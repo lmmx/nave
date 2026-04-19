@@ -108,6 +108,51 @@ ls ~/.cache/nave/repos/<username>/<reponame>/checkout/
 NAVE_LOG=debug cargo run --bin nave -- fetch
 ```
 
+### Template anti-unification
+
+After acquiring your repo data, the fun part is modelling it.
+To get the simplest possible description, we use anti-unification.
+
+```bash
+cargo run --bin nave -- distil
+```
+
+It's easiest to show how that works with a relatively trivial format like Dependabot:
+
+```bash
+cargo run --bin nave -- distil --filter dependabot
+```
+
+```yaml
+━━ .github/dependabot.yml ━━
+  instances: 9
+
+  template:
+    updates: 
+      - cooldown?: ⟨?0⟩
+        directory: "/"
+        package-ecosystem: ⟨?1⟩
+        schedule: 
+          interval: ⟨?2⟩
+    version: 2
+
+  holes:
+    updates[0].cooldown  [optionalkey]  3/9 optional  [constant when present]
+        3× {"default-days":7}
+    updates[0].package-ecosystem  [string]  9/9
+        8× "github-actions"
+        1× "cargo"
+    updates[0].schedule.interval  [string]  9/9
+        6× "weekly"
+        3× "monthly"
+```
+
+Note you can also access this as JSON:
+
+```
+cargo run --bin nave -- distil --json | jq '.groups[] | select(.pattern | contains("dependabot"))'
+```
+
 ## Configuration
 
 All settings live in `~/.config/nave.toml`. The defaults are deliberately visible at
