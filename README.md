@@ -60,8 +60,10 @@ cache_base["~/.cache/nave/"]
 subgraph repo["repos/{username}/{repo_id}/"]
     meta["meta.toml"]
     tracked["tracked.toml"]
-    checkout["checkout/"]
-    files["pyproject.toml<br/>.github/workflows/*<br/>..."]
+
+    subgraph checkout["checkout/"]
+        files["pyproject.toml<br/>.github/workflows/*<br/>..."]
+    end
 end
 
 validate["validate<br/>(stub)"]
