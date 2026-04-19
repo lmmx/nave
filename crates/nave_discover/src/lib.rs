@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use anyhow::Result;
@@ -122,7 +122,10 @@ pub async fn run_discovery(
         .filter(|r| !(cfg.discovery.exclude_forks && r.fork))
         .collect();
 
-    let tracked_set: HashSet<String> = cfg.discovery.tracked_paths.iter().cloned().collect();
+    let matcher = nave_config::PathMatcher::new(
+        &cfg.discovery.tracked_paths,
+        cfg.discovery.case_insensitive,
+    )?;
 
     // Walk tree for each repo, in parallel, capped.
     let results: Vec<(Repo, TreeResponse)> = stream::iter(repos)
@@ -150,21 +153,21 @@ pub async fn run_discovery(
         let (owner, name) = split_full_name(&repo.full_name);
 
         // Filter the tree down to just the paths we track.
-        let matched: BTreeMap<String, String> = tree
+        let tracked_files: BTreeMap<String, String> = tree
             .tree
             .iter()
             .filter(|e| e.entry_type == "blob")
-            .filter(|e| tracked_set.contains(&e.path))
+            .filter(|e| matcher.is_match(&e.path))
             .map(|e| (e.path.clone(), e.sha.clone()))
             .collect();
 
-        if matched.is_empty() {
+        if tracked_files.is_empty() {
             // No tracked files; don't pollute the cache with empty entries.
             continue;
         }
 
         repos_with_tracked += 1;
-        tracked_total += matched.len();
+        tracked_total += tracked_files.len();
 
         let repo_meta = RepoMeta {
             owner: owner.clone(),
@@ -181,7 +184,12 @@ pub async fn run_discovery(
         // Merge with existing so we don't lose state for files that disappeared
         // this run (we want to notice deletions downstream at fetch-time).
         let existing = read_tracked(cache_root, &owner, &name)?;
-        let merged = merge_tracked(existing, TrackedFiles { files: matched });
+        let merged = merge_tracked(
+            existing,
+            TrackedFiles {
+                files: tracked_files,
+            },
+        );
         write_tracked(cache_root, &owner, &name, &merged)?;
 
         if let Some(pushed) = repo.pushed_at {

@@ -17,6 +17,7 @@ toml = { workspace = true }
 dirs = { workspace = true }
 thiserror = { workspace = true }
 time = { workspace = true }
+globset = { workspace = true }
 
 [lints]
 workspace = true

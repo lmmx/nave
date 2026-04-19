@@ -17,9 +17,19 @@ See blog post: [Fleet Ops](https://cog.spin.systems/fleet-ops).
 Run the CLI (still in development) like so:
 
 ```bash
+cargo run --bin nave -- init --no-interaction
+cat ~/.config/nave.toml
+# You should see the commented header followed by [github], [cache], [discovery]
+# with the full tracked_paths list explicit in the file.
+
 cargo run --bin nave -- discover
+ls ~/.cache/nave/repos/
+# See the metadata that got recorded for user's repos
+
 cargo run --bin nave -- fetch
-ls ~/.cache/nave/repos/lmmx/nave/checkout/
-# pyproject.toml
-NAVE_LOG=debug cargo run --bin nave -- fetch   # second run: should be "updated"
+ls ~/.cache/nave/repos/
+# See the repo files that got fetched (only tracked file types)
+
+NAVE_LOG=debug cargo run --bin nave -- fetch
+# Run this to see details of what gets fetched
 ```

@@ -22,6 +22,7 @@ nave_fetch = { path = "crates/nave_fetch" }
 anyhow = { version = "1.0.80" }
 clap = { version = "4.5.3", features = ["derive"] }
 figment2 = { version = "0.11", features = ["toml", "env"] }
+globset = { version = "0.4" }
 serde = { version = "1.0", features = ["derive"] }
 toml = { version = "0.8" }
 # Use rustls to avoid OpenSSL headaches on CI/various OSes

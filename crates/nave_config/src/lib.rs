@@ -7,6 +7,7 @@
 //!   4. CLI overrides supplied by the binary
 
 pub mod cache;
+pub mod matcher;
 pub mod paths;
 
 use std::path::PathBuf;
@@ -17,6 +18,7 @@ use figment2::{
 };
 use serde::{Deserialize, Serialize};
 
+pub use crate::matcher::PathMatcher;
 pub use crate::paths::{cache_root, user_config_path};
 
 /// The fully-resolved nave configuration.
@@ -65,9 +67,21 @@ pub struct CacheConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct DiscoveryConfig {
-    /// Glob-like paths we care about, relative to repo root.
-    /// We'll later support nested patterns; for now a literal-path match is enough.
+    /// Glob patterns for files to track, relative to repo root.
+    ///
+    /// Globs follow gitignore-ish semantics:
+    ///   - `*` matches within a path component (not crossing `/`)
+    ///   - `**` matches zero or more components
+    ///   - `?`, `[abc]`, `{a,b}` work as expected
+    ///
+    /// Defaults cover: `pyproject.toml`, `Cargo.toml`, pre-commit configs,
+    /// `.github/workflows/*`, and the top-level dependabot config.
     pub tracked_paths: Vec<String>,
+
+    /// Match paths case-insensitively. Defaults to true to catch typos like
+    /// `Pyproject.toml`; most real configs are lowercase.
+    pub case_insensitive: bool,
+
     /// Exclude forks from discovery. Defaults to true — forks typically inherit
     /// upstream's configs and we'd rather model the canonical source.
     pub exclude_forks: bool,
@@ -76,10 +90,26 @@ pub struct DiscoveryConfig {
 impl Default for DiscoveryConfig {
     fn default() -> Self {
         Self {
-            tracked_paths: vec!["pyproject.toml".to_string()],
+            tracked_paths: default_tracked_paths(),
+            case_insensitive: true,
             exclude_forks: true,
         }
     }
+}
+
+/// The canonical default list of tracked file patterns. Public so `init`
+/// and other tools can show it to the user verbatim.
+pub fn default_tracked_paths() -> Vec<String> {
+    vec![
+        "pyproject.toml".to_string(),
+        "Cargo.toml".to_string(),
+        ".pre-commit-config.yaml".to_string(),
+        ".pre-commit-config.yml".to_string(),
+        ".github/workflows/*.yml".to_string(),
+        ".github/workflows/*.yaml".to_string(),
+        ".github/dependabot.yml".to_string(),
+        ".github/dependabot.yaml".to_string(),
+    ]
 }
 
 /// Load with no CLI overrides.
