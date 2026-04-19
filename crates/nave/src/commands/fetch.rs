@@ -2,14 +2,14 @@ use anyhow::{Context, Result};
 use clap::Args;
 use tracing::info;
 
-use nave_config::{NaveConfig, cache_root, load};
+use nave_config::{NaveConfig, cache_root, load_default};
 use nave_fetch::run_fetch;
 
 #[derive(Args, Debug)]
 pub(crate) struct FetchArgs {}
 
 pub(crate) async fn run(_args: FetchArgs) -> Result<()> {
-    let cfg: NaveConfig = load(())?;
+    let cfg: NaveConfig = load_default()?;
     let root = match cfg.cache.root.clone() {
         Some(r) => r,
         None => cache_root()?,

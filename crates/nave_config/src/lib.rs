@@ -78,7 +78,22 @@ impl Default for DiscoveryConfig {
     }
 }
 
-/// Load `NaveConfig` in the standard precedence stack.
+/// Load with no CLI overrides.
+pub fn load_default() -> anyhow::Result<NaveConfig> {
+    let mut figment = Figment::from(Serialized::defaults(NaveConfig::default()));
+
+    let user_path = user_config_path()?;
+    if user_path.exists() {
+        figment = figment.merge(Toml::file(&user_path));
+    }
+
+    figment = figment.merge(Env::prefixed("NAVE_").split("__"));
+
+    Ok(figment.extract()?)
+}
+
+/// Load `NaveConfig` in the standard precedence stack, with CLI overrides
+/// (must serialize to a map, e.g. a struct with `#[derive(Serialize)]`).
 ///
 /// `cli_overrides` should be a `Serialize` type holding any CLI-provided values.
 /// Pass `()` if there are none.

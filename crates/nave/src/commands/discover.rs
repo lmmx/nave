@@ -2,7 +2,7 @@ use anyhow::{Context, Result, bail};
 use clap::Args;
 use tracing::info;
 
-use nave_config::{NaveConfig, cache_root, load, user_config_path};
+use nave_config::{NaveConfig, cache_root, load_default, user_config_path};
 use nave_discover::run_discovery;
 use nave_github::auth::gh_username;
 
@@ -17,7 +17,7 @@ pub(crate) struct DiscoverArgs {
 }
 
 pub(crate) async fn run(args: DiscoverArgs) -> Result<()> {
-    let cfg: NaveConfig = load(())?;
+    let cfg: NaveConfig = load_default()?;
 
     // Resolve username: CLI > config > gh > error.
     let username = resolve_username(&cfg, args.user.as_deref(), args.no_interaction).await?;
