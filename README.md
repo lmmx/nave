@@ -14,24 +14,37 @@ See the blog series: [Fleet Ops](https://cog.spin.systems/fleet-ops).
 
 Most OSS package development happens across dozens of small repos, each with its own
 `pyproject.toml`, CI workflows, dependabot config, and pre-commit hooks. Managing them
-as a fleet — enforcing consistency, rolling out changes, spotting drift — currently
-means ad-hoc shell loops over the GitHub API. `nave` is an attempt at a proper control
-plane: model the configs declaratively, query and bulk-edit across repos, validate that
-what's on disk matches what you've specified.
+as a fleet — enforcing consistency, rolling out changes, spotting drift — often
+means ad-hoc shell loops over the GitHub API. `nave` is my attempt at a control
+plane for these release process artifacts.
+
+The goal is to model these configs declaratively, so as to facilitate query and bulk-edit
+operations across repos. To achieve that, `nave` first validates that what's on disk matches
+what you've specified (WIP!).
 
 ## Status
 
-Early-stage, pre-alpha. Currently implemented:
+So far the following is implemented:
 
-- **`nave init`** — first-run bootstrap; writes `~/.config/nave.toml`
-- **`nave discover`** — lists a user's public repos, walks their file trees, caches
+- **`nave init`** bootstrap step on the first-run, writes `~/.config/nave.toml`
+- **`nave discover`** enumerates a user's public repos, walks their file trees, caches
   metadata for any file matching `tracked_paths` (globs supported)
-- **`nave fetch`** — sparse-checkouts discovered repos into `~/.cache/nave/`, pulling
+- **`nave fetch`** sparse-checkouts discovered repos into `~/.cache/nave/`, pulling
   only the tracked files
-- **`nave validate`** — stub; will validate tracked configs against the (not-yet-written)
+- **`nave validate`** (TODO) will validate tracked configs against the (not-yet-written)
   fleet model
 
 ## Pipeline
+
+- Running the `init` entrypoint sets up the user-level config
+- Running the `discover` entrypoint uses that config (or writes it if called first)
+  to enumerate all the GitHub repos for the user, and recording the default branch,
+  a SHA for the repo tree, and when it was last pushed to. For each of the files in the repo tree,
+  it records the SHAs of each file in the tracked file set
+- Running the `fetch` entrypoint pulls down those files that were marked as tracked via
+  a sparse clone (i.e. just those specific files) into a shallow clone of the repo (i.e. just the
+  most recent version, not its full history)
+
 
 ```mermaid
 flowchart TB
@@ -127,35 +140,43 @@ single underscores are part of field names.)
 repos even when authenticated as that user. Private repos are not included. Forks
 and archived repos are filtered out by default; both are configurable.
 
+The primary purpose of this software is for use with open source software,
+private repo is a non-goal but feel free to fork for your own use cases.
+
 ## Auth
 
 Auth is detected in this order:
 
 1. `NAVE_GITHUB_TOKEN` environment variable
 2. `gh auth token` (requires the `gh` CLI to be installed and authenticated)
-3. Anonymous (60 requests/hour — will hit rate limits on first discovery of large
+3. Anonymous (60 requests/hour — note this will hit rate limits on first discovery of large
    accounts)
 
 ## Architecture
 
-Workspace of focused crates:
+This repo is a Rust workspace of focused crates:
 
-- `nave` — the binary (subcommand routing, logging)
-- `nave_core` — shared primitives (currently minimal)
-- `nave_config` — layered config via [figment2](https://crates.io/crates/figment2),
+- `nave`: the binary (subcommand routing, logging)
+- `nave_core`: shared primitives (currently minimal)
+- `nave_config`: layered config providers via [figment2](https://crates.io/crates/figment2),
   cache layout, path matching
-- `nave_github` — GitHub REST client with auth probing
-- `nave_discover` — orchestrates repo listing, tree walking, and cache updates
-- `nave_fetch` — sparse-checkout fetcher
+- `nave_github`: GitHub REST client with auth probing
+- `nave_discover`: orchestrates repo listing, tree walking, and cache updates
+- `nave_fetch`: sparse-checkout fetcher
 
-Python entry point is a thin `maturin`-packaged shim (`python/nave/`) that finds and
-execs the Rust binary — same pattern as `uv`, `ruff`, `ty`.
+The Python entry point is a thin `maturin`-packaged shim (`python/nave/`) that finds and
+execs the Rust binary (the same pattern used by the likes of `uv` and `ruff`).
 
 ## Development
+
+To install git hooks with [cargo husky][husky], run `cargo test`
 
 ```bash
 just build     # workspace build
 just test      # cargo nextest
 just lint      # clippy + ruff
-just pre-commit   # what the hook runs
+just pre-commit   # what the pre-commit hook runs
+just pre-push # what the pre-push hook runs
 ```
+
+[husky]: https://github.com/rhysd/cargo-husky
