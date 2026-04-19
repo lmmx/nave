@@ -149,10 +149,10 @@ fn next_link(headers: &reqwest::header::HeaderMap) -> Option<String> {
     let link = headers.get("link")?.to_str().ok()?;
     for part in link.split(',') {
         let part = part.trim();
-        if part.ends_with(r#"rel="next""#) {
-            if let (Some(lt), Some(gt)) = (part.find('<'), part.find('>')) {
-                return Some(part[lt + 1..gt].to_string());
-            }
+        if part.ends_with(r#"rel="next""#)
+            && let (Some(lt), Some(gt)) = (part.find('<'), part.find('>'))
+        {
+            return Some(part[lt + 1..gt].to_string());
         }
     }
     None

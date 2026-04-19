@@ -32,13 +32,13 @@ impl AuthMode {
 }
 
 pub async fn detect_auth(use_gh_cli: bool) -> AuthMode {
-    if let Ok(tok) = std::env::var("NAVE_GITHUB_TOKEN") {
-        if !tok.is_empty() {
-            return AuthMode::Token {
-                token: tok,
-                source: "token_env",
-            };
-        }
+    if let Ok(tok) = std::env::var("NAVE_GITHUB_TOKEN")
+        && !tok.is_empty()
+    {
+        return AuthMode::Token {
+            token: tok,
+            source: "token_env",
+        };
     }
 
     if use_gh_cli {
@@ -60,9 +60,8 @@ pub async fn detect_auth(use_gh_cli: bool) -> AuthMode {
 
 /// Returns `Ok(None)` if gh is not installed or not authed.
 async fn gh_token() -> Result<Option<String>> {
-    let out = match Command::new("gh").arg("auth").arg("token").output().await {
-        Ok(o) => o,
-        Err(_) => return Ok(None), // gh not on PATH
+    let Ok(out) = Command::new("gh").arg("auth").arg("token").output().await else {
+        return Ok(None); // gh not on PATH
     };
     if !out.status.success() {
         return Ok(None);

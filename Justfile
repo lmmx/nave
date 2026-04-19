@@ -23,6 +23,9 @@ wheel:
 develop:
     maturin develop
 
+clippy:
+    cargo clippy --workspace --all-targets -- -D warnings
+
 # Format Rust + Python
 fmt:
     cargo fmt --all
@@ -30,7 +33,7 @@ fmt:
 
 # Lint Rust + Python
 lint:
-    cargo clippy --workspace --all-targets -- -D warnings
+    just clippy
     ruff check python/
 
 # Tests
@@ -41,7 +44,7 @@ test:
 pre-commit:
     just fmt
     cargo fmt --all -- --check
-    cargo clippy --workspace --all-targets -- -D warnings
+    just clippy
     ruff check python/
     ruff format --check python/
 

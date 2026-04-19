@@ -1,2 +1,2 @@
-pub mod discover;
-pub mod init;
+pub(crate) mod discover;
+pub(crate) mod init;

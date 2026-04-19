@@ -67,7 +67,7 @@ pub async fn run_discovery(
     let tracked_set: HashSet<String> = cfg.discovery.tracked_paths.iter().cloned().collect();
 
     // Walk tree for each repo, in parallel, capped.
-    let results: Vec<(Repo, TreeResponse)> = stream::iter(repos.into_iter())
+    let results: Vec<(Repo, TreeResponse)> = stream::iter(repos)
         .map(|repo| {
             let client = &client;
             async move {

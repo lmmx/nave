@@ -7,7 +7,7 @@ use nave_discover::run_discovery;
 use nave_github::auth::gh_username;
 
 #[derive(Args, Debug)]
-pub struct DiscoverArgs {
+pub(crate) struct DiscoverArgs {
     /// Override the GitHub username for this run.
     #[arg(long)]
     pub user: Option<String>,
@@ -16,20 +16,22 @@ pub struct DiscoverArgs {
     pub no_interaction: bool,
 }
 
-pub async fn run(args: DiscoverArgs) -> Result<()> {
+pub(crate) async fn run(args: DiscoverArgs) -> Result<()> {
     let cfg: NaveConfig = load(())?;
 
     // Resolve username: CLI > config > gh > error.
     let username = resolve_username(&cfg, args.user.as_deref(), args.no_interaction).await?;
 
     // If CLI provided a username and the user config had none, persist it.
-    if args.user.is_some() && cfg.github.username.is_none() {
-        if let Err(e) = persist_username(&username) {
+    if args.user.is_some() && cfg.github.username.is_none()
+        && let Err(e) = persist_username(&username) {
             tracing::warn!("could not persist username to user config: {e}");
         }
-    }
 
-    let root = cfg.cache.root.clone().unwrap_or(cache_root()?);
+    let root = match cfg.cache.root.clone() {
+        Some(r) => r,
+        None => cache_root()?,
+    };
     std::fs::create_dir_all(&root)
         .with_context(|| format!("creating cache root {}", root.display()))?;
 
@@ -56,10 +58,10 @@ async fn resolve_username(
     if let Some(u) = cfg.github.username.as_ref() {
         return Ok(u.clone());
     }
-    if cfg.github.use_gh_cli {
-        if let Some(u) = gh_username().await {
-            return Ok(u);
-        }
+    if cfg.github.use_gh_cli
+        && let Some(u) = gh_username().await
+    {
+        return Ok(u);
     }
     if no_interaction {
         bail!(

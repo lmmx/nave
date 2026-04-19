@@ -7,7 +7,7 @@ use nave_config::{NaveConfig, user_config_path};
 use nave_github::auth::gh_username;
 
 #[derive(Args, Debug)]
-pub struct InitArgs {
+pub(crate) struct InitArgs {
     /// Accept all suggested defaults without prompting.
     #[arg(long)]
     pub no_interaction: bool,
@@ -16,7 +16,7 @@ pub struct InitArgs {
     pub force: bool,
 }
 
-pub async fn run(args: InitArgs) -> Result<()> {
+pub(crate) async fn run(args: InitArgs) -> Result<()> {
     let path = user_config_path()?;
     if path.exists() && !args.force {
         if args.no_interaction {
@@ -70,7 +70,7 @@ pub async fn run(args: InitArgs) -> Result<()> {
             .default(cfg.github.per_page.to_string())
             .interact_text()?;
         if let Ok(n) = per_page.parse::<u32>() {
-            cfg.github.per_page = n.min(100).max(1);
+            cfg.github.per_page = n.clamp(1, 100);
         }
     }
 

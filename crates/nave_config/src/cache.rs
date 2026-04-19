@@ -29,7 +29,7 @@ pub struct CacheMeta {
     /// When we last ran discovery (informational).
     #[serde(with = "time::serde::rfc3339::option")]
     pub last_discovery_at: Option<OffsetDateTime>,
-    /// "gh" | "token_env" | "anonymous"
+    /// `"gh"` | `"token_env"` | `"anonymous"`
     pub auth_mode: Option<String>,
     /// Username last used for discovery.
     pub username: Option<String>,

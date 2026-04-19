@@ -20,22 +20,12 @@ use serde::{Deserialize, Serialize};
 pub use crate::paths::{cache_root, user_config_path};
 
 /// The fully-resolved nave configuration.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct NaveConfig {
     pub github: GithubConfig,
     pub cache: CacheConfig,
     pub discovery: DiscoveryConfig,
-}
-
-impl Default for NaveConfig {
-    fn default() -> Self {
-        Self {
-            github: GithubConfig::default(),
-            cache: CacheConfig::default(),
-            discovery: DiscoveryConfig::default(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -65,17 +55,11 @@ impl Default for GithubConfig {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct CacheConfig {
     /// Override for `~/.cache/nave`. `None` = use XDG default.
     pub root: Option<PathBuf>,
-}
-
-impl Default for CacheConfig {
-    fn default() -> Self {
-        Self { root: None }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
