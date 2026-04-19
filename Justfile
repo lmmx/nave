@@ -35,7 +35,7 @@ lint:
 
 # Tests
 test:
-    cargo test --workspace
+    cargo nextest run --no-fail-fast
 
 # Pre-commit: fast stuff only — fmt check + clippy + python lint
 pre-commit:
@@ -48,4 +48,4 @@ pre-commit:
 # Pre-push: also run the test suite
 pre-push:
     just pre-commit
-    cargo test --workspace
+    just test
