@@ -7,3 +7,7 @@ Fleet-level modelling and operations for OSS package repos.
 </div>
 
 Rust core (`nave-rs`), Python entry point (`nave`).
+
+## Motivation
+
+See blog post: [Fleet Ops](https://cog.spin.systems/fleet-ops).
