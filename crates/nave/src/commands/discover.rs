@@ -23,10 +23,12 @@ pub(crate) async fn run(args: DiscoverArgs) -> Result<()> {
     let username = resolve_username(&cfg, args.user.as_deref(), args.no_interaction).await?;
 
     // If CLI provided a username and the user config had none, persist it.
-    if args.user.is_some() && cfg.github.username.is_none()
-        && let Err(e) = persist_username(&username) {
-            tracing::warn!("could not persist username to user config: {e}");
-        }
+    if args.user.is_some()
+        && cfg.github.username.is_none()
+        && let Err(e) = persist_username(&username)
+    {
+        tracing::warn!("could not persist username to user config: {e}");
+    }
 
     let root = match cfg.cache.root.clone() {
         Some(r) => r,
