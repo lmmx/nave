@@ -1,0 +1,27 @@
+[package]
+name = "nave"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Fleet-level modelling and operations for OSS package repos"
+readme = "../../README.md"
+
+[[bin]]
+name = "nave"
+path = "src/main.rs"
+
+[dependencies]
+nave_core = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+
+[dev-dependencies]
+cargo-husky = { version = "1.5.0", default-features = false, features = ["user-hooks"] }
+
+[lints]
+workspace = true

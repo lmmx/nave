@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+echo "[husky] pre-commit: running \`just pre-commit\`"
+just pre-commit

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+echo "[husky] pre-push: running \`just pre-push\`"
+just pre-push

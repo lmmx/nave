@@ -1,0 +1,44 @@
+[build-system]
+requires = ["maturin>=1.9.3,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "nave"
+version = "0.0.0"
+description = "Fleet-level modelling and operations for OSS package repos, in Rust."
+authors = [{ name = "Louis Maddox", email = "louismmx@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["fleet-ops", "packaging", "github", "dependabot"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Rust",
+]
+
+[project.urls]
+Repository = "https://github.com/lmmx/nave"
+
+[tool.maturin]
+bindings = "bin"
+manifest-path = "crates/nave/Cargo.toml"
+module-name = "nave"
+python-source = "python"
+strip = true
+
+[tool.ruff]
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I", "UP", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
