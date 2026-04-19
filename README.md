@@ -11,3 +11,15 @@ Rust core (`nave-rs`), Python entry point (`nave`).
 ## Motivation
 
 See blog post: [Fleet Ops](https://cog.spin.systems/fleet-ops).
+
+## Try it
+
+Run the CLI (still in development) like so:
+
+```bash
+cargo run --bin nave -- discover
+cargo run --bin nave -- fetch
+ls ~/.cache/nave/repos/lmmx/nave/checkout/
+# pyproject.toml
+NAVE_LOG=debug cargo run --bin nave -- fetch   # second run: should be "updated"
+```
