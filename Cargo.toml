@@ -14,9 +14,26 @@ license = "MIT"
 [workspace.dependencies]
 nave = { path = "crates/nave" }
 nave_core = { path = "crates/nave_core" }
+nave_config = { path = "crates/nave_config" }
+nave_github = { path = "crates/nave_github" }
+nave_discover = { path = "crates/nave_discover" }
 
 anyhow = { version = "1.0.80" }
 clap = { version = "4.5.3", features = ["derive"] }
+figment2 = { version = "0.11", features = ["toml", "env"] }
+serde = { version = "1.0", features = ["derive"] }
+toml = { version = "0.8" }
+# Use rustls to avoid OpenSSL headaches on CI/various OSes
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "gzip"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs", "process", "sync"] }
+serde_json = { version = "1.0" }
+time = { version = "0.3", features = ["serde-well-known", "formatting", "parsing", "macros"] }
+dirs = { version = "5" }
+dialoguer = { version = "0.11" }
+tracing = { version = "0.1" }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror = { version = "1" }
+futures = { version = "0.3" }
 
 [workspace.lints.rust]
 unsafe_code = "warn"

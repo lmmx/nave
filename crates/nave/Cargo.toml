@@ -17,8 +17,18 @@ path = "src/main.rs"
 
 [dependencies]
 nave_core = { workspace = true }
+nave_config = { workspace = true }
+nave_github = { workspace = true }
+nave_discover = { workspace = true }
+
 anyhow = { workspace = true }
 clap = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+dialoguer = { workspace = true }
+serde = { workspace = true }
+toml = { workspace = true }
 
 [dev-dependencies]
 cargo-husky = { version = "1.5.0", default-features = false, features = ["user-hooks"] }
