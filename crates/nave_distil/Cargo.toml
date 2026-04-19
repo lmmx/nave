@@ -1,0 +1,22 @@
+[package]
+name = "nave_distil"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
+repository.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Anti-unification over tracked config files"
+
+[dependencies]
+nave_config = { workspace = true }
+nave_parse = { workspace = true }
+
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+
+[lints]
+workspace = true

@@ -21,6 +21,8 @@ enum Command {
     Fetch(commands::fetch::FetchArgs),
     /// Validate tracked configs parse and round-trip cleanly.
     Validate(commands::validate::ValidateArgs),
+    /// Anti-unify tracked configs across repos to discover shared templates.
+    Distil(commands::distil::DistilArgs),
 }
 
 #[tokio::main]
@@ -38,5 +40,6 @@ async fn main() -> Result<()> {
         Some(Command::Discover(args)) => commands::discover::run(args).await,
         Some(Command::Fetch(args)) => commands::fetch::run(args).await,
         Some(Command::Validate(args)) => commands::validate::run(args).await,
+        Some(Command::Distil(args)) => commands::distil::run(args).await,
     }
 }

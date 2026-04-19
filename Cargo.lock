@@ -899,6 +899,7 @@ dependencies = [
  "nave_config",
  "nave_core",
  "nave_discover",
+ "nave_distil",
  "nave_fetch",
  "nave_github",
  "nave_validate",
@@ -939,6 +940,18 @@ dependencies = [
  "serde",
  "time",
  "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "nave_distil"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "nave_config",
+ "nave_parse",
+ "serde",
+ "serde_json",
  "tracing",
 ]
 
