@@ -19,8 +19,8 @@ enum Command {
     Discover(commands::discover::DiscoverArgs),
     /// Sparse-checkout discovered repos into the cache.
     Fetch(commands::fetch::FetchArgs),
-    /// (stub) Validate tracked configs against the fleet model.
-    Validate,
+    /// Validate tracked configs parse and round-trip cleanly.
+    Validate(commands::validate::ValidateArgs),
 }
 
 #[tokio::main]
@@ -37,8 +37,6 @@ async fn main() -> Result<()> {
         Some(Command::Init(args)) => commands::init::run(args).await,
         Some(Command::Discover(args)) => commands::discover::run(args).await,
         Some(Command::Fetch(args)) => commands::fetch::run(args).await,
-        Some(Command::Validate) => {
-            anyhow::bail!("`nave validate` is not yet implemented");
-        }
+        Some(Command::Validate(args)) => commands::validate::run(args).await,
     }
 }
