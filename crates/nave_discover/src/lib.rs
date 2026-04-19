@@ -60,9 +60,12 @@ pub async fn run_discovery(
 
     info!(count = repos.len(), "repos returned from GitHub");
 
-    // Skip archived by default; forks are a judgment call — keep them for now, user can
-    // filter via tracked_paths later.
-    let repos: Vec<Repo> = repos.into_iter().filter(|r| !r.archived).collect();
+    // Skip archived and forks by default.
+    let repos: Vec<Repo> = repos
+        .into_iter()
+        .filter(|r| !r.archived)
+        .filter(|r| !(cfg.discovery.exclude_forks && r.fork))
+        .collect();
 
     let tracked_set: HashSet<String> = cfg.discovery.tracked_paths.iter().cloned().collect();
 

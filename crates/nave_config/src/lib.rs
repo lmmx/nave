@@ -68,12 +68,16 @@ pub struct DiscoveryConfig {
     /// Glob-like paths we care about, relative to repo root.
     /// We'll later support nested patterns; for now a literal-path match is enough.
     pub tracked_paths: Vec<String>,
+    /// Exclude forks from discovery. Defaults to true — forks typically inherit
+    /// upstream's configs and we'd rather model the canonical source.
+    pub exclude_forks: bool,
 }
 
 impl Default for DiscoveryConfig {
     fn default() -> Self {
         Self {
             tracked_paths: vec!["pyproject.toml".to_string()],
+            exclude_forks: true,
         }
     }
 }
