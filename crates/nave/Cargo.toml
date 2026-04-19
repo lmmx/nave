@@ -20,6 +20,7 @@ nave_core = { workspace = true }
 nave_config = { workspace = true }
 nave_github = { workspace = true }
 nave_discover = { workspace = true }
+nave_fetch = { workspace = true }
 
 anyhow = { workspace = true }
 clap = { workspace = true }

@@ -1,0 +1,264 @@
+//! Sparse-checkout fetcher.
+//!
+//! For each repo directory under `<cache_root>/repos/<owner>/<repo>/`, ensure
+//! `checkout/` contains exactly the files listed in `tracked.toml`.
+
+mod git;
+mod plan;
+
+use std::path::{Path, PathBuf};
+
+use anyhow::{Context, Result};
+use futures::{StreamExt, stream};
+use tracing::{debug, info, warn};
+
+use nave_config::cache::{RepoMeta, TrackedFiles, read_repo_meta, read_tracked, write_tracked};
+
+use crate::git::GitRunner;
+use crate::plan::{FetchAction, FetchPlan};
+
+pub const FETCH_CONCURRENCY: usize = 6;
+
+#[derive(Debug, Default)]
+pub struct FetchReport {
+    pub cloned: usize,
+    pub updated: usize,
+    pub skipped: usize,
+    pub recloned: usize,
+    pub failed: usize,
+    pub sha_mismatches: usize,
+}
+
+pub async fn run_fetch(cache_root: &Path) -> Result<FetchReport> {
+    let repos = discover_cached_repos(cache_root)?;
+    info!(count = repos.len(), "planning fetch");
+
+    let results: Vec<Result<FetchRepoResult>> = stream::iter(repos)
+        .map(|repo_dir| async move { fetch_one(&repo_dir).await })
+        .buffer_unordered(FETCH_CONCURRENCY)
+        .collect()
+        .await;
+
+    let mut report = FetchReport::default();
+    for r in results {
+        match r {
+            Ok(outcome) => {
+                report.sha_mismatches += outcome.sha_mismatches;
+                match outcome.action {
+                    FetchAction::FreshClone => report.cloned += 1,
+                    FetchAction::Update => report.updated += 1,
+                    FetchAction::Reclone => report.recloned += 1,
+                    FetchAction::Skip => report.skipped += 1,
+                }
+            }
+            Err(e) => {
+                report.failed += 1;
+                warn!("fetch failed: {e:#}");
+            }
+        }
+    }
+    Ok(report)
+}
+
+struct FetchRepoResult {
+    action: FetchAction,
+    sha_mismatches: usize,
+}
+
+async fn fetch_one(repo_dir: &Path) -> Result<FetchRepoResult> {
+    let meta = read_repo_meta_required(repo_dir)?;
+    // TODO: make this less ugly - doing it this way rather than threading cache_root through
+    // because it keeps fetch_one self-contained and the relationship is an invariant of the cache
+    // layout not a runtime concern
+    let tracked = read_tracked(
+        repo_dir
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap(),
+        &meta.owner,
+        &meta.name,
+    )?;
+
+    if tracked.files.is_empty() {
+        debug!(owner = %meta.owner, name = %meta.name, "no tracked files; skipping");
+        return Ok(FetchRepoResult {
+            action: FetchAction::Skip,
+            sha_mismatches: 0,
+        });
+    }
+
+    let checkout_dir = repo_dir.join("checkout");
+    let git = GitRunner::new();
+    let plan = FetchPlan::decide(&checkout_dir, &tracked);
+
+    let action = match plan {
+        FetchAction::Skip => {
+            debug!(owner = %meta.owner, name = %meta.name, "checkout already current");
+            FetchAction::Skip
+        }
+        FetchAction::FreshClone => {
+            fresh_clone(&git, &meta, &tracked, &checkout_dir).await?;
+            FetchAction::FreshClone
+        }
+        FetchAction::Update => match update_checkout(&git, &meta, &tracked, &checkout_dir).await {
+            Ok(()) => FetchAction::Update,
+            Err(e) => {
+                warn!(
+                    owner = %meta.owner, name = %meta.name,
+                    "update failed ({e:#}); falling back to reclone",
+                );
+                reclone(&git, &meta, &tracked, &checkout_dir).await?;
+                FetchAction::Reclone
+            }
+        },
+        FetchAction::Reclone => {
+            reclone(&git, &meta, &tracked, &checkout_dir).await?;
+            FetchAction::Reclone
+        }
+    };
+
+    // Regardless of which path we took, verify SHAs and reconcile the cache.
+    let mismatches = verify_and_reconcile(&git, repo_dir, &meta, &tracked, &checkout_dir).await?;
+
+    Ok(FetchRepoResult {
+        action,
+        sha_mismatches: mismatches,
+    })
+}
+
+async fn fresh_clone(
+    git: &GitRunner,
+    meta: &RepoMeta,
+    tracked: &TrackedFiles,
+    checkout_dir: &Path,
+) -> Result<()> {
+    if checkout_dir.exists() {
+        std::fs::remove_dir_all(checkout_dir)?;
+    }
+    if let Some(parent) = checkout_dir.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    git.clone_sparse(&meta.clone_url, checkout_dir).await?;
+    let paths: Vec<&str> = tracked.files.keys().map(String::as_str).collect();
+    git.sparse_checkout_set(checkout_dir, &paths).await?;
+    Ok(())
+}
+
+async fn update_checkout(
+    git: &GitRunner,
+    meta: &RepoMeta,
+    tracked: &TrackedFiles,
+    checkout_dir: &Path,
+) -> Result<()> {
+    git.fetch(checkout_dir).await?;
+    git.reset_hard(checkout_dir, &meta.default_branch).await?;
+    let paths: Vec<&str> = tracked.files.keys().map(String::as_str).collect();
+    git.sparse_checkout_set(checkout_dir, &paths).await?;
+    Ok(())
+}
+
+async fn reclone(
+    git: &GitRunner,
+    meta: &RepoMeta,
+    tracked: &TrackedFiles,
+    checkout_dir: &Path,
+) -> Result<()> {
+    fresh_clone(git, meta, tracked, checkout_dir).await
+}
+
+async fn verify_and_reconcile(
+    git: &GitRunner,
+    repo_dir: &Path,
+    meta: &RepoMeta,
+    tracked: &TrackedFiles,
+    checkout_dir: &Path,
+) -> Result<usize> {
+    let mut mismatches = 0usize;
+    let mut updates: Vec<(String, String)> = Vec::new();
+
+    for (path, cached_sha) in &tracked.files {
+        let on_disk = checkout_dir.join(path);
+        if !on_disk.exists() {
+            // File tracked in cache but not materialized; sparse spec may differ
+            // from what upstream actually has. Record as mismatch; discover will
+            // reconcile next run.
+            warn!(
+                owner = %meta.owner, name = %meta.name, path = %path,
+                "tracked file missing from checkout",
+            );
+            mismatches += 1;
+            continue;
+        }
+        let actual = git.hash_object(&on_disk).await?;
+        if actual != *cached_sha {
+            mismatches += 1;
+            updates.push((path.clone(), actual));
+        }
+    }
+
+    if !updates.is_empty() {
+        warn!(
+            owner = %meta.owner, name = %meta.name, count = updates.len(),
+            "tracked SHAs drifted; updating cache to match checkout",
+        );
+        let cache_root = repo_dir
+            .parent()
+            .and_then(Path::parent)
+            .and_then(Path::parent)
+            .context("repo_dir has no cache root ancestor")?;
+        let mut merged = tracked.clone();
+        for (path, sha) in updates {
+            merged.files.insert(path, sha);
+        }
+        write_tracked(cache_root, &meta.owner, &meta.name, &merged)?;
+    }
+
+    Ok(mismatches)
+}
+
+fn read_repo_meta_required(repo_dir: &Path) -> Result<RepoMeta> {
+    // repo_dir is <cache_root>/repos/<owner>/<repo>
+    let owner = repo_dir
+        .parent()
+        .and_then(Path::file_name)
+        .and_then(|s| s.to_str())
+        .context("could not infer owner from path")?;
+    let repo = repo_dir
+        .file_name()
+        .and_then(|s| s.to_str())
+        .context("could not infer repo name from path")?;
+    let cache_root = repo_dir
+        .parent()
+        .and_then(Path::parent)
+        .and_then(Path::parent)
+        .context("repo_dir has no cache root ancestor")?;
+    read_repo_meta(cache_root, owner, repo)?
+        .with_context(|| format!("meta.toml missing for {owner}/{repo}"))
+}
+
+/// Walk `<cache_root>/repos/<owner>/<repo>/` and return each repo directory.
+fn discover_cached_repos(cache_root: &Path) -> Result<Vec<PathBuf>> {
+    let repos_root = cache_root.join("repos");
+    if !repos_root.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut out = Vec::new();
+    for owner_entry in std::fs::read_dir(&repos_root)? {
+        let owner_entry = owner_entry?;
+        if !owner_entry.file_type()?.is_dir() {
+            continue;
+        }
+        for repo_entry in std::fs::read_dir(owner_entry.path())? {
+            let repo_entry = repo_entry?;
+            if !repo_entry.file_type()?.is_dir() {
+                continue;
+            }
+            out.push(repo_entry.path());
+        }
+    }
+    Ok(out)
+}

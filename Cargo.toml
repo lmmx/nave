@@ -17,6 +17,7 @@ nave_core = { path = "crates/nave_core" }
 nave_config = { path = "crates/nave_config" }
 nave_github = { path = "crates/nave_github" }
 nave_discover = { path = "crates/nave_discover" }
+nave_fetch = { path = "crates/nave_fetch" }
 
 anyhow = { version = "1.0.80" }
 clap = { version = "4.5.3", features = ["derive"] }

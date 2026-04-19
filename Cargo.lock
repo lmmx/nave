@@ -876,6 +876,7 @@ dependencies = [
  "nave_config",
  "nave_core",
  "nave_discover",
+ "nave_fetch",
  "nave_github",
  "serde",
  "tokio",
@@ -911,6 +912,17 @@ dependencies = [
  "nave_github",
  "serde",
  "time",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "nave_fetch"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "futures",
+ "nave_config",
  "tokio",
  "tracing",
 ]

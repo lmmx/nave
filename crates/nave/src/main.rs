@@ -17,8 +17,8 @@ enum Command {
     Init(commands::init::InitArgs),
     /// List a user's repos and cache the set of tracked files.
     Discover(commands::discover::DiscoverArgs),
-    /// (stub) Sparse-checkout discovered repos into the cache.
-    Fetch,
+    /// Sparse-checkout discovered repos into the cache.
+    Fetch(commands::fetch::FetchArgs),
     /// (stub) Validate tracked configs against the fleet model.
     Validate,
 }
@@ -36,9 +36,7 @@ async fn main() -> Result<()> {
         }
         Some(Command::Init(args)) => commands::init::run(args).await,
         Some(Command::Discover(args)) => commands::discover::run(args).await,
-        Some(Command::Fetch) => {
-            anyhow::bail!("`nave fetch` is not yet implemented");
-        }
+        Some(Command::Fetch(args)) => commands::fetch::run(args).await,
         Some(Command::Validate) => {
             anyhow::bail!("`nave validate` is not yet implemented");
         }
