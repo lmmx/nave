@@ -29,12 +29,67 @@ pub struct DiscoveryReport {
     pub tracked_file_count: usize,
     pub auth_mode: String,
     pub incremental: bool,
+    pub pruned: usize,
 }
 
+fn prune_stale_repos(
+    cache_root: &Path,
+    touched: &std::collections::HashSet<(String, String)>,
+    incremental: bool,
+) -> Result<usize> {
+    if incremental {
+        // In incremental mode we only see recently-pushed repos, so absence
+        // from `touched` doesn't imply the repo is gone from GitHub. Prune
+        // would be destructive. Force user to do a full discovery first.
+        tracing::warn!(
+            "--prune ignored on incremental run; re-run after clearing last_pushed_at \
+             or use `nave discover --prune` after a fresh listing"
+        );
+        return Ok(0);
+    }
+
+    let repos_root = cache_root.join("repos");
+    if !repos_root.exists() {
+        return Ok(0);
+    }
+
+    let mut pruned = 0usize;
+    for owner_entry in std::fs::read_dir(&repos_root)? {
+        let owner_entry = owner_entry?;
+        if !owner_entry.file_type()?.is_dir() {
+            continue;
+        }
+        let owner = owner_entry.file_name().to_string_lossy().into_owned();
+
+        for repo_entry in std::fs::read_dir(owner_entry.path())? {
+            let repo_entry = repo_entry?;
+            if !repo_entry.file_type()?.is_dir() {
+                continue;
+            }
+            let name = repo_entry.file_name().to_string_lossy().into_owned();
+
+            if !touched.contains(&(owner.clone(), name.clone())) {
+                tracing::info!(%owner, %name, "pruning stale repo");
+                std::fs::remove_dir_all(repo_entry.path())?;
+                pruned += 1;
+            }
+        }
+
+        // Clean up empty owner dirs after pruning.
+        if std::fs::read_dir(owner_entry.path())?.next().is_none() {
+            std::fs::remove_dir(owner_entry.path())?;
+        }
+    }
+
+    Ok(pruned)
+}
+
+#[allow(clippy::too_many_lines)]
 pub async fn run_discovery(
     cfg: &NaveConfig,
     cache_root: &Path,
     username: &str,
+    prune: bool,
 ) -> Result<DiscoveryReport> {
     let auth = detect_auth(cfg.github.use_gh_cli).await;
     let auth_label = auth.label().to_string();
@@ -86,6 +141,8 @@ pub async fn run_discovery(
         .await?;
 
     let mut max_pushed = cache_meta_before.last_pushed_at;
+    let mut repos_touched: std::collections::HashSet<(String, String)> =
+        std::collections::HashSet::new();
     let mut repos_with_tracked = 0usize;
     let mut tracked_total = 0usize;
 
@@ -119,6 +176,8 @@ pub async fn run_discovery(
         };
         write_repo_meta(cache_root, &repo_meta)?;
 
+        repos_touched.insert((owner.clone(), name.clone()));
+
         // Merge with existing so we don't lose state for files that disappeared
         // this run (we want to notice deletions downstream at fetch-time).
         let existing = read_tracked(cache_root, &owner, &name)?;
@@ -145,6 +204,12 @@ pub async fn run_discovery(
     };
     write_cache_meta(cache_root, &new_meta)?;
 
+    let pruned = if prune {
+        prune_stale_repos(cache_root, &repos_touched, incremental)?
+    } else {
+        0
+    };
+
     if auth_label == "anonymous" {
         warn!("discovery completed anonymously; results may be rate-limited");
     }
@@ -155,6 +220,7 @@ pub async fn run_discovery(
         tracked_file_count: tracked_total,
         auth_mode: auth_label,
         incremental,
+        pruned,
     })
 }
 

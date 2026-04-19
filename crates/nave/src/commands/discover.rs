@@ -14,6 +14,11 @@ pub(crate) struct DiscoverArgs {
     /// Don't prompt; fail fast if anything is missing.
     #[arg(long)]
     pub no_interaction: bool,
+    /// Remove cached repo directories that no longer match the current
+    /// user's repos or discovery filters (forks, archived, missing tracked
+    /// files, etc). Only effective on a full (non-incremental) run.
+    #[arg(long)]
+    pub prune: bool,
 }
 
 pub(crate) async fn run(args: DiscoverArgs) -> Result<()> {
@@ -37,11 +42,12 @@ pub(crate) async fn run(args: DiscoverArgs) -> Result<()> {
     std::fs::create_dir_all(&root)
         .with_context(|| format!("creating cache root {}", root.display()))?;
 
-    let report = run_discovery(&cfg, &root, &username).await?;
+    let report = run_discovery(&cfg, &root, &username, args.prune).await?;
     info!(
         repos = report.repos_seen,
         with_tracked = report.repos_with_tracked_files,
         tracked_files = report.tracked_file_count,
+        pruned = report.pruned,
         auth = %report.auth_mode,
         incremental = report.incremental,
         "discovery complete"
