@@ -4,7 +4,7 @@ resolver = "2"
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.93"
+rust-version = "1.95"
 homepage = "https://github.com/lmmx/nave"
 documentation = "https://github.com/lmmx/nave"
 repository = "https://github.com/lmmx/nave"

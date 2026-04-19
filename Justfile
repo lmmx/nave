@@ -39,6 +39,7 @@ test:
 
 # Pre-commit: fast stuff only — fmt check + clippy + python lint
 pre-commit:
+    just fmt
     cargo fmt --all -- --check
     cargo clippy --workspace --all-targets -- -D warnings
     ruff check python/
