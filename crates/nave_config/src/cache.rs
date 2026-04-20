@@ -6,7 +6,7 @@
 //!   repos/<owner>/<repo>/
 //!     meta.toml                         -- RepoMeta
 //!     tracked.toml                      -- TrackedFiles
-//!     checkout/                         -- (populated by `nave fetch`, out of scope here)
+//!     checkout/                         -- (populated by `nave pull`, out of scope here)
 //! ```
 
 use std::{
@@ -22,7 +22,7 @@ use time::OffsetDateTime;
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct CacheMeta {
-    /// The most recent `pushed_at` we've seen across any scaned repo.
+    /// The most recent `pushed_at` we've seen across any scanned repo.
     /// Used to build the incremental `pushed:>TS` search query next run.
     #[serde(with = "time::serde::rfc3339::option")]
     pub last_pushed_at: Option<OffsetDateTime>,

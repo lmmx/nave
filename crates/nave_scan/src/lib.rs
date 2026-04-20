@@ -180,7 +180,7 @@ pub async fn run_scany(
         repos_touched.insert((owner.clone(), name.clone()));
 
         // Merge with existing so we don't lose state for files that disappeared
-        // this run (we want to notice deletions downstream at fetch-time).
+        // this run (we want to notice deletions downstream at pull-time).
         let existing = read_tracked(cache_root, &owner, &name)?;
         let merged = merge_tracked(
             existing,
@@ -238,7 +238,7 @@ fn split_full_name(full_name: &str) -> (String, String) {
 }
 
 /// Union of old and new: preserves any files we knew about previously.
-/// Fetch-time logic will compare against reality and reconcile deletions.
+/// Pull-time logic will compare against reality and reconcile deletions.
 fn merge_tracked(old: TrackedFiles, new: TrackedFiles) -> TrackedFiles {
     let mut files = old.files;
     for (k, v) in new.files {

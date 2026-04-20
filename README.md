@@ -41,11 +41,11 @@ Anonymous access works but hits the 60 req/hr rate limit quickly on first scany.
 
 ### Structural simplification of configs
 
-`nave distil` finds the shared skeleton across all tracked configs of the same kind and shows you which fields vary,
+`nave build` finds the shared skeleton across all tracked configs of the same kind and shows you which fields vary,
 how often, and with what values. It's a way to see drift at a glance, and to work out which fields are worth enforcing fleet-wide.
 
 ```bash
-nave distil --filter dependabot
+nave build --filter dependabot
 ```
 
 ```yaml
@@ -120,7 +120,7 @@ Three plumbing commands you'll run in order on first use:
 ```bash
 nave init            # write ~/.config/nave.toml (one-shot)
 nave scan        # enumerate repos and index tracked files
-nave fetch           # sparse-checkout tracked files into ~/.cache/nave/
+nave pull           # sparse-checkout tracked files into ~/.cache/nave/
 ```
 
 `scan` is incremental by default. Subsequent runs only re-check repos pushed to since the last run.
@@ -128,7 +128,7 @@ nave fetch           # sparse-checkout tracked files into ~/.cache/nave/
 To force a full listing (e.g. after narrowing `tracked_paths` or to prune repos that no longer match filters),
 delete `~/.cache/nave/meta.toml` and run `nave scan --prune`.
 
-There's also `nave validate` (which currently simply validates that the configs can be parsed).
+There's also `nave check` (which currently simply checks that the configs can be parsed).
 
 Verbose logging: `NAVE_LOG=debug nave <cmd>`.
 
@@ -174,9 +174,9 @@ A Rust workspace split across four concerns:
 - **Config & cache** — `nave_config` handles layered config via
   [figment2](https://crates.io/crates/figment2), cache layout, and path matching.
 - **GitHub I/O** — `nave_github` (REST client with auth probing), `nave_scan`
-  (repo listing and tree walking), `nave_fetch` (sparse checkout).
-- **Modelling** — `nave_parse` (YAML/TOML de/serialisation), `nave_validate`
-  (WIP), `nave_distil` (anti-unification to find minimal template groupings).
+  (repo listing and tree walking), `nave_pull` (sparse checkout).
+- **Modelling** — `nave_parse` (YAML/TOML de/serialisation), `nave_check`
+  (WIP), `nave_build` (anti-unification to find minimal template groupings).
 
 ## Contributing
 

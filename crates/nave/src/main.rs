@@ -23,12 +23,12 @@ enum Command {
     Init(commands::init::InitArgs),
     /// List a user's repos and cache the set of tracked files.
     Scan(commands::scan::ScanArgs),
-    /// Sparse-checkout scaned repos into the cache.
-    Fetch(commands::fetch::FetchArgs),
-    /// Validate tracked configs parse and round-trip cleanly.
-    Validate(commands::validate::ValidateArgs),
-    /// Anti-unify tracked configs across repos to scan shared templates.
-    Distil(commands::distil::DistilArgs),
+    /// Sparse-checkout scanned repos into the cache.
+    Pull(commands::pull::PullArgs),
+    /// Check tracked configs parse and round-trip cleanly.
+    Check(commands::check::CheckArgs),
+    /// Simplify configs across repos into shared templates.
+    Build(commands::build::BuildArgs),
     /// Search cached repos for substring patterns across tracked files.
     Search(commands::search::SearchArgs),
 }
@@ -42,9 +42,9 @@ async fn main() -> Result<()> {
     match cli.command {
         Command::Init(args) => commands::init::run(args).await,
         Command::Scan(args) => commands::scan::run(args).await,
-        Command::Fetch(args) => commands::fetch::run(args).await,
-        Command::Validate(args) => commands::validate::run(args).await,
-        Command::Distil(args) => commands::distil::run(args).await,
+        Command::Pull(args) => commands::pull::run(args).await,
+        Command::Check(args) => commands::check::run(args).await,
+        Command::Build(args) => commands::build::run(args).await,
         Command::Search(args) => commands::search::run(args).await,
     }
 }

@@ -1,11 +1,11 @@
 use anyhow::Result;
 use clap::Args;
 
+use nave_check::{Totals, ValidationReport, run_check};
 use nave_config::{NaveConfig, cache_root, load_default};
-use nave_validate::{Totals, ValidationReport, run_validate};
 
 #[derive(Args, Debug)]
-pub(crate) struct ValidateArgs {
+pub(crate) struct CheckArgs {
     /// Emit results as JSON instead of text.
     #[arg(long)]
     pub json: bool,
@@ -16,7 +16,7 @@ pub(crate) struct ValidateArgs {
 }
 
 #[allow(clippy::unused_async)] // "Keep things consistent"
-pub(crate) async fn run(args: ValidateArgs) -> Result<()> {
+pub(crate) async fn run(args: CheckArgs) -> Result<()> {
     let cfg: NaveConfig = load_default()?;
     let root = match cfg.cache.root.clone() {
         Some(r) => r,
@@ -24,12 +24,12 @@ pub(crate) async fn run(args: ValidateArgs) -> Result<()> {
     };
     if !root.exists() {
         anyhow::bail!(
-            "cache root {} does not exist; run `nave scan` + `nave fetch` first",
+            "cache root {} does not exist; run `nave scan` + `nave pull` first",
             root.display()
         );
     }
 
-    let report = run_validate(&root)?;
+    let report = run_check(&root)?;
 
     if args.json {
         println!("{}", serde_json::to_string_pretty(&report)?);

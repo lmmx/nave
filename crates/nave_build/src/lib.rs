@@ -9,7 +9,7 @@ mod report;
 mod value;
 
 pub use antiunify::{Template, anti_unify};
-pub use report::{DistilReport, GroupReport, HoleReport, SourceHint};
+pub use report::{BuildReport, GroupReport, HoleReport, SourceHint};
 pub use value::to_common_tree;
 
 use std::collections::BTreeMap;
@@ -24,10 +24,10 @@ use nave_config::{
 };
 use nave_parse::{Document, parse_file};
 
-/// Walk the cache and produce a distillation report.
-pub fn run_distil(cache_root: &Path, cfg: &NaveConfig) -> Result<DistilReport> {
+/// Walk the cache and produce a buildlation report.
+pub fn run_build(cache_root: &Path, cfg: &NaveConfig) -> Result<BuildReport> {
     let repos_root = cache_root.join("repos");
-    let mut report = DistilReport::default();
+    let mut report = BuildReport::default();
 
     if !repos_root.exists() {
         return Ok(report);

@@ -1,11 +1,11 @@
 use anyhow::Result;
 use clap::Args;
 
+use nave_build::{BuildReport, GroupReport, HoleReport, SourceHint, run_build};
 use nave_config::{NaveConfig, cache_root, load_default};
-use nave_distil::{DistilReport, GroupReport, HoleReport, SourceHint, run_distil};
 
 #[derive(Args, Debug)]
-pub(crate) struct DistilArgs {
+pub(crate) struct BuildArgs {
     /// Emit as JSON instead of text.
     #[arg(long)]
     pub json: bool,
@@ -15,7 +15,7 @@ pub(crate) struct DistilArgs {
 }
 
 #[allow(clippy::unused_async)]
-pub(crate) async fn run(args: DistilArgs) -> Result<()> {
+pub(crate) async fn run(args: BuildArgs) -> Result<()> {
     let cfg: NaveConfig = load_default()?;
     let root = match cfg.cache.root.clone() {
         Some(r) => r,
@@ -23,12 +23,12 @@ pub(crate) async fn run(args: DistilArgs) -> Result<()> {
     };
     if !root.exists() {
         anyhow::bail!(
-            "cache root {} does not exist; run `nave scan` + `nave fetch` first",
+            "cache root {} does not exist; run `nave scan` + `nave pull` first",
             root.display()
         );
     }
 
-    let mut report = run_distil(&root, &cfg)?;
+    let mut report = run_build(&root, &cfg)?;
 
     if let Some(f) = &args.filter {
         report.groups.retain(|g| g.pattern.contains(f));
@@ -42,7 +42,7 @@ pub(crate) async fn run(args: DistilArgs) -> Result<()> {
     Ok(())
 }
 
-fn print_text(report: &DistilReport) {
+fn print_text(report: &BuildReport) {
     for group in &report.groups {
         print_group(group);
         println!();

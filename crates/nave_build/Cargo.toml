@@ -10,7 +10,7 @@ tracing = {workspace = true}
 workspace = true
 
 [package]
-name = "nave_distil"
+name = "nave_build"
 version = "0.0.2"
 description = "Anti-unification over tracked config files"
 authors.workspace = true
