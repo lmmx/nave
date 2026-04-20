@@ -3,11 +3,11 @@ use clap::Args;
 use tracing::info;
 
 use nave_config::{NaveConfig, cache_root, load_default, user_config_path};
-use nave_discover::run_discovery;
 use nave_github::auth::gh_username;
+use nave_scan::run_scany;
 
 #[derive(Args, Debug)]
-pub(crate) struct DiscoverArgs {
+pub(crate) struct ScanArgs {
     /// Override the GitHub username for this run.
     #[arg(long)]
     pub user: Option<String>,
@@ -15,13 +15,13 @@ pub(crate) struct DiscoverArgs {
     #[arg(long)]
     pub no_interaction: bool,
     /// Remove cached repo directories that no longer match the current
-    /// user's repos or discovery filters (forks, archived, missing tracked
+    /// user's repos or scany filters (forks, archived, missing tracked
     /// files, etc). Only effective on a full (non-incremental) run.
     #[arg(long)]
     pub prune: bool,
 }
 
-pub(crate) async fn run(args: DiscoverArgs) -> Result<()> {
+pub(crate) async fn run(args: ScanArgs) -> Result<()> {
     let cfg: NaveConfig = load_default()?;
 
     // Resolve username: CLI > config > gh > error.
@@ -42,7 +42,7 @@ pub(crate) async fn run(args: DiscoverArgs) -> Result<()> {
     std::fs::create_dir_all(&root)
         .with_context(|| format!("creating cache root {}", root.display()))?;
 
-    let report = run_discovery(&cfg, &root, &username, args.prune).await?;
+    let report = run_scany(&cfg, &root, &username, args.prune).await?;
     info!(
         repos = report.repos_seen,
         with_tracked = report.repos_with_tracked_files,
@@ -50,7 +50,7 @@ pub(crate) async fn run(args: DiscoverArgs) -> Result<()> {
         pruned = report.pruned,
         auth = %report.auth_mode,
         incremental = report.incremental,
-        "discovery complete"
+        "scany complete"
     );
     Ok(())
 }

@@ -22,16 +22,16 @@ use time::OffsetDateTime;
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct CacheMeta {
-    /// The most recent `pushed_at` we've seen across any discovered repo.
+    /// The most recent `pushed_at` we've seen across any scaned repo.
     /// Used to build the incremental `pushed:>TS` search query next run.
     #[serde(with = "time::serde::rfc3339::option")]
     pub last_pushed_at: Option<OffsetDateTime>,
-    /// When we last ran discovery (informational).
+    /// When we last ran scany (informational).
     #[serde(with = "time::serde::rfc3339::option")]
-    pub last_discovery_at: Option<OffsetDateTime>,
+    pub last_scany_at: Option<OffsetDateTime>,
     /// `"gh"` | `"token_env"` | `"anonymous"`
     pub auth_mode: Option<String>,
-    /// Username last used for discovery.
+    /// Username last used for scany.
     pub username: Option<String>,
 }
 

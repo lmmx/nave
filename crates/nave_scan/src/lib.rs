@@ -23,7 +23,7 @@ use nave_github::{
 /// at ~100 concurrent requests; 8 is conservative and plenty for 40–50 repos.
 const TREE_CONCURRENCY: usize = 8;
 
-pub struct DiscoveryReport {
+pub struct ScanyReport {
     pub repos_seen: usize,
     pub repos_with_tracked_files: usize,
     pub tracked_file_count: usize,
@@ -40,10 +40,10 @@ fn prune_stale_repos(
     if incremental {
         // In incremental mode we only see recently-pushed repos, so absence
         // from `touched` doesn't imply the repo is gone from GitHub. Prune
-        // would be destructive. Force user to do a full discovery first.
+        // would be destructive. Force user to do a full scany first.
         tracing::warn!(
             "--prune ignored on incremental run; re-run after clearing last_pushed_at \
-             or use `nave discover --prune` after a fresh listing"
+             or use `nave scan --prune` after a fresh listing"
         );
         return Ok(0);
     }
@@ -85,12 +85,12 @@ fn prune_stale_repos(
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn run_discovery(
+pub async fn run_scany(
     cfg: &NaveConfig,
     cache_root: &Path,
     username: &str,
     prune: bool,
-) -> Result<DiscoveryReport> {
+) -> Result<ScanyReport> {
     let auth = detect_auth(cfg.github.use_gh_cli).await;
     let auth_label = auth.label().to_string();
     let client = GithubClient::new(&cfg.github.api_base, auth)?;
@@ -119,13 +119,11 @@ pub async fn run_discovery(
     let repos: Vec<Repo> = repos
         .into_iter()
         .filter(|r| !r.archived)
-        .filter(|r| !(cfg.discovery.exclude_forks && r.fork))
+        .filter(|r| !(cfg.scany.exclude_forks && r.fork))
         .collect();
 
-    let matcher = nave_config::PathMatcher::new(
-        &cfg.discovery.tracked_paths,
-        cfg.discovery.case_insensitive,
-    )?;
+    let matcher =
+        nave_config::PathMatcher::new(&cfg.scany.tracked_paths, cfg.scany.case_insensitive)?;
 
     // Walk tree for each repo, in parallel, capped.
     let results: Vec<(Repo, TreeResponse)> = stream::iter(repos)
@@ -206,7 +204,7 @@ pub async fn run_discovery(
 
     let new_meta = CacheMeta {
         last_pushed_at: max_pushed,
-        last_discovery_at: Some(OffsetDateTime::now_utc()),
+        last_scany_at: Some(OffsetDateTime::now_utc()),
         auth_mode: Some(auth_label.clone()),
         username: Some(username.to_string()),
     };
@@ -219,10 +217,10 @@ pub async fn run_discovery(
     };
 
     if auth_label == "anonymous" {
-        warn!("discovery completed anonymously; results may be rate-limited");
+        warn!("scany completed anonymously; results may be rate-limited");
     }
 
-    Ok(DiscoveryReport {
+    Ok(ScanyReport {
         repos_seen: results.len(),
         repos_with_tracked_files: repos_with_tracked,
         tracked_file_count: tracked_total,

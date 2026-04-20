@@ -12,9 +12,9 @@ futures = {workspace = true}
 workspace = true
 
 [package]
-name = "nave_discover"
+name = "nave_scan"
 version = "0.0.2"
-description = "Repository discovery for nave"
+description = "Repository scany for nave"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true

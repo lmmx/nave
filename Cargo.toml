@@ -10,7 +10,7 @@ resolver = "2"
 nave = {path = "crates/nave"}
 nave_config = {path = "crates/nave_config"}
 nave_github = {path = "crates/nave_github"}
-nave_discover = {path = "crates/nave_discover"}
+nave_scan = {path = "crates/nave_scan"}
 nave_fetch = {path = "crates/nave_fetch"}
 nave_parse = {path = "crates/nave_parse"}
 nave_validate = {path = "crates/nave_validate"}

@@ -16,7 +16,7 @@ pub(crate) async fn run(_args: FetchArgs) -> Result<()> {
     };
     if !root.exists() {
         anyhow::bail!(
-            "cache root {} does not exist; run `nave discover` first",
+            "cache root {} does not exist; run `nave scan` first",
             root.display()
         );
     }

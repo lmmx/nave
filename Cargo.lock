@@ -944,10 +944,10 @@ dependencies = [
  "clap",
  "dialoguer",
  "nave_config",
- "nave_discover",
  "nave_distil",
  "nave_fetch",
  "nave_github",
+ "nave_scan",
  "nave_search",
  "nave_validate",
  "serde",
@@ -970,20 +970,6 @@ dependencies = [
  "thiserror",
  "time",
  "toml",
-]
-
-[[package]]
-name = "nave_discover"
-version = "0.0.2"
-dependencies = [
- "anyhow",
- "futures",
- "nave_config",
- "nave_github",
- "serde",
- "time",
- "tokio",
- "tracing",
 ]
 
 [[package]]
@@ -1033,6 +1019,20 @@ dependencies = [
  "serde_norway",
  "thiserror",
  "toml",
+]
+
+[[package]]
+name = "nave_scan"
+version = "0.0.2"
+dependencies = [
+ "anyhow",
+ "futures",
+ "nave_config",
+ "nave_github",
+ "serde",
+ "time",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]

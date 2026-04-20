@@ -5,7 +5,7 @@ path = "src/main.rs"
 [dependencies]
 nave_config = {workspace = true}
 nave_github = {workspace = true}
-nave_discover = {workspace = true}
+nave_scan = {workspace = true}
 nave_fetch = {workspace = true}
 nave_validate = {workspace = true}
 nave_distil = {workspace = true}

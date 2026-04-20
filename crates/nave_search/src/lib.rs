@@ -84,11 +84,11 @@ pub fn run_search(
     // classify a file's path into its pattern once, rather than testing
     // every term against every pattern for every file.
     let pattern_matchers: Vec<(String, PathMatcher)> = cfg
-        .discovery
+        .scany
         .tracked_paths
         .iter()
         .map(|pat| {
-            let m = PathMatcher::new(std::slice::from_ref(pat), cfg.discovery.case_insensitive)?;
+            let m = PathMatcher::new(std::slice::from_ref(pat), cfg.scany.case_insensitive)?;
             Ok::<_, anyhow::Error>((pat.clone(), m))
         })
         .collect::<Result<Vec<_>>>()?;
@@ -248,8 +248,8 @@ fn collect_matched_files(
 }
 
 fn pattern_for_path(cfg: &NaveConfig, path: &str) -> Option<String> {
-    for pat in &cfg.discovery.tracked_paths {
-        let m = PathMatcher::new(std::slice::from_ref(pat), cfg.discovery.case_insensitive).ok()?;
+    for pat in &cfg.scany.tracked_paths {
+        let m = PathMatcher::new(std::slice::from_ref(pat), cfg.scany.case_insensitive).ok()?;
         if m.is_match(path) {
             return Some(pat.clone());
         }

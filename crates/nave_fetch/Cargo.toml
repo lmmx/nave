@@ -11,7 +11,7 @@ workspace = true
 [package]
 name = "nave_fetch"
 version = "0.0.2"
-description = "Sparse-checkout fetcher for discovered repos"
+description = "Sparse-checkout fetcher for scaned repos"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true

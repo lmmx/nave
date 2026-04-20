@@ -30,7 +30,7 @@ pub struct FetchReport {
 }
 
 pub async fn run_fetch(cache_root: &Path) -> Result<FetchReport> {
-    let repos = discover_cached_repos(cache_root)?;
+    let repos = scan_cached_repos(cache_root)?;
     info!(count = repos.len(), "planning fetch");
 
     let results: Vec<Result<FetchRepoResult>> = stream::iter(repos)
@@ -183,7 +183,7 @@ async fn verify_and_reconcile(
         let on_disk = checkout_dir.join(path);
         if !on_disk.exists() {
             // File tracked in cache but not materialized; sparse spec may differ
-            // from what upstream actually has. Record as mismatch; discover will
+            // from what upstream actually has. Record as mismatch; scan will
             // reconcile next run.
             warn!(
                 owner = %meta.owner, name = %meta.name, path = %path,
@@ -240,7 +240,7 @@ fn read_repo_meta_required(repo_dir: &Path) -> Result<RepoMeta> {
 }
 
 /// Walk `<cache_root>/repos/<owner>/<repo>/` and return each repo directory.
-fn discover_cached_repos(cache_root: &Path) -> Result<Vec<PathBuf>> {
+fn scan_cached_repos(cache_root: &Path) -> Result<Vec<PathBuf>> {
     let repos_root = cache_root.join("repos");
     if !repos_root.exists() {
         return Ok(Vec::new());

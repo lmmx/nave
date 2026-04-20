@@ -22,12 +22,12 @@ enum Command {
     /// Interactively create `~/.config/nave.toml`.
     Init(commands::init::InitArgs),
     /// List a user's repos and cache the set of tracked files.
-    Discover(commands::discover::DiscoverArgs),
-    /// Sparse-checkout discovered repos into the cache.
+    Scan(commands::scan::ScanArgs),
+    /// Sparse-checkout scaned repos into the cache.
     Fetch(commands::fetch::FetchArgs),
     /// Validate tracked configs parse and round-trip cleanly.
     Validate(commands::validate::ValidateArgs),
-    /// Anti-unify tracked configs across repos to discover shared templates.
+    /// Anti-unify tracked configs across repos to scan shared templates.
     Distil(commands::distil::DistilArgs),
     /// Search cached repos for substring patterns across tracked files.
     Search(commands::search::SearchArgs),
@@ -41,7 +41,7 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
         Command::Init(args) => commands::init::run(args).await,
-        Command::Discover(args) => commands::discover::run(args).await,
+        Command::Scan(args) => commands::scan::run(args).await,
         Command::Fetch(args) => commands::fetch::run(args).await,
         Command::Validate(args) => commands::validate::run(args).await,
         Command::Distil(args) => commands::distil::run(args).await,

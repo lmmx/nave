@@ -27,7 +27,7 @@ pub use crate::paths::{cache_root, user_config_path};
 pub struct NaveConfig {
     pub github: GithubConfig,
     pub cache: CacheConfig,
-    pub discovery: DiscoveryConfig,
+    pub scany: ScanyConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,7 +66,7 @@ pub struct CacheConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-pub struct DiscoveryConfig {
+pub struct ScanyConfig {
     /// Glob patterns for files to track, relative to repo root.
     ///
     /// Globs follow gitignore-ish semantics:
@@ -82,12 +82,12 @@ pub struct DiscoveryConfig {
     /// `Pyproject.toml`; most real configs are lowercase.
     pub case_insensitive: bool,
 
-    /// Exclude forks from discovery. Defaults to true — forks typically inherit
+    /// Exclude forks from scany. Defaults to true — forks typically inherit
     /// upstream's configs and we'd rather model the canonical source.
     pub exclude_forks: bool,
 }
 
-impl Default for DiscoveryConfig {
+impl Default for ScanyConfig {
     fn default() -> Self {
         Self {
             tracked_paths: default_tracked_paths(),

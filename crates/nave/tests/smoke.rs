@@ -22,7 +22,7 @@ fn subcommands_listed() {
         .expect("failed to execute nave");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    for sub in ["init", "discover", "fetch", "validate", "distil", "search"] {
+    for sub in ["init", "scan", "fetch", "validate", "distil", "search"] {
         assert!(
             stdout.contains(sub),
             "missing subcommand `{sub}` in help:\n{stdout}"
@@ -46,7 +46,7 @@ fn fetch_without_cache_errors_cleanly() {
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("does not exist") || stderr.contains("run `nave discover`"),
+        stderr.contains("does not exist") || stderr.contains("run `nave scan`"),
         "unexpected stderr: {stderr}"
     );
 }
