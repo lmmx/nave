@@ -42,11 +42,11 @@ pub fn run_build(cache_root: &Path, cfg: &NaveConfig) -> Result<BuildReport> {
     // one pattern. A file matching multiple patterns picks the first one
     // in config order — mirrors how humans read the list.
     let per_pattern: Vec<(String, PathMatcher)> = cfg
-        .scany
+        .scan
         .tracked_paths
         .iter()
         .map(|pat| {
-            let m = PathMatcher::new(std::slice::from_ref(pat), cfg.scany.case_insensitive)?;
+            let m = PathMatcher::new(std::slice::from_ref(pat), cfg.scan.case_insensitive)?;
             Ok::<_, anyhow::Error>((pat.clone(), m))
         })
         .collect::<Result<Vec<_>>>()?;

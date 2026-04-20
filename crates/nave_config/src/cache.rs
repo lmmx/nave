@@ -26,12 +26,12 @@ pub struct CacheMeta {
     /// Used to build the incremental `pushed:>TS` search query next run.
     #[serde(with = "time::serde::rfc3339::option")]
     pub last_pushed_at: Option<OffsetDateTime>,
-    /// When we last ran scany (informational).
+    /// When we last ran scan (informational).
     #[serde(with = "time::serde::rfc3339::option")]
-    pub last_scany_at: Option<OffsetDateTime>,
+    pub last_scan_at: Option<OffsetDateTime>,
     /// `"gh"` | `"token_env"` | `"anonymous"`
     pub auth_mode: Option<String>,
-    /// Username last used for scany.
+    /// Username last used for scan.
     pub username: Option<String>,
 }
 

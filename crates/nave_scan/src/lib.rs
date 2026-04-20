@@ -40,7 +40,7 @@ fn prune_stale_repos(
     if incremental {
         // In incremental mode we only see recently-pushed repos, so absence
         // from `touched` doesn't imply the repo is gone from GitHub. Prune
-        // would be destructive. Force user to do a full scany first.
+        // would be destructive. Force user to do a full scan first.
         tracing::warn!(
             "--prune ignored on incremental run; re-run after clearing last_pushed_at \
              or use `nave scan --prune` after a fresh listing"
@@ -85,7 +85,7 @@ fn prune_stale_repos(
 }
 
 #[allow(clippy::too_many_lines)]
-pub async fn run_scany(
+pub async fn run_scan(
     cfg: &NaveConfig,
     cache_root: &Path,
     username: &str,
@@ -119,11 +119,11 @@ pub async fn run_scany(
     let repos: Vec<Repo> = repos
         .into_iter()
         .filter(|r| !r.archived)
-        .filter(|r| !(cfg.scany.exclude_forks && r.fork))
+        .filter(|r| !(cfg.scan.exclude_forks && r.fork))
         .collect();
 
     let matcher =
-        nave_config::PathMatcher::new(&cfg.scany.tracked_paths, cfg.scany.case_insensitive)?;
+        nave_config::PathMatcher::new(&cfg.scan.tracked_paths, cfg.scan.case_insensitive)?;
 
     // Walk tree for each repo, in parallel, capped.
     let results: Vec<(Repo, TreeResponse)> = stream::iter(repos)
@@ -204,7 +204,7 @@ pub async fn run_scany(
 
     let new_meta = CacheMeta {
         last_pushed_at: max_pushed,
-        last_scany_at: Some(OffsetDateTime::now_utc()),
+        last_scan_at: Some(OffsetDateTime::now_utc()),
         auth_mode: Some(auth_label.clone()),
         username: Some(username.to_string()),
     };
@@ -217,7 +217,7 @@ pub async fn run_scany(
     };
 
     if auth_label == "anonymous" {
-        warn!("scany completed anonymously; results may be rate-limited");
+        warn!("scan completed anonymously; results may be rate-limited");
     }
 
     Ok(ScanyReport {

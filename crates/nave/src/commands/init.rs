@@ -24,7 +24,7 @@ fn render_config_with_header(cfg: &NaveConfig) -> Result<String> {
         "# nave configuration\n\
          #\n\
          # Edit this file to change which files nave tracks across your repos.\n\
-         # The `scany.tracked_paths` list accepts glob patterns (gitignore-ish):\n\
+         # The `scan.tracked_paths` list accepts glob patterns (gitignore-ish):\n\
          #   *    matches within a single path component\n\
          #   **   matches zero or more path components\n\
          #   ?, [abc], {a,b} work as expected\n\

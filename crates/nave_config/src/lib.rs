@@ -27,7 +27,7 @@ pub use crate::paths::{cache_root, user_config_path};
 pub struct NaveConfig {
     pub github: GithubConfig,
     pub cache: CacheConfig,
-    pub scany: ScanyConfig,
+    pub scan: ScanyConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -82,7 +82,7 @@ pub struct ScanyConfig {
     /// `Pyproject.toml`; most real configs are lowercase.
     pub case_insensitive: bool,
 
-    /// Exclude forks from scany. Defaults to true — forks typically inherit
+    /// Exclude forks from scan. Defaults to true — forks typically inherit
     /// upstream's configs and we'd rather model the canonical source.
     pub exclude_forks: bool,
 }

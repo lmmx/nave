@@ -35,14 +35,14 @@ pip install nave      # or: uv tool install nave
 ```
 
 You'll also want the [`gh` CLI](https://cli.github.com/) authenticated, or a `NAVE_GITHUB_TOKEN` in your environment.
-Anonymous access works but hits the 60 req/hr rate limit quickly on first scany.
+Anonymous access works but hits the 60 req/hr rate limit quickly on first `nave scan`.
 
 ## What it does
 
 ### Structural simplification of configs
 
 `nave build` finds the shared skeleton across all tracked configs of the same kind and shows you which fields vary,
-how often, and with what values. It's a way to see drift at a glance, and to work out which fields are worth enforcing fleet-wide.
+how often, and with what values. It's a way to see drift, and to work out which fields are worth standardising.
 
 ```bash
 nave build --filter dependabot
@@ -123,12 +123,12 @@ nave scan        # enumerate repos and index tracked files
 nave pull           # sparse-checkout tracked files into ~/.cache/nave/
 ```
 
-`scan` is incremental by default. Subsequent runs only re-check repos pushed to since the last run.
+By default, `scan` only looks at repos that have changed since the previous `scan`.
 
-To force a full listing (e.g. after narrowing `tracked_paths` or to prune repos that no longer match filters),
-delete `~/.cache/nave/meta.toml` and run `nave scan --prune`.
+To re-examine every repo (e.g. after narrowing `tracked_paths`, or to remove cached repos that no longer match),
+delete `~/.cache/nave/meta.toml` and use `nave scan --prune`.
 
-There's also `nave check` (which currently simply checks that the configs can be parsed).
+There's also `nave check`, which verifies that every tracked config parses without errors.
 
 Verbose logging: `NAVE_LOG=debug nave <cmd>`.
 
@@ -138,7 +138,7 @@ All settings live in `~/.config/nave.toml`. `nave init` writes a commented defau
 you can edit. The knob most people will want is `tracked_paths`:
 
 ```toml
-[scany]
+[scan]
 tracked_paths = [
     "pyproject.toml",
     "Cargo.toml",
