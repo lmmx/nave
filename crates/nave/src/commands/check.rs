@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Args;
 
-use nave_check::{Totals, CheckReport, run_check};
+use nave_check::{CheckReport, Totals, run_check};
 use nave_config::{NaveConfig, cache_root, load_default};
 
 #[derive(Args, Debug)]
