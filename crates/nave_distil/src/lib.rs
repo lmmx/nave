@@ -5,10 +5,12 @@
 //! distributions per hole.
 
 mod antiunify;
+mod factor;
 mod report;
 mod value;
 
 pub use antiunify::{Template, anti_unify};
+pub use factor::{Cohort, FactorGroup, FactoredReport};
 pub use report::{DistilReport, GroupReport, HoleReport, SourceHint};
 pub use value::to_common_tree;
 
@@ -104,8 +106,6 @@ pub fn run_distil(cache_root: &Path, cfg: &NaveConfig) -> Result<DistilReport> {
         if instances.is_empty() {
             continue;
         }
-        // Workflow YAML files: anti-unification by positional alignment
-        // will mislead here. Flag and skip for now.
         if pattern.starts_with(".github/workflows/") {
             report.skipped.push((
                 pattern,
@@ -114,12 +114,49 @@ pub fn run_distil(cache_root: &Path, cfg: &NaveConfig) -> Result<DistilReport> {
             ));
             continue;
         }
-
-        let group = report::build_group(&pattern, &instances)?;
+        let mut group = report::build_group(&pattern, &instances)?;
+        augment_with_factors(&mut group, &instances)?;
         report.groups.push(group);
     }
 
     Ok(report)
+}
+
+fn augment_with_factors(group: &mut report::GroupReport, instances: &[FileInstance]) -> Result<()> {
+    // Re-derive the things factor detection needs. This is wasted work
+    // relative to a deeper integration but keeps the factor module
+    // self-contained.
+    
+    let values: Vec<serde_json::Value> = instances
+        .iter()
+        .map(to_common_tree_safe)
+        .collect::<Result<Vec<_>>>()?;
+
+    let (_template, observations) = crate::antiunify::anti_unify(&values);
+
+    // Rebuild the address map, the same way build_group_from_values did.
+    let (template_for_addr, _) = crate::antiunify::anti_unify(&values);
+    let mut addresses: std::collections::BTreeMap<usize, String> =
+        std::collections::BTreeMap::new();
+    crate::report::collect_addresses(&template_for_addr, String::new(), &mut addresses);
+
+    let presences =
+        crate::factor::optional_key_presences(&observations, &addresses, instances.len());
+    if presences.is_empty() {
+        return Ok(());
+    }
+
+    let factor_groups = crate::factor::find_factors(&presences);
+    for members in factor_groups {
+        let factored =
+            crate::factor::build_factored_report(&members, &presences, instances, &values)?;
+        group.factors.push(factored);
+    }
+    Ok(())
+}
+
+fn to_common_tree_safe(inst: &FileInstance) -> Result<serde_json::Value> {
+    crate::value::to_common_tree(&inst.doc)
 }
 
 fn first_matching<'a>(per_pattern: &'a [(String, PathMatcher)], path: &str) -> Option<&'a str> {
@@ -132,7 +169,7 @@ fn first_matching<'a>(per_pattern: &'a [(String, PathMatcher)], path: &str) -> O
     })
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct FileInstance {
     pub owner: String,
     pub repo: String,

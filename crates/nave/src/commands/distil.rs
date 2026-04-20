@@ -61,13 +61,52 @@ fn print_group(g: &GroupReport) {
         println!("    {line}");
     }
     println!();
-    if g.holes.is_empty() {
-        println!("  (no holes — fleet is uniform at this path)");
-        return;
+    if !g.holes.is_empty() {
+        println!("  holes:");
+        for h in &g.holes {
+            print_hole(h);
+        }
     }
-    println!("  holes:");
-    for h in &g.holes {
-        print_hole(h);
+
+    for factored in &g.factors {
+        println!();
+        println!("  ── factor ──");
+        println!("    members (mutually exclusive):");
+        for m in &factored.factor.members {
+            println!("      · {m}");
+        }
+        for cohort in &factored.cohorts {
+            println!();
+            println!(
+                "    cohort: {}  ({} instances)",
+                cohort.label, cohort.instance_count
+            );
+            for line in cohort.group_report.template_text.lines() {
+                println!("      {line}");
+            }
+            if !cohort.group_report.holes.is_empty() {
+                println!("    holes:");
+                for h in &cohort.group_report.holes {
+                    // Reuse the existing hole formatter with extra indent.
+                    let presence = if h.present_in == h.total {
+                        format!("{}/{}", h.present_in, h.total)
+                    } else {
+                        format!("{}/{} optional", h.present_in, h.total)
+                    };
+                    let kind = format!("{:?}", h.kind).to_lowercase();
+                    println!("      {}  [{}]  {}", h.address, kind, presence);
+                    for (val, count) in h.distinct_values.iter().take(5) {
+                        let s = serde_json::to_string(val).unwrap_or_default();
+                        let short = if s.len() > 70 {
+                            format!("{}…", &s[..67])
+                        } else {
+                            s
+                        };
+                        println!("          {count}× {short}");
+                    }
+                }
+            }
+        }
     }
 }
 

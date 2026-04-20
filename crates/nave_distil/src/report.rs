@@ -25,6 +25,10 @@ pub struct GroupReport {
     /// Rendered template in a compact YAML-ish form, good for pasting.
     pub template_text: String,
     pub holes: Vec<HoleReport>,
+    /// Post-hoc factor decomposition, if any mutually-exclusive key
+    /// groups were found among the optional-key holes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub factors: Vec<crate::factor::FactoredReport>,
 }
 
 #[derive(Debug, Serialize)]
@@ -74,15 +78,15 @@ pub enum SourceHint {
     ConstantWhenPresent,
 }
 
-pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> Result<GroupReport> {
-    let values: Vec<Value> = instances
-        .iter()
-        .map(|inst| to_common_tree(&inst.doc))
-        .collect::<Result<Vec<_>>>()?;
+/// Core of `build_group`, working directly on pre-computed values.
+/// Used by both the top-level pass and per-cohort re-anti-unification.
+pub(crate) fn build_group_from_values(
+    pattern: &str,
+    instances: &[FileInstance],
+    values: &[Value],
+) -> Result<GroupReport> {
+    let (template, observations) = anti_unify(values);
 
-    let (template, observations) = anti_unify(&values);
-
-    // Walk the template to collect addresses for each hole id.
     let mut hole_addresses: BTreeMap<usize, String> = BTreeMap::new();
     collect_addresses(&template, String::new(), &mut hole_addresses);
 
@@ -97,7 +101,6 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> Result<G
             .unwrap_or_else(|| format!("?{id}"));
         holes.push(summarise_hole(address, obs, total, &repo_names));
     }
-    // Sort holes by address for stable reporting.
     holes.sort_by(|a, b| a.address.cmp(&b.address));
 
     let template_text = render_template(&template, 0);
@@ -115,7 +118,16 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> Result<G
             .collect(),
         template_text,
         holes,
+        factors: Vec::new(),
     })
+}
+
+pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> Result<GroupReport> {
+    let values: Vec<Value> = instances
+        .iter()
+        .map(|inst| to_common_tree(&inst.doc))
+        .collect::<Result<Vec<_>>>()?;
+    build_group_from_values(pattern, instances, &values)
 }
 
 fn summarise_hole(
@@ -185,10 +197,15 @@ fn detect_source(obs: &Observations, repo_names: &[String]) -> SourceHint {
     // (or a PEP 503 normalisation of it). Requires ≥ 2 instances and ≥ 2
     // distinct repo names in the subset.
     if obs.values.len() >= 2 {
-        let subset_repos: Vec<&str> = obs.instance_indices.iter()
+        let subset_repos: Vec<&str> = obs
+            .instance_indices
+            .iter()
             .map(|&i| repo_names[i].as_str())
             .collect();
-        let all_match = obs.values.iter().zip(subset_repos.iter())
+        let all_match = obs
+            .values
+            .iter()
+            .zip(subset_repos.iter())
             .all(|(v, &repo)| match v.as_str() {
                 Some(s) => s == repo || pep503_eq(s, repo),
                 None => false,
@@ -215,7 +232,7 @@ fn pep503_eq(a: &str, b: &str) -> bool {
 }
 
 /// Walk the template, recording each hole's JSONPath-ish address.
-fn collect_addresses(t: &Template, path: String, out: &mut BTreeMap<usize, String>) {
+pub(crate) fn collect_addresses(t: &Template, path: String, out: &mut BTreeMap<usize, String>) {
     match t {
         Template::Literal(_) => {}
         Template::Hole { id } => {
