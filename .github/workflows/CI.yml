@@ -29,11 +29,6 @@ jobs:
         )
       )
       || (github.event_name == 'workflow_dispatch')
-        # &&
-        # (
-        #   startsWith(github.event.head_commit.message, 'chore(release)') ||
-        #   contains(github.event.head_commit.message, 'cibuildwheel')
-        # )
     steps:
       - name: Confirm commit message matched
         run: echo "Commit message matched the condition."
