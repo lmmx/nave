@@ -66,11 +66,7 @@ pub struct Observations {
 
 /// Anti-unify the subset of `all_instances` given by `scope` (a list of
 /// indices into `all_instances`).
-fn au_rec(
-    all_instances: &[Value],
-    scope: &[usize],
-    obs: &mut Vec<Observations>,
-) -> Template {
+fn au_rec(all_instances: &[Value], scope: &[usize], obs: &mut Vec<Observations>) -> Template {
     debug_assert!(!scope.is_empty());
 
     // Gather the actual values at this scope.
@@ -104,13 +100,10 @@ fn au_rec(
     Template::Hole { id }
 }
 
-fn au_object(
-    all_instances: &[Value],
-    scope: &[usize],
-    obs: &mut Vec<Observations>,
-) -> Template {
+fn au_object(all_instances: &[Value], scope: &[usize], obs: &mut Vec<Observations>) -> Template {
     let total = scope.len();
-    let objects: Vec<&serde_json::Map<String, Value>> = scope.iter()
+    let objects: Vec<&serde_json::Map<String, Value>> = scope
+        .iter()
         .map(|&i| all_instances[i].as_object().unwrap())
         .collect();
 
@@ -146,12 +139,21 @@ fn au_object(
         let child = au_rec(&child_vals, &child_scope, obs);
 
         for o in obs.iter_mut().skip(mark) {
-            o.instance_indices = o.instance_indices.iter()
+            o.instance_indices = o
+                .instance_indices
+                .iter()
                 .map(|&local_idx| sub_parent_indices[local_idx])
                 .collect();
         }
 
-        fields.insert(key, Field { value: child, present_in, total });
+        fields.insert(
+            key,
+            Field {
+                value: child,
+                present_in,
+                total,
+            },
+        );
     }
 
     Template::Object(fields)
@@ -181,7 +183,8 @@ fn au_array(
         //
         // Simplest: build a fresh value list and a synthetic 0..n scope
         // for the child, then remap hole observations back up.
-        let child_vals: Vec<Value> = scope.iter()
+        let child_vals: Vec<Value> = scope
+            .iter()
             .map(|&j| all_instances[j].as_array().unwrap()[i].clone())
             .collect();
 
@@ -193,7 +196,9 @@ fn au_array(
         // instance indices reference the parent scope, not the synthetic
         // 0..n scope of child_vals.
         for o in obs.iter_mut().skip(mark) {
-            o.instance_indices = o.instance_indices.iter()
+            o.instance_indices = o
+                .instance_indices
+                .iter()
                 .map(|&local_idx| scope[local_idx])
                 .collect();
         }

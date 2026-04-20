@@ -185,10 +185,15 @@ fn detect_source(obs: &Observations, repo_names: &[String]) -> SourceHint {
     // (or a PEP 503 normalisation of it). Requires ≥ 2 instances and ≥ 2
     // distinct repo names in the subset.
     if obs.values.len() >= 2 {
-        let subset_repos: Vec<&str> = obs.instance_indices.iter()
+        let subset_repos: Vec<&str> = obs
+            .instance_indices
+            .iter()
             .map(|&i| repo_names[i].as_str())
             .collect();
-        let all_match = obs.values.iter().zip(subset_repos.iter())
+        let all_match = obs
+            .values
+            .iter()
+            .zip(subset_repos.iter())
             .all(|(v, &repo)| match v.as_str() {
                 Some(s) => s == repo || pep503_eq(s, repo),
                 None => false,

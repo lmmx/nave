@@ -104,17 +104,6 @@ pub fn run_distil(cache_root: &Path, cfg: &NaveConfig) -> Result<DistilReport> {
         if instances.is_empty() {
             continue;
         }
-        // Workflow YAML files: anti-unification by positional alignment
-        // will mislead here. Flag and skip for now.
-        if pattern.starts_with(".github/workflows/") {
-            report.skipped.push((
-                pattern,
-                instances.len(),
-                "workflow YAML — positional alignment inadequate; not yet supported".into(),
-            ));
-            continue;
-        }
-
         let group = report::build_group(&pattern, &instances)?;
         report.groups.push(group);
     }
