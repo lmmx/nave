@@ -25,6 +25,10 @@ wheel:
 develop:
     maturin develop
 
+# Install into the current venv for smoke-testing the Python entry point
+develop-release:
+    maturin develop --release
+
 clippy:
     cargo clippy --workspace --all-targets -- -D warnings
 

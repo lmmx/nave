@@ -7,12 +7,11 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [master]
     tags:
       - "*"
   pull_request:
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -27,11 +26,6 @@ jobs:
         (
           (github.event_name == 'push')
           || (github.event_name == 'pull_request' && github.event.pull_request.user.login == 'lmmx')
-        )
-        &&
-        (
-          startsWith(github.event.head_commit.message, 'chore(release)') ||
-          contains(github.event.head_commit.message, 'cibuildwheel')
         )
       )
       || (github.event_name == 'workflow_dispatch')
