@@ -9,27 +9,26 @@ pub enum Template {
     Literal(Value),
 
     /// Instances disagreed at this position. The `id` is a stable index
-    /// into the report's hole table; observed values and their per-
-    /// instance attribution are tracked there, not here.
+    /// into the observations vector.
     Hole { id: usize },
 
     /// A JSON object/map. For each key: whether the key is present in
-    /// all instances (required) or some (optional), plus the anti-
-    /// unification of its value over the instances where it's present.
+    /// all instances at this scope (required) or some (optional), plus
+    /// the anti-unification of its value over the instances where the
+    /// key is present.
     Object(BTreeMap<String, Field>),
 
-    /// A JSON array. For the first pass we do positional alignment:
-    /// same-length arrays zip element-wise; different lengths fall
-    /// through to Hole.
+    /// A JSON array. Positional alignment: same-length arrays zip
+    /// element-wise; different lengths fall through to Hole.
     Array(Vec<Template>),
 }
 
 #[derive(Debug, Clone)]
 pub struct Field {
     pub value: Template,
-    /// How many instances had this key.
+    /// How many instances at the parent's scope had this key.
     pub present_in: usize,
-    /// Total instance count for the parent object.
+    /// Total instances at the parent's scope.
     pub total: usize,
 }
 
@@ -41,58 +40,81 @@ impl Field {
 
 /// Anti-unify a set of values into a template, along with the raw
 /// observations needed to fill in a report.
-///
-/// Returns `(template, observations)` where `observations[hole_id]` is
-/// the per-instance value slice (one entry per input instance).
 pub fn anti_unify(instances: &[Value]) -> (Template, Vec<Observations>) {
     assert!(!instances.is_empty(), "anti_unify called with no instances");
     let mut obs = Vec::new();
-    let template = au_rec(instances, &mut obs);
+    // Top-level scope: every instance index 0..N is in scope.
+    let top_scope: Vec<usize> = (0..instances.len()).collect();
+    let template = au_rec(instances, &top_scope, &mut obs);
     (template, obs)
 }
 
-/// Values observed at a single hole, one slot per originating instance.
+/// Values observed at a single hole.
+///
+/// `instance_indices[k]` is the originating instance's index in the
+/// top-level list; `values[k]` is the value that instance had at this
+/// hole. These two vectors always have the same length. If a hole
+/// exists at all, every slot has a value — there is no `Option` here,
+/// because optional-key semantics are captured at the `Field` level
+/// (via `present_in < total`), and we only recurse into the subset
+/// where the key is present.
 #[derive(Debug, Clone, Default)]
 pub struct Observations {
-    /// Per-instance value at this hole. `None` means the hole's parent
-    /// key was absent from this instance.
-    pub per_instance: Vec<Option<Value>>,
+    pub instance_indices: Vec<usize>,
+    pub values: Vec<Value>,
 }
 
-fn au_rec(instances: &[Value], obs: &mut Vec<Observations>) -> Template {
+/// Anti-unify the subset of `all_instances` given by `scope` (a list of
+/// indices into `all_instances`).
+fn au_rec(
+    all_instances: &[Value],
+    scope: &[usize],
+    obs: &mut Vec<Observations>,
+) -> Template {
+    debug_assert!(!scope.is_empty());
+
+    // Gather the actual values at this scope.
+    let vals: Vec<&Value> = scope.iter().map(|&i| &all_instances[i]).collect();
+
     // All literally equal → Literal.
-    if instances.windows(2).all(|w| w[0] == w[1]) {
-        return Template::Literal(instances[0].clone());
+    if vals.windows(2).all(|w| w[0] == w[1]) {
+        return Template::Literal(vals[0].clone());
     }
 
     // All objects → recurse field-wise.
-    if instances.iter().all(|v| matches!(v, Value::Object(_))) {
-        return au_object(instances, obs);
+    if vals.iter().all(|v| matches!(v, Value::Object(_))) {
+        return au_object(all_instances, scope, obs);
     }
 
     // All arrays of equal length → recurse positionally.
-    if instances.iter().all(|v| matches!(v, Value::Array(_))) {
-        let arrays: Vec<&Vec<Value>> = instances.iter().map(|v| v.as_array().unwrap()).collect();
-        if arrays.iter().map(|a| a.len()).all(|n| n == arrays[0].len()) {
-            return au_array(&arrays, obs);
+    if vals.iter().all(|v| matches!(v, Value::Array(_))) {
+        let arrays: Vec<&Vec<Value>> = vals.iter().map(|v| v.as_array().unwrap()).collect();
+        if arrays.iter().all(|a| a.len() == arrays[0].len()) {
+            return au_array(all_instances, scope, arrays[0].len(), obs);
         }
-        // Differing lengths → hole (whole array treated as opaque).
     }
 
-    // Mixed types or disagreeing structures → hole.
+    // Mixed types or disagreeing structures → hole, observed at every
+    // instance in the current scope.
     let id = obs.len();
     obs.push(Observations {
-        per_instance: instances.iter().map(|v| Some(v.clone())).collect(),
+        instance_indices: scope.to_vec(),
+        values: vals.into_iter().cloned().collect(),
     });
     Template::Hole { id }
 }
 
-fn au_object(instances: &[Value], obs: &mut Vec<Observations>) -> Template {
-    let total = instances.len();
-    let objects: Vec<&serde_json::Map<String, Value>> =
-        instances.iter().map(|v| v.as_object().unwrap()).collect();
+fn au_object(
+    all_instances: &[Value],
+    scope: &[usize],
+    obs: &mut Vec<Observations>,
+) -> Template {
+    let total = scope.len();
+    let objects: Vec<&serde_json::Map<String, Value>> = scope.iter()
+        .map(|&i| all_instances[i].as_object().unwrap())
+        .collect();
 
-    // Union of all keys, preserving first-seen order where possible.
+    // Union of keys, preserving first-seen order.
     let mut all_keys: Vec<String> = Vec::new();
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::default();
     for o in &objects {
@@ -105,49 +127,78 @@ fn au_object(instances: &[Value], obs: &mut Vec<Observations>) -> Template {
 
     let mut fields = BTreeMap::new();
     for key in all_keys {
-        let present: Vec<&Value> = objects.iter().filter_map(|o| o.get(&key)).collect();
-        let present_in = present.len();
-
-        if present_in == total {
-            // Required key. Recurse normally.
-            let present_owned: Vec<Value> = present.into_iter().cloned().collect();
-            let child = au_rec(&present_owned, obs);
-            fields.insert(
-                key,
-                Field {
-                    value: child,
-                    present_in,
-                    total,
-                },
-            );
-        } else {
-            // Optional key. The value (where present) becomes a hole
-            // whose Observations align with the *parent*'s instance
-            // order, with None for absent instances.
-            let id = obs.len();
-            let per_instance: Vec<Option<Value>> =
-                objects.iter().map(|o| o.get(&key).cloned()).collect();
-            obs.push(Observations { per_instance });
-            fields.insert(
-                key,
-                Field {
-                    value: Template::Hole { id },
-                    present_in,
-                    total,
-                },
-            );
+        // Collect (parent_instance_idx, field_value) pairs for this key.
+        let mut sub_parent_indices: Vec<usize> = Vec::new();
+        let mut child_vals: Vec<Value> = Vec::new();
+        for (i, o) in scope.iter().copied().zip(objects.iter()) {
+            if let Some(v) = o.get(&key) {
+                sub_parent_indices.push(i);
+                child_vals.push(v.clone());
+            }
         }
+        let present_in = child_vals.len();
+
+        // Recurse on the synthetic child value list with a fresh 0..n
+        // scope, then remap any hole observations from local to parent
+        // indices. Same pattern as au_array.
+        let mark = obs.len();
+        let child_scope: Vec<usize> = (0..child_vals.len()).collect();
+        let child = au_rec(&child_vals, &child_scope, obs);
+
+        for o in obs.iter_mut().skip(mark) {
+            o.instance_indices = o.instance_indices.iter()
+                .map(|&local_idx| sub_parent_indices[local_idx])
+                .collect();
+        }
+
+        fields.insert(key, Field { value: child, present_in, total });
     }
 
     Template::Object(fields)
 }
 
-fn au_array(arrays: &[&Vec<Value>], obs: &mut Vec<Observations>) -> Template {
-    let len = arrays[0].len();
+fn au_array(
+    all_instances: &[Value],
+    scope: &[usize],
+    len: usize,
+    obs: &mut Vec<Observations>,
+) -> Template {
+    // For each position i in the array, build a synthetic instance set
+    // of the i-th elements. We do this by materialising them and
+    // recursing — the index remapping is handled by constructing a
+    // fresh "values array" and recursing with a scope of 0..n.
+    //
+    // However the natural way to preserve attribution is slightly more
+    // involved: we want observations to report the *original* instance
+    // index, not an index into our synthetic array. So we thread the
+    // parent scope through and extract elements on demand.
     let mut elements = Vec::with_capacity(len);
     for i in 0..len {
-        let slice: Vec<Value> = arrays.iter().map(|a| a[i].clone()).collect();
-        elements.push(au_rec(&slice, obs));
+        // For array element i, every instance in scope contributes its
+        // i-th element. The scope of instances stays the same.
+        // We need a temporary array-like structure where index j in the
+        // scope maps to the i-th element of the j-th in-scope instance.
+        //
+        // Simplest: build a fresh value list and a synthetic 0..n scope
+        // for the child, then remap hole observations back up.
+        let child_vals: Vec<Value> = scope.iter()
+            .map(|&j| all_instances[j].as_array().unwrap()[i].clone())
+            .collect();
+
+        let mark = obs.len();
+        let child_scope: Vec<usize> = (0..child_vals.len()).collect();
+        let child = au_rec(&child_vals, &child_scope, obs);
+
+        // Remap any observations added during this recursion so their
+        // instance indices reference the parent scope, not the synthetic
+        // 0..n scope of child_vals.
+        for o in obs.iter_mut().skip(mark) {
+            o.instance_indices = o.instance_indices.iter()
+                .map(|&local_idx| scope[local_idx])
+                .collect();
+        }
+
+        elements.push(child);
     }
     Template::Array(elements)
 }

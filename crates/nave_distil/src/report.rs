@@ -124,11 +124,10 @@ fn summarise_hole(
     total: usize,
     repo_names: &[String],
 ) -> HoleReport {
-    // Tally distinct values (excluding None, which is "key absent").
+    let present_in = obs.values.len();
+
     let mut tally: BTreeMap<String, (Value, usize)> = BTreeMap::new();
-    let mut present_in = 0usize;
-    for val in obs.per_instance.iter().flatten() {
-        present_in += 1;
+    for val in &obs.values {
         let key = serde_json::to_string(val).unwrap_or_default();
         tally
             .entry(key)
@@ -139,8 +138,8 @@ fn summarise_hole(
     let mut distinct_values: Vec<(Value, usize)> = tally.into_values().collect();
     distinct_values.sort_by_key(|b| std::cmp::Reverse(b.1));
 
-    let kind = classify_hole(&obs.per_instance, present_in, total);
-    let source_hint = detect_source(&obs.per_instance, repo_names);
+    let kind = classify_hole(&obs.values, present_in, total);
+    let source_hint = detect_source(obs, repo_names);
 
     HoleReport {
         address,
@@ -152,14 +151,12 @@ fn summarise_hole(
     }
 }
 
-fn classify_hole(per_instance: &[Option<Value>], present_in: usize, total: usize) -> HoleKind {
+fn classify_hole(values: &[Value], present_in: usize, total: usize) -> HoleKind {
     if present_in < total {
-        // Leave it as a separate classification so callers can see the
-        // key-level optionality distinctly from value-type info.
         return HoleKind::OptionalKey;
     }
     let mut kinds: std::collections::HashSet<&'static str> = std::collections::HashSet::default();
-    for v in per_instance.iter().flatten() {
+    for v in values {
         kinds.insert(match v {
             Value::Null => "null",
             Value::Bool(_) => "bool",
@@ -179,31 +176,31 @@ fn classify_hole(per_instance: &[Option<Value>], present_in: usize, total: usize
         "num" => HoleKind::Number,
         "arr" => HoleKind::Array,
         "obj" => HoleKind::Object,
-        _ => HoleKind::String, // let "str" fall into the wildcard
+        _ => HoleKind::String,
     }
 }
 
-fn detect_source(per_instance: &[Option<Value>], repo_names: &[String]) -> SourceHint {
-    // DerivedFromRepoName: for every non-None slot i, value equals
-    // repo_names[i] (or a PEP 503-ish normalisation). Requires no Nones
-    // and at least 2 distinct repo names to be meaningful.
-    if per_instance.iter().all(Option::is_some) {
-        let all_match = per_instance.iter().enumerate().all(|(i, v)| {
-            match v.as_ref().and_then(Value::as_str) {
-                Some(s) => s == repo_names[i] || pep503_eq(s, &repo_names[i]),
+fn detect_source(obs: &Observations, repo_names: &[String]) -> SourceHint {
+    // DerivedFromRepoName: for every slot, value == repo_names[instance_index]
+    // (or a PEP 503 normalisation of it). Requires ≥ 2 instances and ≥ 2
+    // distinct repo names in the subset.
+    if obs.values.len() >= 2 {
+        let subset_repos: Vec<&str> = obs.instance_indices.iter()
+            .map(|&i| repo_names[i].as_str())
+            .collect();
+        let all_match = obs.values.iter().zip(subset_repos.iter())
+            .all(|(v, &repo)| match v.as_str() {
+                Some(s) => s == repo || pep503_eq(s, repo),
                 None => false,
-            }
-        });
-        let distinct_repos: std::collections::HashSet<&str> =
-            repo_names.iter().map(String::as_str).collect();
-        if all_match && distinct_repos.len() >= 2 {
+            });
+        let distinct: std::collections::HashSet<&str> = subset_repos.iter().copied().collect();
+        if all_match && distinct.len() >= 2 {
             return SourceHint::DerivedFromRepoName;
         }
     }
 
-    // ConstantWhenPresent: all non-None slots have the same value.
-    let presents: Vec<&Value> = per_instance.iter().flatten().collect();
-    if presents.len() >= 2 && presents.windows(2).all(|w| w[0] == w[1]) {
+    // ConstantWhenPresent: all observed values equal.
+    if obs.values.len() >= 2 && obs.values.windows(2).all(|w| w[0] == w[1]) {
         return SourceHint::ConstantWhenPresent;
     }
 
