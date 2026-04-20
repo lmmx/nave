@@ -53,38 +53,7 @@ So far the following is implemented:
   most recent version, not its full history)
 
 
-```mermaid
-flowchart TB
-
-config["~/.config/nave.toml<br/>tracked_paths, filters"]
-
-github["GitHub API"]
-
-discover["discover"]
-
-cache_base["~/.cache/nave/"]
-
-subgraph repo["repos/{username}/{repo_id}/"]
-    meta["meta.toml"]
-    tracked["tracked.toml"]
-
-    subgraph checkout["checkout/"]
-        files["pyproject.toml<br/>.github/workflows/*<br/>..."]
-    end
-end
-
-validate["validate<br/>(stub)"]
-
-config --> discover
-github --> discover
-
-discover --> cache_base
-cache_base --> repo
-
-repo --> validate
-```
-
-## Try it
+## Usage Guide
 
 ```bash
 # Bootstrap config
