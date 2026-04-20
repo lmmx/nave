@@ -178,7 +178,9 @@ pub(crate) fn build_factored_report(
 }
 
 /// Re-anti-unify only the values provided. Used for sub-cohorts.
-pub(crate) fn anti_unify_subset(values: &[Value]) -> (crate::antiunify::Template, Vec<Observations>) {
+pub(crate) fn anti_unify_subset(
+    values: &[Value],
+) -> (crate::antiunify::Template, Vec<Observations>) {
     anti_unify(values)
 }
 

@@ -126,7 +126,7 @@ fn augment_with_factors(group: &mut report::GroupReport, instances: &[FileInstan
     // Re-derive the things factor detection needs. This is wasted work
     // relative to a deeper integration but keeps the factor module
     // self-contained.
-    
+
     let values: Vec<serde_json::Value> = instances
         .iter()
         .map(to_common_tree_safe)
