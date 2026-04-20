@@ -24,7 +24,7 @@ use nave_config::{
 };
 use nave_parse::{Document, parse_file};
 
-/// Walk the cache and produce a buildlation report.
+/// Walk the cache and produce a build report.
 pub fn run_build(cache_root: &Path, cfg: &NaveConfig) -> Result<BuildReport> {
     let repos_root = cache_root.join("repos");
     let mut report = BuildReport::default();
