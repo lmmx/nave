@@ -81,31 +81,31 @@ repo --> validate
 
 ```bash
 # Bootstrap config
-cargo run --bin nave -- init --no-interaction
+nave init --no-interaction
 cat ~/.config/nave.toml
 #   Commented header explaining tracked_paths globs, then the
 #   [github], [cache], [discovery] sections.
 
 # Discover repos + tracked files
-cargo run --bin nave -- discover
+nave discover
 #   Example summary: repos=240 with_tracked=138 tracked_files=377 auth=gh
 ls ~/.cache/nave/repos/<username>/
 
 # Re-run incrementally — only repos pushed since last run get re-checked
-cargo run --bin nave -- discover
+nave discover
 #   incremental=true
 
 # Prune repos no longer matching filters (forks, archived, narrowed tracked_paths)
 # Note: only effective on a full (non-incremental) run.
 rm ~/.cache/nave/meta.toml   # force full listing
-cargo run --bin nave -- discover --prune
+nave discover --prune
 
 # Fetch the tracked files themselves via sparse checkout
-cargo run --bin nave -- fetch
+nave fetch
 ls ~/.cache/nave/repos/<username>/<reponame>/checkout/
 
 # Verbose logging
-NAVE_LOG=debug cargo run --bin nave -- fetch
+NAVE_LOG=debug nave fetch
 ```
 
 ### Template anti-unification
@@ -114,13 +114,13 @@ After acquiring your repo data, the fun part is modelling it.
 To get the simplest possible description, we use anti-unification.
 
 ```bash
-cargo run --bin nave -- distil
+nave distil
 ```
 
 It's easiest to show how that works with a relatively trivial format like Dependabot:
 
 ```bash
-cargo run --bin nave -- distil --filter dependabot
+nave distil --filter dependabot
 ```
 
 ```yaml
@@ -150,7 +150,7 @@ cargo run --bin nave -- distil --filter dependabot
 Note you can also access this as JSON:
 
 ```
-cargo run --bin nave -- distil --json | jq '.groups[] | select(.pattern | contains("dependabot"))'
+nave distil --json | jq '.groups[] | select(.pattern | contains("dependabot"))'
 ```
 
 ## Configuration
