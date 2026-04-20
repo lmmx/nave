@@ -1,3 +1,5 @@
+import ".just/ship.just"
+
 set shell := ["bash", "-cu"]
 
 default:
@@ -8,7 +10,7 @@ build:
     cargo build --workspace
 
 # Release build
-release:
+build-release:
     cargo build --workspace --release
 
 # Run the binary
