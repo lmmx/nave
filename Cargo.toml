@@ -23,7 +23,7 @@ globset = {version = "0.4"}
 serde = {version = "1.0", features = ["derive"]}
 toml = {version = "0.8"}
 # Use rustls to avoid OpenSSL headaches on CI/various OSes
-reqwest = {version = "0.13", default-features = false, features = ["rustls-no-provider", "query", "json", "gzip"]}
+reqwest = {version = "0.13", default-features = false, features = ["rustls", "charset", "http2", "query", "json", "gzip"]}
 tokio = {version = "1", features = ["rt-multi-thread", "macros", "fs", "process", "sync"]}
 serde_json = {version = "1.0"}
 serde_norway = {version = "0.9"}
