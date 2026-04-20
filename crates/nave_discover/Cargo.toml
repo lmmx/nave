@@ -1,24 +1,23 @@
-[package]
-name = "nave_discover"
-version = "0.0.0"
-edition.workspace = true
-rust-version.workspace = true
-homepage.workspace = true
-repository.workspace = true
-authors.workspace = true
-license.workspace = true
-description = "Repository discovery for nave"
-
 [dependencies]
-nave_config = { workspace = true }
-nave_github = { workspace = true }
-
-anyhow = { workspace = true }
-serde = { workspace = true }
-time = { workspace = true }
-tokio = { workspace = true }
-tracing = { workspace = true }
-futures = { workspace = true }
+nave_config = {workspace = true}
+nave_github = {workspace = true}
+anyhow = {workspace = true}
+serde = {workspace = true}
+time = {workspace = true}
+tokio = {workspace = true}
+tracing = {workspace = true}
+futures = {workspace = true}
 
 [lints]
 workspace = true
+
+[package]
+name = "nave_discover"
+version = "0.0.0"
+description = "Repository discovery for nave"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true

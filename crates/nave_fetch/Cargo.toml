@@ -1,21 +1,20 @@
-[package]
-name = "nave_fetch"
-version = "0.0.0"
-edition.workspace = true
-rust-version.workspace = true
-homepage.workspace = true
-repository.workspace = true
-authors.workspace = true
-license.workspace = true
-description = "Sparse-checkout fetcher for discovered repos"
-
 [dependencies]
-nave_config = { workspace = true }
-
-anyhow = { workspace = true }
-futures = { workspace = true }
-tokio = { workspace = true }
-tracing = { workspace = true }
+nave_config = {workspace = true}
+anyhow = {workspace = true}
+futures = {workspace = true}
+tokio = {workspace = true}
+tracing = {workspace = true}
 
 [lints]
 workspace = true
+
+[package]
+name = "nave_fetch"
+version = "0.0.0"
+description = "Sparse-checkout fetcher for discovered repos"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true

@@ -4,28 +4,28 @@ build-backend = "maturin"
 
 [dependency-groups]
 dev = [
-  "maturin[patchelf]>=1.13",
+  "maturin[patchelf]>=1.13"
 ]
 
 [project]
 name = "nave"
 version = "0.0.1"
 description = "Fleet-level modelling and operations for OSS package repos, in Rust."
-authors = [{ name = "Louis Maddox", email = "louismmx@gmail.com" }]
+authors = [{name = "Louis Maddox", email = "louismmx@gmail.com"}]
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["fleet-ops", "packaging", "github", "dependabot"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Rust",
+  "Development Status :: 2 - Pre-Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Rust"
 ]
 
 [project.urls]

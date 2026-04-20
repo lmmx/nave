@@ -1,40 +1,39 @@
-[package]
-name = "nave"
-version = "0.0.0"
-edition.workspace = true
-rust-version.workspace = true
-homepage.workspace = true
-documentation.workspace = true
-repository.workspace = true
-authors.workspace = true
-license.workspace = true
-description = "Fleet-level modelling and operations for OSS package repos"
-readme = "../../README.md"
-
 [[bin]]
 name = "nave"
 path = "src/main.rs"
 
 [dependencies]
-nave_config = { workspace = true }
-nave_github = { workspace = true }
-nave_discover = { workspace = true }
-nave_fetch = { workspace = true }
-nave_validate = { workspace = true }
-nave_distil = { workspace = true }
-
-anyhow = { workspace = true }
-clap = { workspace = true }
-tokio = { workspace = true }
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
-dialoguer = { workspace = true }
-serde = { workspace = true }
-toml = { workspace = true }
-serde_json = { workspace = true }
+nave_config = {workspace = true}
+nave_github = {workspace = true}
+nave_discover = {workspace = true}
+nave_fetch = {workspace = true}
+nave_validate = {workspace = true}
+nave_distil = {workspace = true}
+anyhow = {workspace = true}
+clap = {workspace = true}
+tokio = {workspace = true}
+tracing = {workspace = true}
+tracing-subscriber = {workspace = true}
+dialoguer = {workspace = true}
+serde = {workspace = true}
+toml = {workspace = true}
+serde_json = {workspace = true}
 
 [dev-dependencies]
-cargo-husky = { version = "1.5.0", default-features = false, features = ["user-hooks"] }
+cargo-husky = {version = "1.5.0", default-features = false, features = ["user-hooks"]}
 
 [lints]
 workspace = true
+
+[package]
+name = "nave"
+version = "0.0.0"
+description = "Fleet-level modelling and operations for OSS package repos"
+readme = "../../README.md"
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true

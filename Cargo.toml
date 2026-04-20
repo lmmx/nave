@@ -1,6 +1,49 @@
+[profile.release]
+lto = "fat"
+codegen-units = 16
+
 [workspace]
 members = ["crates/*"]
 resolver = "2"
+
+[workspace.dependencies]
+nave = {path = "crates/nave"}
+nave_config = {path = "crates/nave_config"}
+nave_github = {path = "crates/nave_github"}
+nave_discover = {path = "crates/nave_discover"}
+nave_fetch = {path = "crates/nave_fetch"}
+nave_parse = {path = "crates/nave_parse"}
+nave_validate = {path = "crates/nave_validate"}
+nave_distil = {path = "crates/nave_distil"}
+anyhow = {version = "1.0.80"}
+clap = {version = "4.5.3", features = ["derive"]}
+figment2 = {version = "0.11", features = ["toml", "env"]}
+globset = {version = "0.4"}
+serde = {version = "1.0", features = ["derive"]}
+toml = {version = "0.8"}
+# Use rustls to avoid OpenSSL headaches on CI/various OSes
+reqwest = {version = "0.12", default-features = false, features = ["rustls-tls", "json", "gzip"]}
+tokio = {version = "1", features = ["rt-multi-thread", "macros", "fs", "process", "sync"]}
+serde_json = {version = "1.0"}
+serde_norway = {version = "0.9"}
+time = {version = "0.3", features = ["serde-well-known", "formatting", "parsing", "macros"]}
+dirs = {version = "5"}
+dialoguer = {version = "0.11"}
+tracing = {version = "0.1"}
+tracing-subscriber = {version = "0.3", features = ["env-filter"]}
+thiserror = {version = "1"}
+futures = {version = "0.3"}
+
+[workspace.lints.clippy]
+pedantic = {level = "warn", priority = -2}
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+
+[workspace.lints.rust]
+unsafe_code = "warn"
+unreachable_pub = "warn"
 
 [workspace.package]
 edition = "2024"
@@ -10,47 +53,3 @@ documentation = "https://github.com/lmmx/nave"
 repository = "https://github.com/lmmx/nave"
 authors = ["Louis Maddox <louismmx@gmail.com>"]
 license = "MIT"
-
-[workspace.dependencies]
-nave = { path = "crates/nave" }
-nave_config = { path = "crates/nave_config" }
-nave_github = { path = "crates/nave_github" }
-nave_discover = { path = "crates/nave_discover" }
-nave_fetch = { path = "crates/nave_fetch" }
-nave_parse = { path = "crates/nave_parse" }
-nave_validate = { path = "crates/nave_validate" }
-nave_distil = { path = "crates/nave_distil" }
-
-anyhow = { version = "1.0.80" }
-clap = { version = "4.5.3", features = ["derive"] }
-figment2 = { version = "0.11", features = ["toml", "env"] }
-globset = { version = "0.4" }
-serde = { version = "1.0", features = ["derive"] }
-toml = { version = "0.8" }
-# Use rustls to avoid OpenSSL headaches on CI/various OSes
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "gzip"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs", "process", "sync"] }
-serde_json = { version = "1.0" }
-serde_norway = { version = "0.9" }
-time = { version = "0.3", features = ["serde-well-known", "formatting", "parsing", "macros"] }
-dirs = { version = "5" }
-dialoguer = { version = "0.11" }
-tracing = { version = "0.1" }
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-thiserror = { version = "1" }
-futures = { version = "0.3" }
-
-[workspace.lints.rust]
-unsafe_code = "warn"
-unreachable_pub = "warn"
-
-[workspace.lints.clippy]
-pedantic = { level = "warn", priority = -2 }
-missing_errors_doc = "allow"
-missing_panics_doc = "allow"
-module_name_repetitions = "allow"
-must_use_candidate = "allow"
-
-[profile.release]
-lto = "fat"
-codegen-units = 16

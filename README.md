@@ -135,11 +135,11 @@ nave distil --filter dependabot
   instances: 9
 
   template:
-    updates: 
+    updates:
       - cooldown?: ⟨?0⟩
         directory: "/"
         package-ecosystem: ⟨?1⟩
-        schedule: 
+        schedule:
           interval: ⟨?2⟩
     version: 2
 

@@ -44,7 +44,7 @@ def find_nave_bin() -> str:
 
     locations = "\n".join(f" - {target}" for target in seen)
     raise NaveNotFound(
-        f"Could not find the nave binary in any of the following locations:\n{locations}\n"
+        f"Could not find the nave binary in any of the following locations:\n{locations}\n",
     )
 
 
@@ -78,8 +78,7 @@ def _join(path: str | None, *parts: str) -> str | None:
 
 
 def _user_scheme() -> str:
-    if sys.version_info >= (3, 10):
-        return sysconfig.get_preferred_scheme("user")
+    return sysconfig.get_preferred_scheme("user")
     if os.name == "nt":
         return "nt_user"
     if sys.platform == "darwin" and sys._framework:  # type: ignore[attr-defined]
