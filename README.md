@@ -216,6 +216,9 @@ This repo is a Rust workspace of focused crates:
 - `nave_github`: GitHub REST client with auth probing
 - `nave_discover`: orchestrates repo listing, tree walking, and cache updates
 - `nave_fetch`: sparse-checkout fetcher
+- `nave_parse`: YAML/TOML de/serialisation
+- `nave_validate`: validation of parsed templates
+- `nave_distil`: find minimal groupings of templates by anti-unification
 
 The Python entry point is a thin `maturin`-packaged shim (`python/nave/`) that finds and
 execs the Rust binary (the same pattern used by the likes of `uv` and `ruff`).
