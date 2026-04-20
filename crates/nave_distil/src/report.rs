@@ -122,10 +122,7 @@ pub(crate) fn build_group_from_values(
     }
 }
 
-pub(crate) fn build_group(
-    pattern: &str,
-    instances: &[FileInstance],
-) -> Result<GroupReport> {
+pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> Result<GroupReport> {
     let values: Vec<Value> = instances
         .iter()
         .map(|inst| to_common_tree(&inst.doc))

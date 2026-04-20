@@ -148,12 +148,8 @@ fn augment_with_factors(group: &mut report::GroupReport, instances: &[FileInstan
 
     let factor_groups = crate::factor::find_factors(&presences);
     for members in factor_groups {
-        let factored = crate::factor::build_factored_report(
-            &members,
-            &presences,
-            instances,
-            &values,
-        );
+        let factored =
+            crate::factor::build_factored_report(&members, &presences, instances, &values);
         group.factors.push(factored);
     }
     Ok(())
