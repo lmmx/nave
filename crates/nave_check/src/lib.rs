@@ -22,7 +22,7 @@ pub struct FileResult {
 }
 
 #[derive(Debug, Default, Serialize)]
-pub struct ValidationReport {
+pub struct CheckReport {
     pub results: Vec<FileResult>,
     pub totals: Totals,
 }
@@ -38,8 +38,8 @@ pub struct Totals {
     pub missing: usize,
 }
 
-pub fn run_check(cache_root: &Path) -> Result<ValidationReport> {
-    let mut report = ValidationReport::default();
+pub fn run_check(cache_root: &Path) -> Result<CheckReport> {
+    let mut report = CheckReport::default();
     let repos_root = cache_root.join("repos");
     if !repos_root.exists() {
         return Ok(report);
@@ -69,7 +69,7 @@ fn check_repo(
     owner: &str,
     name: &str,
     repo_dir: &Path,
-    report: &mut ValidationReport,
+    report: &mut CheckReport,
 ) -> Result<()> {
     let Some(meta) = read_repo_meta(cache_root, owner, name)? else {
         debug!(%owner, %name, "no repo meta; skipping");

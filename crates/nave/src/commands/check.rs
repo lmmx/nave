@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Args;
 
-use nave_check::{Totals, ValidationReport, run_check};
+use nave_check::{Totals, CheckReport, run_check};
 use nave_config::{NaveConfig, cache_root, load_default};
 
 #[derive(Args, Debug)]
@@ -48,7 +48,7 @@ pub(crate) async fn run(args: CheckArgs) -> Result<()> {
     Ok(())
 }
 
-fn print_text(report: &ValidationReport, failures_only: bool) {
+fn print_text(report: &CheckReport, failures_only: bool) {
     for r in &report.results {
         if failures_only && r.outcome == "ok" {
             continue;
