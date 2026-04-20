@@ -200,6 +200,28 @@ nave search maturin workflow:pytest --sort pushed-at --limit 1
 
 You can also get the results as JSON with `--json`, or count them with `--count`.
 
+### Field search
+
+It's often useful to be able to look for the specific parts of the config files
+that a search term appears in, which you can query for by specifying `--output holes`.
+
+In this example we filter out the workflow fields, i.e. we look for the pyproject
+TOML fields in repos which have CI tests:
+
+```bash
+nave search maturin workflow:pytest --output holes | rg -v workflows
+```
+
+```
+pyproject.toml  build-system.build-backend  (2 hits)
+pyproject.toml  build-system.requires[0]  (2 hits)
+pyproject.toml  dependency-groups.build[0]  (2 hits)
+pyproject.toml  dependency-groups.dev[0]  (2 hits)
+pyproject.toml  tool.maturin  (2 hits)
+```
+
+The `--explain` and `--json` flags work here too.
+
 ## Configuration
 
 All settings live in `~/.config/nave.toml`. The defaults are deliberately visible at

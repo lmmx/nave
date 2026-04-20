@@ -46,6 +46,7 @@ pub(crate) struct SearchArgs {
 pub(crate) enum Projection {
     Repos,
     Files,
+    Holes,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -77,6 +78,7 @@ pub(crate) async fn run(args: SearchArgs) -> Result<()> {
     let options = SearchOptions {
         terms,
         ignore_case: args.ignore_case,
+        enrich_holes: matches!(args.output, Projection::Holes),
     };
 
     let mut report = run_search(&root, &cfg, &options)?;
@@ -100,6 +102,7 @@ pub(crate) async fn run(args: SearchArgs) -> Result<()> {
                     .count();
                 println!("{n}");
             }
+            Projection::Holes => println!("{}", report.holes.len()),
         }
         return Ok(());
     }
@@ -107,6 +110,7 @@ pub(crate) async fn run(args: SearchArgs) -> Result<()> {
     match args.output {
         Projection::Repos => print_repos(&report, args.explain),
         Projection::Files => print_files(&report, args.explain),
+        Projection::Holes => print_holes(&report, args.explain),
     }
 
     Ok(())
@@ -166,6 +170,33 @@ fn print_files(report: &SearchReport, explain: bool) {
                 for (term, needle) in terms {
                     println!("    {term} (matched {needle:?})");
                 }
+            }
+        }
+    }
+}
+
+fn print_holes(report: &SearchReport, explain: bool) {
+    use std::collections::BTreeMap;
+
+    // Group holes by (pattern, address) so the output shows the
+    // structural positions as the primary unit, with repos as evidence.
+    let mut by_addr: BTreeMap<(&str, &str), Vec<&nave_search::HoleHit>> = BTreeMap::new();
+    for h in &report.holes {
+        by_addr
+            .entry((h.pattern.as_str(), h.address.as_str()))
+            .or_default()
+            .push(h);
+    }
+
+    for ((pattern, address), hits) in by_addr {
+        println!("{pattern}  {address}  ({} hits)", hits.len());
+        if explain {
+            for h in hits {
+                println!(
+                    "    {}/{} :: {}  (needle: {:?})",
+                    h.owner, h.repo, h.file_path, h.needle,
+                );
+                println!("        {}", h.snippet);
             }
         }
     }

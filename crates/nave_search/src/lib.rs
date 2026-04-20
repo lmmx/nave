@@ -1,5 +1,6 @@
 //! Predicate-based search over the nave cache.
 
+pub mod holes;
 pub mod term;
 
 use std::path::Path;
@@ -14,6 +15,7 @@ use nave_config::{
     cache::{RepoMeta, read_repo_meta, read_tracked},
 };
 
+pub use holes::HoleHit;
 pub use term::Term;
 
 #[derive(Debug, Clone, Serialize)]
@@ -24,6 +26,8 @@ pub struct SearchReport {
     pub repos_considered: usize,
     /// Number of repos skipped because no checkout existed.
     pub repos_without_checkout: usize,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub holes: Vec<HoleHit>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -55,6 +59,8 @@ pub struct FileMatch {
 pub struct SearchOptions {
     pub terms: Vec<Term>,
     pub ignore_case: bool,
+    /// Whether to enrich results with hole-level addresses.
+    pub enrich_holes: bool,
 }
 
 pub fn run_search(
@@ -67,6 +73,7 @@ pub fn run_search(
         repos: Vec::new(),
         repos_considered: 0,
         repos_without_checkout: 0,
+        holes: Vec::new(),
     };
 
     if !repos_root.exists() {
@@ -116,6 +123,11 @@ pub fn run_search(
                 report.repos.push(matched);
             }
         }
+    }
+
+    if options.enrich_holes && !report.repos.is_empty() {
+        let matched_files = collect_matched_files(&report, cache_root, cfg);
+        report.holes = holes::enrich_with_holes(cache_root, cfg, &matched_files)?;
     }
 
     Ok(report)
@@ -187,4 +199,60 @@ fn classify<'a>(pattern_matchers: &'a [(String, PathMatcher)], path: &str) -> Op
         .iter()
         .find(|(_, m)| m.is_match(path))
         .map(|(p, _)| p.as_str())
+}
+
+fn collect_matched_files(
+    report: &SearchReport,
+    cache_root: &Path,
+    cfg: &NaveConfig,
+) -> Vec<holes::MatchedFile> {
+    use std::collections::BTreeSet;
+
+    let mut out: Vec<holes::MatchedFile> = Vec::new();
+    let mut seen: BTreeSet<(String, String, String, String)> = BTreeSet::new();
+
+    for r in &report.repos {
+        let checkout = cache_root
+            .join("repos")
+            .join(&r.owner)
+            .join(&r.repo)
+            .join("checkout");
+        for hit in &r.hits {
+            for fm in &hit.files {
+                let key = (
+                    r.owner.clone(),
+                    r.repo.clone(),
+                    fm.path.clone(),
+                    fm.matched_needle.clone(),
+                );
+                if !seen.insert(key) {
+                    continue;
+                }
+                let Ok(bytes) = std::fs::read(checkout.join(&fm.path)) else {
+                    continue;
+                };
+                let pattern =
+                    pattern_for_path(cfg, &fm.path).unwrap_or_else(|| "(unknown)".to_string());
+                out.push(holes::MatchedFile {
+                    owner: r.owner.clone(),
+                    repo: r.repo.clone(),
+                    file_path: fm.path.clone(),
+                    pattern,
+                    bytes,
+                    matched_needle: fm.matched_needle.clone(),
+                });
+            }
+        }
+    }
+    out
+}
+
+fn pattern_for_path(cfg: &NaveConfig, path: &str) -> Option<String> {
+    for pat in &cfg.discovery.tracked_paths {
+        let m = PathMatcher::new(std::slice::from_ref(pat), cfg.discovery.case_insensitive).ok()?;
+        if m.is_match(path) {
+            return Some(pat.clone());
+        }
+    }
+    None
 }
