@@ -84,7 +84,7 @@ pub(crate) fn build_group_from_values(
     pattern: &str,
     instances: &[FileInstance],
     values: &[Value],
-) -> Result<GroupReport> {
+) -> GroupReport {
     let (template, observations) = anti_unify(values);
 
     let mut hole_addresses: BTreeMap<usize, String> = BTreeMap::new();
@@ -105,7 +105,7 @@ pub(crate) fn build_group_from_values(
 
     let template_text = render_template(&template, 0);
 
-    Ok(GroupReport {
+    GroupReport {
         pattern: pattern.to_string(),
         instance_count: total,
         instances: instances
@@ -119,15 +119,18 @@ pub(crate) fn build_group_from_values(
         template_text,
         holes,
         factors: Vec::new(),
-    })
+    }
 }
 
-pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> Result<GroupReport> {
+pub(crate) fn build_group(
+    pattern: &str,
+    instances: &[FileInstance],
+) -> Result<GroupReport> {
     let values: Vec<Value> = instances
         .iter()
         .map(|inst| to_common_tree(&inst.doc))
         .collect::<Result<Vec<_>>>()?;
-    build_group_from_values(pattern, instances, &values)
+    Ok(build_group_from_values(pattern, instances, &values))
 }
 
 fn summarise_hole(
