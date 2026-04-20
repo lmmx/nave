@@ -1,5 +1,12 @@
 # nave
 
+<!-- [![downloads](https://static.pepy.tech/badge/nave/month)](https://pepy.tech/project/nave) -->
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![PyPI](https://img.shields.io/pypi/v/nave.svg)](https://pypi.org/project/nave)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/nave.svg)](https://pypi.org/project/nave)
+[![License](https://img.shields.io/pypi/l/nave.svg)](https://pypi.python.org/pypi/nave)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/lmmx/nave/master.svg)](https://results.pre-commit.ci/latest/github/lmmx/nave/master)
+
 Fleet-level modelling and operations for OSS package repos.
 
 <div align="center">
