@@ -23,7 +23,7 @@ use nave_github::{
 /// at ~100 concurrent requests; 8 is conservative and plenty for 40–50 repos.
 const TREE_CONCURRENCY: usize = 8;
 
-pub struct ScanyReport {
+pub struct ScanReport {
     pub repos_seen: usize,
     pub repos_with_tracked_files: usize,
     pub tracked_file_count: usize,
@@ -90,7 +90,7 @@ pub async fn run_scan(
     cache_root: &Path,
     username: &str,
     prune: bool,
-) -> Result<ScanyReport> {
+) -> Result<ScanReport> {
     let auth = detect_auth(cfg.github.use_gh_cli).await;
     let auth_label = auth.label().to_string();
     let client = GithubClient::new(&cfg.github.api_base, auth)?;
@@ -220,7 +220,7 @@ pub async fn run_scan(
         warn!("scan completed anonymously; results may be rate-limited");
     }
 
-    Ok(ScanyReport {
+    Ok(ScanReport {
         repos_seen: results.len(),
         repos_with_tracked_files: repos_with_tracked,
         tracked_file_count: tracked_total,

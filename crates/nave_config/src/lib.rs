@@ -27,7 +27,7 @@ pub use crate::paths::{cache_root, user_config_path};
 pub struct NaveConfig {
     pub github: GithubConfig,
     pub cache: CacheConfig,
-    pub scan: ScanyConfig,
+    pub scan: ScanConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,7 +66,7 @@ pub struct CacheConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-pub struct ScanyConfig {
+pub struct ScanConfig {
     /// Glob patterns for files to track, relative to repo root.
     ///
     /// Globs follow gitignore-ish semantics:
@@ -87,7 +87,7 @@ pub struct ScanyConfig {
     pub exclude_forks: bool,
 }
 
-impl Default for ScanyConfig {
+impl Default for ScanConfig {
     fn default() -> Self {
         Self {
             tracked_paths: default_tracked_paths(),
