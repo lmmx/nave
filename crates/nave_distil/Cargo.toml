@@ -11,7 +11,7 @@ workspace = true
 
 [package]
 name = "nave_distil"
-version = "0.0.0"
+version = "0.0.2"
 description = "Anti-unification over tracked config files"
 authors.workspace = true
 edition.workspace = true

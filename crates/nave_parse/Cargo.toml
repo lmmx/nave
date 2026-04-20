@@ -10,7 +10,7 @@ workspace = true
 
 [package]
 name = "nave_parse"
-version = "0.0.0"
+version = "0.0.2"
 description = "Generic parse + round-trip for tracked config files"
 authors.workspace = true
 edition.workspace = true

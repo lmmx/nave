@@ -890,7 +890,7 @@ dependencies = [
 
 [[package]]
 name = "nave"
-version = "0.0.0"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "cargo-husky",
@@ -913,7 +913,7 @@ dependencies = [
 
 [[package]]
 name = "nave_config"
-version = "0.0.0"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "dirs",
@@ -927,7 +927,7 @@ dependencies = [
 
 [[package]]
 name = "nave_discover"
-version = "0.0.0"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "futures",
@@ -941,7 +941,7 @@ dependencies = [
 
 [[package]]
 name = "nave_distil"
-version = "0.0.0"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "nave_config",
@@ -953,7 +953,7 @@ dependencies = [
 
 [[package]]
 name = "nave_fetch"
-version = "0.0.0"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "futures",
@@ -964,7 +964,7 @@ dependencies = [
 
 [[package]]
 name = "nave_github"
-version = "0.0.0"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "futures",
@@ -979,7 +979,7 @@ dependencies = [
 
 [[package]]
 name = "nave_parse"
-version = "0.0.0"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "serde",
@@ -990,7 +990,7 @@ dependencies = [
 
 [[package]]
 name = "nave_search"
-version = "0.0.0"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "nave_config",
@@ -1004,7 +1004,7 @@ dependencies = [
 
 [[package]]
 name = "nave_validate"
-version = "0.0.0"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "nave_config",

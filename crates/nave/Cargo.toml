@@ -28,7 +28,7 @@ workspace = true
 
 [package]
 name = "nave"
-version = "0.0.0"
+version = "0.0.2"
 description = "Fleet-level modelling and operations for OSS package repos"
 readme = "../../README.md"
 authors.workspace = true
