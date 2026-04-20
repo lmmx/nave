@@ -44,7 +44,7 @@ impl GitRunner {
             Command::new("git")
                 .arg("-C")
                 .arg(repo)
-                .arg("pull")
+                .arg("fetch")
                 .arg("--depth=1")
                 .arg("origin"),
             "git pull",
