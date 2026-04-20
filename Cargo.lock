@@ -901,6 +901,7 @@ dependencies = [
  "nave_distil",
  "nave_fetch",
  "nave_github",
+ "nave_search",
  "nave_validate",
  "serde",
  "serde_json",
@@ -985,6 +986,18 @@ dependencies = [
  "serde_norway",
  "thiserror 1.0.69",
  "toml",
+]
+
+[[package]]
+name = "nave_search"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "nave_config",
+ "serde",
+ "serde_json",
+ "time",
+ "tracing",
 ]
 
 [[package]]

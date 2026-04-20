@@ -1,0 +1,21 @@
+[dependencies]
+nave_config = {workspace = true}
+anyhow = {workspace = true}
+serde = {workspace = true}
+serde_json = {workspace = true}
+time = {workspace = true}
+tracing = {workspace = true}
+
+[lints]
+workspace = true
+
+[package]
+name = "nave_search"
+version = "0.0.0"
+description = "Predicate-based repo and file search over the nave cache"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
