@@ -1,7 +1,7 @@
 //! Hole-address enrichment for `--output holes`.
 //!
 //! Given the per-file matches from `match_repo`, we re-parse each
-//! matched file, walk the distil template for that file's group, and
+//! matched file, walk the build template for that file's group, and
 //! find the addresses where the matched needle appears in this specific
 //! file's contribution. This gives the user "where in the configured
 //! template did my match land" without showing data from other repos.
@@ -13,12 +13,12 @@ use anyhow::Result;
 use serde::Serialize;
 use serde_json::Value;
 
+use nave_build::{GroupReport, run_build};
 use nave_config::NaveConfig;
-use nave_distil::{GroupReport, run_distil};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct HoleHit {
-    /// Tracked-path pattern (the distil group this address belongs to).
+    /// Tracked-path pattern (the build group this address belongs to).
     pub pattern: String,
     /// Address in the template, e.g. `updates[0].package-ecosystem`.
     pub address: String,
@@ -35,7 +35,7 @@ pub struct HoleHit {
 
 /// Enrich a set of file matches with hole-level addresses.
 ///
-/// For each matched file, we parse it, look up its distil group, and
+/// For each matched file, we parse it, look up its build group, and
 /// walk the template to find every address where the file's own value
 /// at that address contains one of the matched needles.
 pub fn enrich_with_holes(
@@ -43,9 +43,9 @@ pub fn enrich_with_holes(
     cfg: &NaveConfig,
     matches: &[MatchedFile],
 ) -> Result<Vec<HoleHit>> {
-    // Run distil once — we need its templates regardless of which
+    // Run build once — we need its templates regardless of which
     // files matched, because the template structure is global.
-    let report = run_distil(cache_root, cfg)?;
+    let report = run_build(cache_root, cfg)?;
 
     // Index groups by pattern for fast lookup.
     let groups_by_pattern: BTreeMap<&str, &GroupReport> = report
@@ -137,7 +137,7 @@ fn parse_to_json(bytes: &[u8], path: &str) -> Option<Value> {
     };
 
     let doc = parse_bytes(bytes, fmt).ok()?;
-    nave_distil::to_common_tree(&doc).ok()
+    nave_build::to_common_tree(&doc).ok()
 }
 
 /// Walk the JSON value tree. For each node:

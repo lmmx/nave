@@ -1,102 +1,51 @@
 # nave
 
-<!-- [![downloads](https://static.pepy.tech/badge/nave/month)](https://pepy.tech/project/nave) -->
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![PyPI](https://img.shields.io/pypi/v/nave.svg)](https://pypi.org/project/nave)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/nave.svg)](https://pypi.org/project/nave)
 [![License](https://img.shields.io/pypi/l/nave.svg)](https://pypi.python.org/pypi/nave)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/lmmx/nave/master.svg)](https://results.pre-commit.ci/latest/github/lmmx/nave/master)
 
-Fleet-level modelling and operations for OSS package repos.
+**Fleet-level operations for OSS package repos.**
+
+If you maintain multiple repos, each with its own `pyproject.toml`, CI workflows, dependabot config,
+pre-commit hooks, and so on, `nave` lets you query and manage these as a _fleet_.
+
+Examples of questions `nave` is built to answer:
+
+- Which of my repos use `maturin` *and* have pytest in CI?
+- What's the shared skeleton across all my dependabot configs, and where do they diverge?
+- Which repos still pin an old Python version in `pyproject.toml`?
+
+If you have one repo, or a monorepo, this isn't for you. If you have a sprawl of
+related-but-drifting configs and you've written shell loops over the GitHub API to
+keep track of them, read on.
 
 <div align="center">
-  <img width="200" height="200" alt="nave logo" src="https://github.com/user-attachments/assets/15aaaa82-0300-45ca-a616-8535cf46c416" />
+  <img width="160" height="160" alt="nave logo" src="https://github.com/user-attachments/assets/15aaaa82-0300-45ca-a616-8535cf46c416" />
 </div>
 
-Rust core (`nave-rs`), Python entry point (`nave`).
+Nave is built in Rust (`nave-rs`) with a Python package as a command line entry point (`nave`).
+Background on the design is in the [Fleet Ops](https://cog.spin.systems/fleet-ops) blog series.
 
-## Motivation
-
-See the blog series: [Fleet Ops](https://cog.spin.systems/fleet-ops).
-
-Most OSS package development happens across dozens of small repos, each with its own
-`pyproject.toml`, CI workflows, dependabot config, and pre-commit hooks. Managing them
-as a fleet — enforcing consistency, rolling out changes, spotting drift — often
-means ad-hoc shell loops over the GitHub API. `nave` is my attempt at a control
-plane for these release process artifacts.
-
-The goal is to model these configs declaratively, so as to facilitate query and bulk-edit
-operations across repos. To achieve that, `nave` first validates that what's on disk matches
-what you've specified (WIP!).
-
-## Status
-
-So far the following is implemented:
-
-- **`nave init`** bootstrap step on the first-run, writes `~/.config/nave.toml`
-- **`nave discover`** enumerates a user's public repos, walks their file trees, caches
-  metadata for any file matching `tracked_paths` (globs supported)
-- **`nave fetch`** sparse-checkouts discovered repos into `~/.cache/nave/`, pulling
-  only the tracked files
-- **`nave validate`** (TODO) will validate tracked configs against the (not-yet-written)
-  fleet model
-
-## Pipeline
-
-- Running the `init` entrypoint sets up the user-level config
-- Running the `discover` entrypoint uses that config (or writes it if called first)
-  to enumerate all the GitHub repos for the user, and recording the default branch,
-  a SHA for the repo tree, and when it was last pushed to. For each of the files in the repo tree,
-  it records the SHAs of each file in the tracked file set
-- Running the `fetch` entrypoint pulls down those files that were marked as tracked via
-  a sparse clone (i.e. just those specific files) into a shallow clone of the repo (i.e. just the
-  most recent version, not its full history)
-
-
-## Usage Guide
+## Install
 
 ```bash
-# Bootstrap config
-nave init --no-interaction
-cat ~/.config/nave.toml
-#   Commented header explaining tracked_paths globs, then the
-#   [github], [cache], [discovery] sections.
-
-# Discover repos + tracked files
-nave discover
-#   Example summary: repos=240 with_tracked=138 tracked_files=377 auth=gh
-ls ~/.cache/nave/repos/<username>/
-
-# Re-run incrementally — only repos pushed since last run get re-checked
-nave discover
-#   incremental=true
-
-# Prune repos no longer matching filters (forks, archived, narrowed tracked_paths)
-# Note: only effective on a full (non-incremental) run.
-rm ~/.cache/nave/meta.toml   # force full listing
-nave discover --prune
-
-# Fetch the tracked files themselves via sparse checkout
-nave fetch
-ls ~/.cache/nave/repos/<username>/<reponame>/checkout/
-
-# Verbose logging
-NAVE_LOG=debug nave fetch
+pip install nave      # or: uv tool install nave
 ```
 
-### Template anti-unification
+You'll also want the [`gh` CLI](https://cli.github.com/) authenticated, or a `NAVE_GITHUB_TOKEN` in your environment.
+Anonymous access works but hits the 60 req/hr rate limit quickly on first `nave scan`.
 
-After acquiring your repo data, the fun part is modelling it.
-To get the simplest possible description, we use anti-unification.
+## What it does
+
+### Structural simplification of configs
+
+`nave build` finds the shared skeleton across all tracked configs of the same kind and shows you which fields vary,
+how often, and with what values. It's a way to see drift, and to work out which fields are worth standardising.
 
 ```bash
-nave distil
-```
-
-It's easiest to show how that works with a relatively trivial format like Dependabot:
-
-```bash
-nave distil --filter dependabot
+nave build --filter dependabot
 ```
 
 ```yaml
@@ -123,18 +72,17 @@ nave distil --filter dependabot
         3× "monthly"
 ```
 
-Note you can also access this as JSON:
+This is read as: across 9 dependabot configs, they all have the same shape; the ecosystem and interval vary,
+and 3 of the 9 set a cooldown. Under the hood this is anti-unification over the parsed YAML/TOML trees,
+but you don't need to care about that to use it.
 
-```
-nave distil --json | jq '.groups[] | select(.pattern | contains("dependabot"))'
-```
+JSON output is available with `--json` for scripting.
 
-### Search
+### Search across tracked files
 
-You can also search config files in the cache, which is often handy for reasoning about repos.
+`nave search` looks for patterns across your cache of tracked configs.
 
-For example: which repos with "maturin" (in any of the config files) also have CI tests ("pytest"
-in a workflow)?
+Plain terms match substrings anywhere; `workflow:` scopes a term to CI workflow files.
 
 ```bash
 nave search maturin workflow:pytest
@@ -147,35 +95,8 @@ lmmx/page-dewarp
 lmmx/polars-luxical
 ```
 
-If you want to know why exactly (usually you don't) add the `--explain` flag
-
-```bash
-nave search maturin workflow:pytest --explain --limit 1
-```
-
-```
-lmmx/comrak
-    maturin  →  .github/workflows/CI.yml (matched "maturin")
-    maturin  →  .github/workflows/test.yml (matched "maturin")
-    maturin  →  pyproject.toml (matched "maturin")
-    workflow:pytest  →  .github/workflows/test.yml (matched "pytest")
-```
-
-but which was most recent? You can sort by the pushed-at time which might tell you:
-
-```bash
-nave search maturin workflow:pytest --sort pushed-at --limit 1
-```
-
-You can also get the results as JSON with `--json`, or count them with `--count`.
-
-### Field search
-
-It's often useful to be able to look for the specific parts of the config files
-that a search term appears in, which you can query for by specifying `--output holes`.
-
-In this example we filter out the workflow fields, i.e. we look for the pyproject
-TOML fields in repos which have CI tests:
+To see *where* in each file a term matched — particularly useful for `pyproject.toml`
+where you often want to know which field, not just which file:
 
 ```bash
 nave search maturin workflow:pytest --output holes | rg -v workflows
@@ -183,21 +104,41 @@ nave search maturin workflow:pytest --output holes | rg -v workflows
 
 ```
 pyproject.toml  build-system.build-backend  (2 hits)
-pyproject.toml  build-system.requires[0]  (2 hits)
+pyproject.toml  build-system.requires[0]    (2 hits)
 pyproject.toml  dependency-groups.build[0]  (2 hits)
-pyproject.toml  dependency-groups.dev[0]  (2 hits)
-pyproject.toml  tool.maturin  (2 hits)
+pyproject.toml  dependency-groups.dev[0]    (2 hits)
+pyproject.toml  tool.maturin                (2 hits)
 ```
 
-The `--explain` and `--json` flags work here too.
+Other useful flags: `--explain` (show matched files and terms), `--json`, `--count`,
+`--sort pushed-at --limit N` (most recently touched first).
+
+## Setup commands
+
+Three plumbing commands you'll run in order on first use:
+
+```bash
+nave init            # write ~/.config/nave.toml (one-shot)
+nave scan        # enumerate repos and index tracked files
+nave pull           # sparse-checkout tracked files into ~/.cache/nave/
+```
+
+By default, `scan` only looks at repos that have changed since the previous `scan`.
+
+To re-examine every repo (e.g. after narrowing `tracked_paths`, or to remove cached repos that no longer match),
+delete `~/.cache/nave/meta.toml` and use `nave scan --prune`.
+
+There's also `nave check`, which verifies that every tracked config parses without errors.
+
+Verbose logging: `NAVE_LOG=debug nave <cmd>`.
 
 ## Configuration
 
-All settings live in `~/.config/nave.toml`. The defaults are deliberately visible at
-the top of that file (written by `nave init`). The main one to customise:
+All settings live in `~/.config/nave.toml`. `nave init` writes a commented default
+you can edit. The knob most people will want is `tracked_paths`:
 
 ```toml
-[discovery]
+[scan]
 tracked_paths = [
     "pyproject.toml",
     "Cargo.toml",
@@ -212,58 +153,32 @@ case_insensitive = true
 exclude_forks = true
 ```
 
-Glob semantics are gitignore-ish: `*` doesn't cross `/`, `**` does, `?` and `[abc]`
-work as expected.
+Glob semantics follow gitignore syntax for `*`, `**`, `?` and `[abc]`.
 
-Any field in `nave.toml` can be overridden via env var: `NAVE_GITHUB__USERNAME=foo`,
-`NAVE_DISCOVERY__EXCLUDE_FORKS=false`, etc. (Double underscore is the section separator;
-single underscores are part of field names.)
+Any field can be overridden via env var using double-underscore as the section separator:
+`NAVE_GITHUB__USERNAME=foo`, `NAVE_DISCOVERY__EXCLUDE_FORKS=false`.
 
-## Privacy / scope
+## Scope and privacy
 
-`nave discover` queries `GET /users/{username}/repos`, which returns only **public**
-repos even when authenticated as that user. Private repos are not included. Forks
-and archived repos are filtered out by default; both are configurable.
-
-The primary purpose of this software is for use with open source software,
-private repo is a non-goal but feel free to fork for your own use cases.
-
-## Auth
-
-Auth is detected in this order:
-
-1. `NAVE_GITHUB_TOKEN` environment variable
-2. `gh auth token` (requires the `gh` CLI to be installed and authenticated)
-3. Anonymous (60 requests/hour — note this will hit rate limits on first discovery of large
-   accounts)
+- `nave scan` queries `GET /users/{username}/repos`, which returns only **public** repos even when authenticated.
+- Forks and archived repos are filtered out by default. To configure this, edit the user-level config which is written on `nave init`
+  or by setting the corresponding environment variables.
+- Private repos aren't included (supporting them is a non-goal).
 
 ## Architecture
 
-This repo is a Rust workspace of focused crates:
+A Rust workspace split across four concerns:
 
-- `nave`: the binary (subcommand routing, logging)
-- `nave_config`: layered config providers via [figment2](https://crates.io/crates/figment2),
-  cache layout, path matching
-- `nave_github`: GitHub REST client with auth probing
-- `nave_discover`: orchestrates repo listing, tree walking, and cache updates
-- `nave_fetch`: sparse-checkout fetcher
-- `nave_parse`: YAML/TOML de/serialisation
-- `nave_validate`: validation of parsed templates
-- `nave_distil`: find minimal groupings of templates by anti-unification
+- **CLI & shim** — `nave` (binary, subcommand routing) and a thin `maturin`-packaged
+  Python entry point that execs the Rust binary (same pattern as `uv` and `ruff`).
+- **Config & cache** — `nave_config` handles layered config via
+  [figment2](https://crates.io/crates/figment2), cache layout, and path matching.
+- **GitHub I/O** — `nave_github` (REST client with auth probing), `nave_scan`
+  (repo listing and tree walking), `nave_pull` (sparse checkout).
+- **Modelling** — `nave_parse` (YAML/TOML de/serialisation), `nave_check`
+  (WIP), `nave_build` (anti-unification to find minimal template groupings).
 
-The Python entry point is a thin `maturin`-packaged shim (`python/nave/`) that finds and
-execs the Rust binary (the same pattern used by the likes of `uv` and `ruff`).
+## Contributing
 
-## Development
-
-To install git hooks with [cargo husky][husky], run `cargo test`
-
-```bash
-just build     # workspace build
-just test      # cargo nextest
-just lint      # clippy + ruff
-just pre-commit   # what the pre-commit hook runs
-just pre-push # what the pre-push hook runs
-```
-
-[husky]: https://github.com/rhysd/cargo-husky
+See [CONTRIBUTING.md](CONTRIBUTING.md) for dev setup, the `just` task list, and
+git hooks.

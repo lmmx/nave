@@ -1,20 +1,18 @@
 [dependencies]
 nave_config = {workspace = true}
-nave_github = {workspace = true}
+nave_parse = {workspace = true}
 anyhow = {workspace = true}
 serde = {workspace = true}
-time = {workspace = true}
-tokio = {workspace = true}
+serde_json = {workspace = true}
 tracing = {workspace = true}
-futures = {workspace = true}
 
 [lints]
 workspace = true
 
 [package]
-name = "nave_discover"
+name = "nave_build"
 version = "0.0.2"
-description = "Repository discovery for nave"
+description = "Anti-unification over tracked config files"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true

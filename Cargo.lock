@@ -943,19 +943,43 @@ dependencies = [
  "cargo-husky",
  "clap",
  "dialoguer",
+ "nave_build",
+ "nave_check",
  "nave_config",
- "nave_discover",
- "nave_distil",
- "nave_fetch",
  "nave_github",
+ "nave_pull",
+ "nave_scan",
  "nave_search",
- "nave_validate",
  "serde",
  "serde_json",
  "tokio",
  "toml",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "nave_build"
+version = "0.0.2"
+dependencies = [
+ "anyhow",
+ "nave_config",
+ "nave_parse",
+ "serde",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
+name = "nave_check"
+version = "0.0.2"
+dependencies = [
+ "anyhow",
+ "nave_config",
+ "nave_parse",
+ "serde",
+ "serde_json",
+ "tracing",
 ]
 
 [[package]]
@@ -970,43 +994,6 @@ dependencies = [
  "thiserror",
  "time",
  "toml",
-]
-
-[[package]]
-name = "nave_discover"
-version = "0.0.2"
-dependencies = [
- "anyhow",
- "futures",
- "nave_config",
- "nave_github",
- "serde",
- "time",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "nave_distil"
-version = "0.0.2"
-dependencies = [
- "anyhow",
- "nave_config",
- "nave_parse",
- "serde",
- "serde_json",
- "tracing",
-]
-
-[[package]]
-name = "nave_fetch"
-version = "0.0.2"
-dependencies = [
- "anyhow",
- "futures",
- "nave_config",
- "tokio",
- "tracing",
 ]
 
 [[package]]
@@ -1036,28 +1023,41 @@ dependencies = [
 ]
 
 [[package]]
-name = "nave_search"
+name = "nave_pull"
 version = "0.0.2"
 dependencies = [
  "anyhow",
+ "futures",
  "nave_config",
- "nave_distil",
- "nave_parse",
- "serde",
- "serde_json",
- "time",
+ "tokio",
  "tracing",
 ]
 
 [[package]]
-name = "nave_validate"
+name = "nave_scan"
 version = "0.0.2"
 dependencies = [
  "anyhow",
+ "futures",
+ "nave_config",
+ "nave_github",
+ "serde",
+ "time",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "nave_search"
+version = "0.0.2"
+dependencies = [
+ "anyhow",
+ "nave_build",
  "nave_config",
  "nave_parse",
  "serde",
  "serde_json",
+ "time",
  "tracing",
 ]
 

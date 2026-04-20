@@ -1,4 +1,4 @@
-//! Walk the fetched checkouts and run a round-trip parse check on each
+//! Walk the pulled checkouts and run a round-trip parse check on each
 //! tracked file.
 
 use std::path::{Path, PathBuf};
@@ -22,7 +22,7 @@ pub struct FileResult {
 }
 
 #[derive(Debug, Default, Serialize)]
-pub struct ValidationReport {
+pub struct CheckReport {
     pub results: Vec<FileResult>,
     pub totals: Totals,
 }
@@ -38,8 +38,8 @@ pub struct Totals {
     pub missing: usize,
 }
 
-pub fn run_validate(cache_root: &Path) -> Result<ValidationReport> {
-    let mut report = ValidationReport::default();
+pub fn run_check(cache_root: &Path) -> Result<CheckReport> {
+    let mut report = CheckReport::default();
     let repos_root = cache_root.join("repos");
     if !repos_root.exists() {
         return Ok(report);
@@ -58,18 +58,18 @@ pub fn run_validate(cache_root: &Path) -> Result<ValidationReport> {
                 continue;
             }
             let name = repo_entry.file_name().to_string_lossy().into_owned();
-            validate_repo(cache_root, &owner, &name, &repo_entry.path(), &mut report)?;
+            check_repo(cache_root, &owner, &name, &repo_entry.path(), &mut report)?;
         }
     }
     Ok(report)
 }
 
-fn validate_repo(
+fn check_repo(
     cache_root: &Path,
     owner: &str,
     name: &str,
     repo_dir: &Path,
-    report: &mut ValidationReport,
+    report: &mut CheckReport,
 ) -> Result<()> {
     let Some(meta) = read_repo_meta(cache_root, owner, name)? else {
         debug!(%owner, %name, "no repo meta; skipping");
@@ -92,7 +92,7 @@ fn validate_repo(
                 format: None,
                 outcome: "missing",
                 detail: Some(
-                    "file tracked in cache but not found in checkout; run `nave fetch`".into(),
+                    "file tracked in cache but not found in checkout; run `nave pull`".into(),
                 ),
             });
             continue;

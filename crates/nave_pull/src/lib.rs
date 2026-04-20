@@ -1,4 +1,4 @@
-//! Sparse-checkout fetcher.
+//! Sparse-checkout puller.
 //!
 //! For each repo directory under `<cache_root>/repos/<owner>/<repo>/`, ensure
 //! `checkout/` contains exactly the files listed in `tracked.toml`.
@@ -15,12 +15,12 @@ use tracing::{debug, info, warn};
 use nave_config::cache::{RepoMeta, TrackedFiles, read_repo_meta, read_tracked, write_tracked};
 
 use crate::git::GitRunner;
-use crate::plan::{FetchAction, FetchPlan};
+use crate::plan::{PullAction, PullPlan};
 
 pub const FETCH_CONCURRENCY: usize = 6;
 
 #[derive(Debug, Default)]
-pub struct FetchReport {
+pub struct PullReport {
     pub cloned: usize,
     pub updated: usize,
     pub skipped: usize,
@@ -29,46 +29,46 @@ pub struct FetchReport {
     pub sha_mismatches: usize,
 }
 
-pub async fn run_fetch(cache_root: &Path) -> Result<FetchReport> {
-    let repos = discover_cached_repos(cache_root)?;
-    info!(count = repos.len(), "planning fetch");
+pub async fn run_pull(cache_root: &Path) -> Result<PullReport> {
+    let repos = scan_cached_repos(cache_root)?;
+    info!(count = repos.len(), "planning pull");
 
-    let results: Vec<Result<FetchRepoResult>> = stream::iter(repos)
-        .map(|repo_dir| async move { fetch_one(&repo_dir).await })
+    let results: Vec<Result<PullRepoResult>> = stream::iter(repos)
+        .map(|repo_dir| async move { pull_one(&repo_dir).await })
         .buffer_unordered(FETCH_CONCURRENCY)
         .collect()
         .await;
 
-    let mut report = FetchReport::default();
+    let mut report = PullReport::default();
     for r in results {
         match r {
             Ok(outcome) => {
                 report.sha_mismatches += outcome.sha_mismatches;
                 match outcome.action {
-                    FetchAction::FreshClone => report.cloned += 1,
-                    FetchAction::Update => report.updated += 1,
-                    FetchAction::Reclone => report.recloned += 1,
-                    FetchAction::Skip => report.skipped += 1,
+                    PullAction::FreshClone => report.cloned += 1,
+                    PullAction::Update => report.updated += 1,
+                    PullAction::Reclone => report.recloned += 1,
+                    PullAction::Skip => report.skipped += 1,
                 }
             }
             Err(e) => {
                 report.failed += 1;
-                warn!("fetch failed: {e:#}");
+                warn!("pull failed: {e:#}");
             }
         }
     }
     Ok(report)
 }
 
-struct FetchRepoResult {
-    action: FetchAction,
+struct PullRepoResult {
+    action: PullAction,
     sha_mismatches: usize,
 }
 
-async fn fetch_one(repo_dir: &Path) -> Result<FetchRepoResult> {
+async fn pull_one(repo_dir: &Path) -> Result<PullRepoResult> {
     let meta = read_repo_meta_required(repo_dir)?;
     // TODO: make this less ugly - doing it this way rather than threading cache_root through
-    // because it keeps fetch_one self-contained and the relationship is an invariant of the cache
+    // because it keeps pull_one self-contained and the relationship is an invariant of the cache
     // layout not a runtime concern
     let tracked = read_tracked(
         repo_dir
@@ -84,46 +84,46 @@ async fn fetch_one(repo_dir: &Path) -> Result<FetchRepoResult> {
 
     if tracked.files.is_empty() {
         debug!(owner = %meta.owner, name = %meta.name, "no tracked files; skipping");
-        return Ok(FetchRepoResult {
-            action: FetchAction::Skip,
+        return Ok(PullRepoResult {
+            action: PullAction::Skip,
             sha_mismatches: 0,
         });
     }
 
     let checkout_dir = repo_dir.join("checkout");
     let git = GitRunner::new();
-    let plan = FetchPlan::decide(&checkout_dir, &tracked);
+    let plan = PullPlan::decide(&checkout_dir, &tracked);
 
     let action = match plan {
-        FetchAction::Skip => {
+        PullAction::Skip => {
             debug!(owner = %meta.owner, name = %meta.name, "checkout already current");
-            FetchAction::Skip
+            PullAction::Skip
         }
-        FetchAction::FreshClone => {
+        PullAction::FreshClone => {
             fresh_clone(&git, &meta, &tracked, &checkout_dir).await?;
-            FetchAction::FreshClone
+            PullAction::FreshClone
         }
-        FetchAction::Update => match update_checkout(&git, &meta, &tracked, &checkout_dir).await {
-            Ok(()) => FetchAction::Update,
+        PullAction::Update => match update_checkout(&git, &meta, &tracked, &checkout_dir).await {
+            Ok(()) => PullAction::Update,
             Err(e) => {
                 warn!(
                     owner = %meta.owner, name = %meta.name,
                     "update failed ({e:#}); falling back to reclone",
                 );
                 reclone(&git, &meta, &tracked, &checkout_dir).await?;
-                FetchAction::Reclone
+                PullAction::Reclone
             }
         },
-        FetchAction::Reclone => {
+        PullAction::Reclone => {
             reclone(&git, &meta, &tracked, &checkout_dir).await?;
-            FetchAction::Reclone
+            PullAction::Reclone
         }
     };
 
     // Regardless of which path we took, verify SHAs and reconcile the cache.
     let mismatches = verify_and_reconcile(&git, repo_dir, &meta, &tracked, &checkout_dir).await?;
 
-    Ok(FetchRepoResult {
+    Ok(PullRepoResult {
         action,
         sha_mismatches: mismatches,
     })
@@ -183,7 +183,7 @@ async fn verify_and_reconcile(
         let on_disk = checkout_dir.join(path);
         if !on_disk.exists() {
             // File tracked in cache but not materialized; sparse spec may differ
-            // from what upstream actually has. Record as mismatch; discover will
+            // from what upstream actually has. Record as mismatch; scan will
             // reconcile next run.
             warn!(
                 owner = %meta.owner, name = %meta.name, path = %path,
@@ -240,7 +240,7 @@ fn read_repo_meta_required(repo_dir: &Path) -> Result<RepoMeta> {
 }
 
 /// Walk `<cache_root>/repos/<owner>/<repo>/` and return each repo directory.
-fn discover_cached_repos(cache_root: &Path) -> Result<Vec<PathBuf>> {
+fn scan_cached_repos(cache_root: &Path) -> Result<Vec<PathBuf>> {
     let repos_root = cache_root.join("repos");
     if !repos_root.exists() {
         return Ok(Vec::new());

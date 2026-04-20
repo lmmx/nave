@@ -39,7 +39,7 @@ impl GitRunner {
     }
 
     pub(crate) async fn fetch(&self, repo: &Path) -> Result<()> {
-        debug!(repo = %repo.display(), "git fetch");
+        debug!(repo = %repo.display(), "git pull");
         run(
             Command::new("git")
                 .arg("-C")
@@ -47,7 +47,7 @@ impl GitRunner {
                 .arg("fetch")
                 .arg("--depth=1")
                 .arg("origin"),
-            "git fetch",
+            "git pull",
         )
         .await
     }

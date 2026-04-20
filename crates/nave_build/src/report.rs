@@ -10,7 +10,7 @@ use crate::antiunify::{Observations, Template, anti_unify};
 use crate::value::to_common_tree;
 
 #[derive(Debug, Default, Serialize)]
-pub struct DistilReport {
+pub struct BuildReport {
     pub groups: Vec<GroupReport>,
     /// `(pattern, instance_count, reason)` for patterns we explicitly skipped.
     pub skipped: Vec<(String, usize, String)>,

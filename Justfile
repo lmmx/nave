@@ -19,15 +19,15 @@ run *ARGS:
 
 # Build the Python wheel via maturin
 wheel:
-    maturin build --release
+    maturin build --release --uv
 
 # Install into the current venv for smoke-testing the Python entry point
 develop:
-    maturin develop
+    maturin develop --uv
 
 # Install into the current venv for smoke-testing the Python entry point
 develop-release:
-    maturin develop --release
+    maturin develop --release --uv
 
 clippy:
     cargo clippy --workspace --all-targets -- -D warnings

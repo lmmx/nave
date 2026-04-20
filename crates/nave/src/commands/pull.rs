@@ -3,12 +3,12 @@ use clap::Args;
 use tracing::info;
 
 use nave_config::{NaveConfig, cache_root, load_default};
-use nave_fetch::run_fetch;
+use nave_pull::run_pull;
 
 #[derive(Args, Debug)]
-pub(crate) struct FetchArgs {}
+pub(crate) struct PullArgs {}
 
-pub(crate) async fn run(_args: FetchArgs) -> Result<()> {
+pub(crate) async fn run(_args: PullArgs) -> Result<()> {
     let cfg: NaveConfig = load_default()?;
     let root = match cfg.cache.root.clone() {
         Some(r) => r,
@@ -16,14 +16,14 @@ pub(crate) async fn run(_args: FetchArgs) -> Result<()> {
     };
     if !root.exists() {
         anyhow::bail!(
-            "cache root {} does not exist; run `nave discover` first",
+            "cache root {} does not exist; run `nave scan` first",
             root.display()
         );
     }
 
-    let report = run_fetch(&root)
+    let report = run_pull(&root)
         .await
-        .with_context(|| format!("fetching into {}", root.display()))?;
+        .with_context(|| format!("pulling into {}", root.display()))?;
 
     info!(
         cloned = report.cloned,
@@ -32,7 +32,7 @@ pub(crate) async fn run(_args: FetchArgs) -> Result<()> {
         skipped = report.skipped,
         failed = report.failed,
         sha_mismatches = report.sha_mismatches,
-        "fetch complete"
+        "pull complete"
     );
     Ok(())
 }
