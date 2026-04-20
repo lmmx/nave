@@ -29,6 +29,8 @@ enum Command {
     Validate(commands::validate::ValidateArgs),
     /// Anti-unify tracked configs across repos to discover shared templates.
     Distil(commands::distil::DistilArgs),
+    /// Search cached repos for substring patterns across tracked files.
+    Search(commands::search::SearchArgs),
 }
 
 #[tokio::main]
@@ -43,5 +45,6 @@ async fn main() -> Result<()> {
         Command::Fetch(args) => commands::fetch::run(args).await,
         Command::Validate(args) => commands::validate::run(args).await,
         Command::Distil(args) => commands::distil::run(args).await,
+        Command::Search(args) => commands::search::run(args).await,
     }
 }

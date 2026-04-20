@@ -22,7 +22,7 @@ fn subcommands_listed() {
         .expect("failed to execute nave");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    for sub in ["init", "discover", "fetch", "validate"] {
+    for sub in ["init", "discover", "fetch", "validate", "distil", "search"] {
         assert!(
             stdout.contains(sub),
             "missing subcommand `{sub}` in help:\n{stdout}"

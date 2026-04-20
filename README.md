@@ -160,6 +160,68 @@ Note you can also access this as JSON:
 nave distil --json | jq '.groups[] | select(.pattern | contains("dependabot"))'
 ```
 
+### Search
+
+You can also search config files in the cache, which is often handy for reasoning about repos.
+
+For example: which repos with "maturin" (in any of the config files) also have CI tests ("pytest"
+in a workflow)?
+
+```bash
+nave search maturin workflow:pytest
+```
+
+```
+lmmx/comrak
+lmmx/polars-fastembed
+lmmx/page-dewarp
+lmmx/polars-luxical
+```
+
+If you want to know why exactly (usually you don't) add the `--explain` flag
+
+```bash
+nave search maturin workflow:pytest --explain --limit 1
+```
+
+```
+lmmx/comrak
+    maturin  →  .github/workflows/CI.yml (matched "maturin")
+    maturin  →  .github/workflows/test.yml (matched "maturin")
+    maturin  →  pyproject.toml (matched "maturin")
+    workflow:pytest  →  .github/workflows/test.yml (matched "pytest")
+```
+
+but which was most recent? You can sort by the pushed-at time which might tell you:
+
+```bash
+nave search maturin workflow:pytest --sort pushed-at --limit 1
+```
+
+You can also get the results as JSON with `--json`, or count them with `--count`.
+
+### Field search
+
+It's often useful to be able to look for the specific parts of the config files
+that a search term appears in, which you can query for by specifying `--output holes`.
+
+In this example we filter out the workflow fields, i.e. we look for the pyproject
+TOML fields in repos which have CI tests:
+
+```bash
+nave search maturin workflow:pytest --output holes | rg -v workflows
+```
+
+```
+pyproject.toml  build-system.build-backend  (2 hits)
+pyproject.toml  build-system.requires[0]  (2 hits)
+pyproject.toml  dependency-groups.build[0]  (2 hits)
+pyproject.toml  dependency-groups.dev[0]  (2 hits)
+pyproject.toml  tool.maturin  (2 hits)
+```
+
+The `--explain` and `--json` flags work here too.
+
 ## Configuration
 
 All settings live in `~/.config/nave.toml`. The defaults are deliberately visible at

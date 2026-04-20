@@ -15,6 +15,7 @@ nave_fetch = {path = "crates/nave_fetch"}
 nave_parse = {path = "crates/nave_parse"}
 nave_validate = {path = "crates/nave_validate"}
 nave_distil = {path = "crates/nave_distil"}
+nave_search = {path = "crates/nave_search"}
 anyhow = {version = "1.0.80"}
 clap = {version = "4.5.3", features = ["derive"]}
 figment2 = {version = "0.11", features = ["toml", "env"]}
