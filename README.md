@@ -204,7 +204,6 @@ Auth is detected in this order:
 This repo is a Rust workspace of focused crates:
 
 - `nave`: the binary (subcommand routing, logging)
-- `nave_core`: shared primitives (currently minimal)
 - `nave_config`: layered config providers via [figment2](https://crates.io/crates/figment2),
   cache layout, path matching
 - `nave_github`: GitHub REST client with auth probing

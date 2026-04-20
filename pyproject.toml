@@ -2,6 +2,11 @@
 requires = ["maturin>=1.9.3,<2.0"]
 build-backend = "maturin"
 
+[dependency-groups]
+dev = [
+  "maturin[patchelf]>=1.13",
+]
+
 [project]
 name = "nave"
 version = "0.0.0"
@@ -42,3 +47,6 @@ ignore = ["E501"]
 
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]
+
+[tool.uv]
+default-groups = "all"

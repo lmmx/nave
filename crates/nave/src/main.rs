@@ -5,10 +5,10 @@ use clap::{Parser, Subcommand};
 use tracing_subscriber::{EnvFilter, fmt};
 
 #[derive(Parser, Debug)]
-#[command(name = "nave", version, about = "Fleet ops for OSS package repos")]
+#[command(name = "nave", version, about = "Fleet ops for OSS package repos", subcommand_required = true, arg_required_else_help = true)]
 struct Cli {
     #[command(subcommand)]
-    command: Option<Command>,
+    command: Command,
 }
 
 #[derive(Subcommand, Debug)]
@@ -32,14 +32,10 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
     match cli.command {
-        None => {
-            nave_core::hello();
-            Ok(())
-        }
-        Some(Command::Init(args)) => commands::init::run(args).await,
-        Some(Command::Discover(args)) => commands::discover::run(args).await,
-        Some(Command::Fetch(args)) => commands::fetch::run(args).await,
-        Some(Command::Validate(args)) => commands::validate::run(args).await,
-        Some(Command::Distil(args)) => commands::distil::run(args).await,
+        Command::Init(args) => commands::init::run(args).await,
+        Command::Discover(args) => commands::discover::run(args).await,
+        Command::Fetch(args) => commands::fetch::run(args).await,
+        Command::Validate(args) => commands::validate::run(args).await,
+        Command::Distil(args) => commands::distil::run(args).await,
     }
 }

@@ -897,7 +897,6 @@ dependencies = [
  "clap",
  "dialoguer",
  "nave_config",
- "nave_core",
  "nave_discover",
  "nave_distil",
  "nave_fetch",
@@ -924,10 +923,6 @@ dependencies = [
  "time",
  "toml",
 ]
-
-[[package]]
-name = "nave_core"
-version = "0.0.0"
 
 [[package]]
 name = "nave_discover"
