@@ -45,7 +45,7 @@ pub fn enrich_with_holes(
 ) -> Result<Vec<HoleHit>> {
     // Run build once — we need its templates regardless of which
     // files matched, because the template structure is global.
-    let report = run_build(cache_root, cfg)?;
+    let report = run_build(cache_root, cfg, &nave_build::BuildOptions::default())?;
 
     // Index groups by pattern for fast lookup.
     let groups_by_pattern: BTreeMap<&str, &GroupReport> = report

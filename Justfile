@@ -13,6 +13,10 @@ build:
 build-release:
     cargo build --workspace --release
 
+# Check the Rust workspace
+check:
+    cargo check --workspace
+
 # Run the binary
 run *ARGS:
     cargo run --bin nave -- {{ARGS}}

@@ -1,8 +1,8 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
 
-use nave_build::{BuildReport, GroupReport, HoleReport, SourceHint, run_build};
-use nave_config::{NaveConfig, cache_root, load_default};
+use nave_build::{BuildOptions, BuildReport, GroupReport, HoleReport, SourceHint, run_build};
+use nave_config::{NaveConfig, Term, cache_root, load_default};
 
 #[derive(Args, Debug)]
 pub(crate) struct BuildArgs {
@@ -12,6 +12,10 @@ pub(crate) struct BuildArgs {
     /// Restrict to groups whose pattern contains this substring.
     #[arg(long)]
     pub filter: Option<String>,
+    /// Narrow the input to files satisfying every term.
+    /// Grammar: `[scope:]value[|value...]`, same as `nave search`.
+    #[arg(long = "where", value_name = "TERM")]
+    pub where_terms: Vec<String>,
 }
 
 #[allow(clippy::unused_async)]
@@ -28,7 +32,13 @@ pub(crate) async fn run(args: BuildArgs) -> Result<()> {
         );
     }
 
-    let mut report = run_build(&root, &cfg)?;
+    let where_terms: Vec<Term> = args
+        .where_terms
+        .iter()
+        .map(|s| Term::parse(s).with_context(|| format!("parsing --where term {s:?}")))
+        .collect::<Result<_>>()?;
+
+    let mut report = run_build(&root, &cfg, &BuildOptions { where_terms })?;
 
     if let Some(f) = &args.filter {
         report.groups.retain(|g| g.pattern.contains(f));

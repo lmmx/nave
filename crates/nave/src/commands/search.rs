@@ -3,8 +3,8 @@ use std::cmp::Reverse;
 use anyhow::{Context, Result};
 use clap::{Args, ValueEnum};
 
-use nave_config::{NaveConfig, cache_root, load_default};
-use nave_search::{SearchOptions, SearchReport, Term, run_search};
+use nave_config::{NaveConfig, Term, cache_root, load_default};
+use nave_search::{SearchOptions, SearchReport, run_search};
 
 #[derive(Args, Debug)]
 #[allow(clippy::struct_excessive_bools)]

@@ -9,6 +9,7 @@
 pub mod cache;
 pub mod matcher;
 pub mod paths;
+pub mod term;
 
 use std::path::PathBuf;
 
@@ -20,6 +21,7 @@ use serde::{Deserialize, Serialize};
 
 pub use crate::matcher::PathMatcher;
 pub use crate::paths::{cache_root, user_config_path};
+pub use crate::term::Term;
 
 /// The fully-resolved nave configuration.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

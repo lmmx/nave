@@ -19,13 +19,23 @@ use anyhow::Result;
 use tracing::{debug, warn};
 
 use nave_config::{
-    NaveConfig, PathMatcher,
+    NaveConfig, PathMatcher, Term,
     cache::{read_repo_meta, read_tracked},
 };
 use nave_parse::{Document, parse_file};
 
+#[derive(Debug, Default)]
+pub struct BuildOptions {
+    /// Only include files satisfying every term. Empty = include all.
+    pub where_terms: Vec<Term>,
+}
+
 /// Walk the cache and produce a build report.
-pub fn run_build(cache_root: &Path, cfg: &NaveConfig) -> Result<BuildReport> {
+pub fn run_build(
+    cache_root: &Path,
+    cfg: &NaveConfig,
+    options: &BuildOptions,
+) -> Result<BuildReport> {
     let repos_root = cache_root.join("repos");
     let mut report = BuildReport::default();
 
@@ -79,6 +89,18 @@ pub fn run_build(cache_root: &Path, cfg: &NaveConfig) -> Result<BuildReport> {
                 if !on_disk.exists() {
                     debug!(%owner, %name, %path, "tracked but missing on disk");
                     continue;
+                }
+                if !options.where_terms.is_empty() {
+                    let Ok(bytes) = std::fs::read(&on_disk) else {
+                        debug!(%owner, %name, %path, "could not read file for --where check");
+                        continue;
+                    };
+                    let all_satisfied = options.where_terms.iter().all(|t| {
+                        t.applies_to_pattern(pattern) && t.matches_content(&bytes, false).is_some()
+                    });
+                    if !all_satisfied {
+                        continue;
+                    }
                 }
                 match parse_file(&on_disk) {
                     Ok(doc) => {

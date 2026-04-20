@@ -1,7 +1,6 @@
 //! Predicate-based search over the nave cache.
 
 pub mod holes;
-pub mod term;
 
 use std::path::Path;
 
@@ -11,12 +10,11 @@ use time::OffsetDateTime;
 use tracing::debug;
 
 use nave_config::{
-    NaveConfig, PathMatcher,
+    NaveConfig, PathMatcher, Term,
     cache::{RepoMeta, read_repo_meta, read_tracked},
 };
 
 pub use holes::HoleHit;
-pub use term::Term;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct SearchReport {
