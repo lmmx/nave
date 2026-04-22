@@ -91,6 +91,8 @@ pub async fn create_pen(cfg: &NaveConfig, opts: CreateOptions) -> Result<Pen> {
 fn derive_name(terms: &[String]) -> String {
     let raw = terms.first().cloned().unwrap_or_else(|| "pen".to_string());
     // Strip any scope prefix (e.g. "workflow:maturin" -> "maturin").
+    // Spurious lint https://github.com/rust-lang/rust-clippy/issues/16901
+    #[allow(clippy::map_unwrap_or)]
     let after_scope = raw.split_once(':').map(|(_, v)| v).unwrap_or(&raw);
     let slug = slugify(after_scope);
     let truncated: String = slug.chars().take(20).collect();
