@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
-use anyhow::Result;
 use serde::Serialize;
 use serde_json::Value;
 
@@ -61,7 +60,7 @@ pub enum SourceHint {
     ConstantWhenPresent,
 }
 
-pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> Result<GroupReport> {
+pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> GroupReport {
     let values: Vec<Value> = instances.iter().map(|inst| inst.value.clone()).collect();
 
     let (template, observations) = anti_unify(&values);
@@ -84,7 +83,7 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> Result<G
 
     let template_text = render_template(&template, 0);
 
-    Ok(GroupReport {
+    GroupReport {
         pattern: pattern.to_string(),
         instance_count: total,
         instances: instances
@@ -98,7 +97,7 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> Result<G
             .collect(),
         template_text,
         holes,
-    })
+    }
 }
 
 fn summarise_hole(

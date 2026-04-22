@@ -85,9 +85,8 @@ impl MatchPredicate {
 pub fn find_match_addresses(tree: &Value, pred: &MatchPredicate) -> Vec<String> {
     let mut out = Vec::new();
     for anchor_addr in find_addresses_all_objects(tree) {
-        let anchor = match subtree_at(tree, &anchor_addr) {
-            Some(v) => v,
-            None => continue,
+        let Some(anchor) = subtree_at(tree, &anchor_addr) else {
+            continue;
         };
         let target = if pred.rel_path.is_empty() {
             Some(anchor.clone())

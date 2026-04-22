@@ -47,6 +47,7 @@ pub struct BuildOptions {
 }
 
 /// Walk the cache and produce a build report.
+#[allow(clippy::too_many_lines)]
 pub fn run_build(
     cache_root: &Path,
     cfg: &NaveConfig,
@@ -275,7 +276,7 @@ pub fn run_build(
         if instances.is_empty() {
             continue;
         }
-        let group = report::build_group(&pattern, &instances)?;
+        let group = report::build_group(&pattern, &instances);
         report.groups.push(group);
     }
 

@@ -5,6 +5,7 @@
 //!   jobs.release.steps[1].with.command
 
 use serde_json::Value;
+use std::fmt::Write;
 
 /// What was matched at a given address, so callers can format snippets.
 pub enum Match<'a> {
@@ -18,7 +19,7 @@ pub enum Match<'a> {
 /// appears — as a substring of a string/number/bool leaf, or as an
 /// object key.
 pub fn walk_matches(value: &Value, needle: &str, mut emit: impl FnMut(&str, Match<'_>)) {
-    walk_with_emit(value, String::new(), needle, &mut emit);
+    walk_with_emit(value, "", needle, &mut emit);
 }
 
 /// Find every address in `value` where `needle` appears.
@@ -28,26 +29,21 @@ pub fn find_addresses(value: &Value, needle: &str) -> Vec<String> {
     out
 }
 
-fn walk_with_emit(
-    value: &Value,
-    path: String,
-    needle: &str,
-    emit: &mut impl FnMut(&str, Match<'_>),
-) {
+fn walk_with_emit(value: &Value, path: &str, needle: &str, emit: &mut impl FnMut(&str, Match<'_>)) {
     match value {
         Value::String(s) => {
             if s.contains(needle) {
-                emit(path_or_root(&path), Match::Leaf(value));
+                emit(path_or_root(path), Match::Leaf(value));
             }
         }
         Value::Number(n) => {
             if n.to_string().contains(needle) {
-                emit(path_or_root(&path), Match::Leaf(value));
+                emit(path_or_root(path), Match::Leaf(value));
             }
         }
         Value::Bool(b) => {
             if b.to_string().contains(needle) {
-                emit(path_or_root(&path), Match::Leaf(value));
+                emit(path_or_root(path), Match::Leaf(value));
             }
         }
         Value::Null => {}
@@ -58,7 +54,7 @@ fn walk_with_emit(
             }
             for (i, item) in items.iter().enumerate() {
                 let sub = format!("{path}[{i}]");
-                walk_with_emit(item, sub, needle, emit);
+                walk_with_emit(item, &sub, needle, emit);
             }
         }
         Value::Object(map) => {
@@ -75,7 +71,7 @@ fn walk_with_emit(
                 if k.contains(needle) {
                     emit(&sub, Match::Key(k));
                 }
-                walk_with_emit(v, sub, needle, emit);
+                walk_with_emit(v, &sub, needle, emit);
             }
         }
     }
@@ -109,10 +105,7 @@ fn parse_address(addr: &str) -> Vec<Segment<'_>> {
                 if i > start {
                     out.push(Segment::Key(&addr[start..i]));
                 }
-                let end = addr[i..]
-                    .find(']')
-                    .map(|j| i + j + 1)
-                    .unwrap_or(bytes.len());
+                let end = addr[i..].find(']').map_or(bytes.len(), |j| i + j + 1);
                 let inner = &addr[i + 1..end - 1];
                 if let Ok(n) = inner.parse::<usize>() {
                     out.push(Segment::Index(n));
@@ -162,7 +155,7 @@ pub fn object_ancestors(root: &Value, addr: &str) -> Vec<String> {
             Segment::Index(i) => {
                 let Value::Array(items) = cursor else { break };
                 let Some(next) = items.get(*i) else { break };
-                current_path.push_str(&format!("[{i}]"));
+                let _ = write!(current_path, "[{i}]");
                 cursor = next;
                 if cursor.is_object() {
                     out.push(current_path.clone());
@@ -206,27 +199,27 @@ pub fn subtree_at(root: &Value, addr: &str) -> Option<Value> {
 /// to consider every object as a candidate anchor.
 pub fn find_addresses_all_objects(value: &Value) -> Vec<String> {
     let mut out = Vec::new();
-    walk_objects(value, String::new(), &mut out);
+    walk_objects(value, "", &mut out);
     out
 }
 
-fn walk_objects(value: &Value, path: String, out: &mut Vec<String>) {
+fn walk_objects(value: &Value, path: &str, out: &mut Vec<String>) {
     match value {
         Value::Object(map) => {
-            out.push(path.clone());
+            out.push(path.to_string());
             for (k, v) in map {
                 let sub = if path.is_empty() {
                     k.clone()
                 } else {
                     format!("{path}.{k}")
                 };
-                walk_objects(v, sub, out);
+                walk_objects(v, &sub, out);
             }
         }
         Value::Array(items) => {
             for (i, item) in items.iter().enumerate() {
                 let sub = format!("{path}[{i}]");
-                walk_objects(item, sub, out);
+                walk_objects(item, &sub, out);
             }
         }
         _ => {}
