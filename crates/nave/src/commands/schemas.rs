@@ -138,7 +138,6 @@ async fn run_validate(args: ValidateArgs) -> Result<()> {
     use nave_parse::{parse_file, to_json};
     use nave_pen::{load_pen, resolve_pen_root, tracked_files_in_pen};
     use nave_schemas::{SchemaId, SchemaRegistry, schema_for_path};
-    
 
     let cfg = load_default()?;
     let pen_root_path = resolve_pen_root(&cfg.pen)?;

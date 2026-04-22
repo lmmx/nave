@@ -1,4 +1,5 @@
 //! Map tracked-path globs to the set of schemas needed to validate them.
+#![allow(clippy::case_sensitive_file_extension_comparisons)]
 
 use std::collections::BTreeSet;
 
