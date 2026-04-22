@@ -14,7 +14,7 @@ workspace = true
 
 [package]
 name = "nave_github"
-version = "0.0.3"
+version = "0.0.4"
 description = "GitHub REST client for nave"
 authors.workspace = true
 edition.workspace = true
