@@ -1,6 +1,6 @@
 //! Sparse-checkout puller.
 //!
-//! For each repo directory under `<cache_root>/repos/<owner>/<repo>/`, ensure
+//! For each repo directory under `<cache_root>/fleet/<owner>/<repo>/`, ensure
 //! `checkout/` contains exactly the files listed in `tracked.toml`.
 
 mod git;
@@ -220,7 +220,7 @@ async fn verify_and_reconcile(
 }
 
 fn read_repo_meta_required(repo_dir: &Path) -> Result<RepoMeta> {
-    // repo_dir is <cache_root>/repos/<owner>/<repo>
+    // repo_dir is <cache_root>/fleet/<owner>/<repo>
     let owner = repo_dir
         .parent()
         .and_then(Path::file_name)
@@ -239,9 +239,9 @@ fn read_repo_meta_required(repo_dir: &Path) -> Result<RepoMeta> {
         .with_context(|| format!("meta.toml missing for {owner}/{repo}"))
 }
 
-/// Walk `<cache_root>/repos/<owner>/<repo>/` and return each repo directory.
+/// Walk `<cache_root>/fleet/<owner>/<repo>/` and return each repo directory.
 fn scan_cached_repos(cache_root: &Path) -> Result<Vec<PathBuf>> {
-    let repos_root = cache_root.join("repos");
+    let repos_root = cache_root.join("fleet");
     if !repos_root.exists() {
         return Ok(Vec::new());
     }

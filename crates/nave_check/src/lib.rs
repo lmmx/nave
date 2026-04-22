@@ -40,7 +40,7 @@ pub struct Totals {
 
 pub fn run_check(cache_root: &Path) -> Result<CheckReport> {
     let mut report = CheckReport::default();
-    let repos_root = cache_root.join("repos");
+    let repos_root = cache_root.join("fleet");
     if !repos_root.exists() {
         return Ok(report);
     }
@@ -152,7 +152,7 @@ fn split_outcome(o: &RoundTrip) -> (&'static str, Option<String>) {
 /// Convenience: full path of a repo's checkout directory.
 pub fn checkout_dir(cache_root: &Path, owner: &str, repo: &str) -> PathBuf {
     cache_root
-        .join("repos")
+        .join("fleet")
         .join(owner)
         .join(repo)
         .join("checkout")

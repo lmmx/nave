@@ -66,7 +66,7 @@ pub fn run_search(
     cfg: &NaveConfig,
     options: &SearchOptions,
 ) -> Result<SearchReport> {
-    let repos_root = cache_root.join("repos");
+    let repos_root = cache_root.join("fleet");
     let mut report = SearchReport {
         repos: Vec::new(),
         repos_considered: 0,
@@ -211,7 +211,7 @@ fn collect_matched_files(
 
     for r in &report.repos {
         let checkout = cache_root
-            .join("repos")
+            .join("fleet")
             .join(&r.owner)
             .join(&r.repo)
             .join("checkout");

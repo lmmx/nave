@@ -53,7 +53,7 @@ pub fn run_build(
     cfg: &NaveConfig,
     options: &BuildOptions,
 ) -> Result<BuildReport> {
-    let repos_root = cache_root.join("repos");
+    let repos_root = cache_root.join("fleet");
     let mut report = BuildReport::default();
 
     if !repos_root.exists() {
