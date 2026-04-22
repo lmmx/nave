@@ -37,6 +37,7 @@ tracing = {version = "0.1"}
 tracing-subscriber = {version = "0.3", features = ["env-filter"]}
 thiserror = {version = "1"}
 futures = {version = "0.3"}
+regex = {version = "1"}
 
 [workspace.lints.clippy]
 pedantic = {level = "warn", priority = -2}

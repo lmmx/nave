@@ -39,6 +39,14 @@ pub struct PenRepo {
     pub name: String,
     pub default_branch: String,
     pub clone_url: String,
+    /// When this repo was last synced against the fleet cache.
+    /// Compared against fleet `CacheMeta.last_pushed_at` to detect staleness.
+    #[serde(with = "time::serde::rfc3339", default = "default_synced_at")]
+    pub synced_at: OffsetDateTime,
+}
+
+fn default_synced_at() -> OffsetDateTime {
+    OffsetDateTime::UNIX_EPOCH
 }
 
 pub fn resolve_pen_root(cfg: &PenConfig) -> Result<PathBuf> {

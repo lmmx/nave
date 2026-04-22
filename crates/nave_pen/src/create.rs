@@ -18,6 +18,7 @@ use crate::storage::{
 pub struct CreateOptions {
     pub name: Option<String>,
     pub terms: Vec<String>,
+    pub match_preds: Vec<String>,
     pub ignore_case: bool,
 }
 
@@ -35,8 +36,18 @@ pub async fn create_pen(cfg: &NaveConfig, opts: CreateOptions) -> Result<Pen> {
         .map(|s| Term::parse(s).with_context(|| format!("parsing term {s:?}")))
         .collect::<Result<_>>()?;
 
+    let parsed_preds: Vec<nave_config::MatchPredicate> = opts
+        .match_preds
+        .iter()
+        .map(|s| {
+            nave_config::MatchPredicate::parse(s)
+                .with_context(|| format!("parsing --match predicate {s:?}"))
+        })
+        .collect::<Result<_>>()?;
+
     let search_opts = SearchOptions {
         terms: parsed_terms,
+        match_preds: parsed_preds,
         ignore_case: opts.ignore_case,
         enrich_holes: false,
     };
@@ -74,6 +85,7 @@ pub async fn create_pen(cfg: &NaveConfig, opts: CreateOptions) -> Result<Pen> {
             name: name_r.clone(),
             default_branch: meta.default_branch.clone(),
             clone_url: meta.clone_url.clone(),
+            synced_at: OffsetDateTime::now_utc(),
         });
     }
 

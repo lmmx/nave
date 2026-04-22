@@ -1248,6 +1248,7 @@ dependencies = [
  "nave_scan",
  "nave_schemas",
  "nave_search",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

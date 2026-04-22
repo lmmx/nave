@@ -8,6 +8,7 @@
 
 pub mod address;
 pub mod cache;
+pub mod file_filter;
 pub mod match_pred;
 pub mod matcher;
 pub mod paths;
@@ -23,6 +24,7 @@ use figment2::{
 use serde::{Deserialize, Serialize};
 
 pub use crate::address::{Match, find_addresses, walk_matches};
+pub use crate::file_filter::FileFilter;
 pub use crate::match_pred::{MatchPredicate, Op as MatchOp, find_match_addresses};
 pub use crate::matcher::PathMatcher;
 pub use crate::paths::{cache_root, pen_root, user_config_path};
