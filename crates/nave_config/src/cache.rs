@@ -3,7 +3,7 @@
 //! ```text
 //! ~/.cache/nave/
 //!   meta.toml                           -- CacheMeta
-//!   repos/<owner>/<repo>/
+//!   fleet/<owner>/<repo>/
 //!     meta.toml                         -- RepoMeta
 //!     tracked.toml                      -- TrackedFiles
 //!     checkout/                         -- (populated by `nave pull`, out of scope here)
@@ -60,7 +60,7 @@ pub fn meta_path(cache_root: &Path) -> PathBuf {
 }
 
 pub fn repo_dir(cache_root: &Path, owner: &str, repo: &str) -> PathBuf {
-    cache_root.join("repos").join(owner).join(repo)
+    cache_root.join("fleet").join(owner).join(repo)
 }
 
 pub fn read_cache_meta(cache_root: &Path) -> Result<CacheMeta> {

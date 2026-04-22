@@ -48,7 +48,7 @@ fn prune_stale_repos(
         return Ok(0);
     }
 
-    let repos_root = cache_root.join("repos");
+    let repos_root = cache_root.join("fleet");
     if !repos_root.exists() {
         return Ok(0);
     }
