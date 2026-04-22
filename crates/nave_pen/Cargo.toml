@@ -16,7 +16,7 @@ workspace = true
 
 [package]
 name = "nave_pen"
-version = "0.0.4"
+version = "0.0.5"
 description = "Pen model and operations for nave"
 authors.workspace = true
 edition.workspace = true
