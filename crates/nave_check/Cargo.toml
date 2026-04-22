@@ -11,7 +11,7 @@ workspace = true
 
 [package]
 name = "nave_check"
-version = "0.0.4"
+version = "0.0.5"
 description = "Round-trip validation of tracked config files"
 authors.workspace = true
 edition.workspace = true
