@@ -139,6 +139,16 @@ async fn run_validate(args: ValidateArgs) -> Result<()> {
     use nave_pen::{load_pen, resolve_pen_root, tracked_files_in_pen};
     use nave_schemas::{SchemaId, SchemaRegistry, schema_for_path};
 
+    #[derive(serde::Serialize)]
+    struct FileOutcome {
+        owner: String,
+        repo: String,
+        path: String,
+        schema: Option<&'static str>,
+        schema_errors: Vec<String>,
+        action_errors: Vec<String>,
+    }
+
     let cfg = load_default()?;
     let pen_root_path = resolve_pen_root(&cfg.pen)?;
     let pen = load_pen(&pen_root_path, &args.pen)?;
@@ -161,16 +171,6 @@ async fn run_validate(args: ValidateArgs) -> Result<()> {
 
     let files = tracked_files_in_pen(&pen_root_path, &pen, &cfg.scan)?;
 
-    #[derive(serde::Serialize)]
-    struct FileOutcome {
-        owner: String,
-        repo: String,
-        path: String,
-        schema: Option<&'static str>,
-        schema_errors: Vec<String>,
-        action_errors: Vec<String>,
-    }
-
     let mut outcomes = Vec::new();
     let mut failures = 0usize;
 
@@ -191,12 +191,12 @@ async fn run_validate(args: ValidateArgs) -> Result<()> {
                 Err(e) => schema_errors.push(format!("parse: {e}")),
             }
 
-            if args.check_actions && matches!(id, SchemaId::GithubWorkflow) {
-                if let Err(e) =
+            if args.check_actions
+                && matches!(id, SchemaId::GithubWorkflow)
+                && let Err(e) =
                     validate_workflow_actions(&http, &cache, &tf.abspath, &mut action_errors).await
-                {
-                    action_errors.push(format!("action check failed: {e}"));
-                }
+            {
+                action_errors.push(format!("action check failed: {e}"));
             }
         }
 
@@ -237,7 +237,7 @@ async fn run_validate(args: ValidateArgs) -> Result<()> {
                 println!("    action: {e}");
             }
         }
-        println!("\n{} files, {} failed", outcomes.len(), failures,);
+        println!("\n{} files, {} failed", outcomes.len(), failures);
     }
 
     if failures > 0 {

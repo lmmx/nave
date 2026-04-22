@@ -58,9 +58,9 @@ pub(crate) struct PenShowArgs {
 pub(crate) async fn run(args: PenArgs) -> Result<()> {
     match args.action {
         PenAction::Create(a) => run_create(a).await,
-        PenAction::List(a) => run_list(a),
-        PenAction::Rm(a) => run_rm(a),
-        PenAction::Show(a) => run_show(a),
+        PenAction::List(a) => run_list(&a),
+        PenAction::Rm(a) => run_rm(&a),
+        PenAction::Show(a) => run_show(&a),
     }
 }
 
@@ -80,7 +80,7 @@ async fn run_create(args: PenCreateArgs) -> Result<()> {
     Ok(())
 }
 
-fn run_list(args: PenListArgs) -> Result<()> {
+fn run_list(args: &PenListArgs) -> Result<()> {
     let cfg = load_default()?;
     let root = resolve_pen_root(&cfg.pen)?;
     let pens = list_pens(&root)?;
@@ -101,7 +101,7 @@ fn run_list(args: PenListArgs) -> Result<()> {
     Ok(())
 }
 
-fn run_rm(args: PenRmArgs) -> Result<()> {
+fn run_rm(args: &PenRmArgs) -> Result<()> {
     let cfg = load_default()?;
     let root = resolve_pen_root(&cfg.pen)?;
     remove_pen(&root, &args.name).with_context(|| format!("removing pen {}", args.name))?;
@@ -109,7 +109,7 @@ fn run_rm(args: PenRmArgs) -> Result<()> {
     Ok(())
 }
 
-fn run_show(args: PenShowArgs) -> Result<()> {
+fn run_show(args: &PenShowArgs) -> Result<()> {
     let cfg = load_default()?;
     let root = resolve_pen_root(&cfg.pen)?;
     let pen = load_pen(&root, &args.name)?;
