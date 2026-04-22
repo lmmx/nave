@@ -9,16 +9,15 @@
 
 mod antiunify;
 mod report;
-mod value;
 
 pub use antiunify::{Template, anti_unify};
 pub use report::{BuildReport, GroupReport, HoleReport, InstanceRef, SourceHint};
-pub use value::to_common_tree;
 
 use std::collections::BTreeMap;
 use std::path::Path;
 
 use anyhow::Result;
+use nave_parse::to_json;
 use serde_json::Value;
 use tracing::{debug, warn};
 
@@ -120,7 +119,7 @@ pub fn run_build(
                         continue;
                     }
                 };
-                let full_tree = match to_common_tree(&doc) {
+                let full_tree = match to_json(&doc) {
                     Ok(v) => v,
                     Err(e) => {
                         warn!(%owner, %name, %path, "tree conversion failed: {e}");

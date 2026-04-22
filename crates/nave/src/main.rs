@@ -29,6 +29,8 @@ enum Command {
     Check(commands::check::CheckArgs),
     /// Simplify configs across repos into shared templates.
     Build(commands::build::BuildArgs),
+    /// Validate schemas for tracked files.
+    Schemas(commands::schemas::SchemasArgs),
     /// Search cached repos for substring patterns across tracked files.
     Search(commands::search::SearchArgs),
 }
@@ -45,6 +47,7 @@ async fn main() -> Result<()> {
         Command::Pull(args) => commands::pull::run(args).await,
         Command::Check(args) => commands::check::run(args).await,
         Command::Build(args) => commands::build::run(args).await,
+        Command::Schemas(args) => commands::schemas::run(args).await,
         Command::Search(args) => commands::search::run(args).await,
     }
 }

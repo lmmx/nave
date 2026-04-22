@@ -10,6 +10,8 @@
 //! pipeline doesn't handle, or the format has intrinsic round-trip hazards
 //! (e.g. YAML anchors/aliases, TOML key-ordering edge cases).
 
+use anyhow::{Context, Result as AnyResult};
+use serde_json::Value as JsonValue;
 use std::path::Path;
 
 use thiserror::Error;
@@ -152,5 +154,17 @@ pub fn round_trip(bytes: &[u8], fmt: Format) -> RoundTrip {
         RoundTrip::Ok
     } else {
         RoundTrip::SemanticDrift
+    }
+}
+
+/// Convert a parsed `Document` into a `serde_json::Value` tree.
+///
+/// Lossy for format-specific details (TOML datetimes → strings,
+/// YAML anchors already expanded at parse time). Sufficient for
+/// structural comparison and JSON Schema validation.
+pub fn to_json(doc: &Document) -> AnyResult<JsonValue> {
+    match doc {
+        Document::Toml(v) => serde_json::to_value(v).context("toml → json conversion"),
+        Document::Yaml(v) => serde_json::to_value(v).context("yaml → json conversion"),
     }
 }

@@ -9,6 +9,7 @@ nave_scan = {workspace = true}
 nave_pull = {workspace = true}
 nave_check = {workspace = true}
 nave_build = {workspace = true}
+nave_schemas = {workspace = true}
 nave_search = {workspace = true}
 anyhow = {workspace = true}
 clap = {workspace = true}

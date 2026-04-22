@@ -108,5 +108,11 @@ pub(crate) async fn run(args: InitArgs) -> Result<()> {
     let text = render_config_with_header(&cfg)?;
     std::fs::write(&path, text).with_context(|| format!("writing {}", path.display()))?;
     info!(path = %path.display(), "wrote config");
+    // Populate the schema cache. Non-fatal on failure: the user might be
+    // offline on first run, and `nave schemas pull` can be run later.
+    let cfg = nave_config::load_default()?;
+    if let Err(e) = crate::commands::schemas::run_pull_with_config(&cfg, false).await {
+        warn!(error = %e, "schema pull failed; run `nave schemas pull` later");
+    }
     Ok(())
 }
