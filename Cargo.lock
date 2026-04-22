@@ -1242,10 +1242,13 @@ dependencies = [
  "nave_check",
  "nave_config",
  "nave_github",
+ "nave_parse",
+ "nave_pen",
  "nave_pull",
  "nave_scan",
  "nave_schemas",
  "nave_search",
+ "reqwest",
  "serde",
  "serde_json",
  "tokio",
@@ -1318,6 +1321,23 @@ dependencies = [
  "serde_norway",
  "thiserror 1.0.69",
  "toml",
+]
+
+[[package]]
+name = "nave_pen"
+version = "0.0.4"
+dependencies = [
+ "anyhow",
+ "dirs",
+ "nave_config",
+ "nave_github",
+ "nave_scan",
+ "nave_search",
+ "serde",
+ "time",
+ "tokio",
+ "toml",
+ "tracing",
 ]
 
 [[package]]

@@ -17,4 +17,4 @@ pub use action::{
 };
 pub use id::SchemaId;
 pub use registry::SchemaRegistry;
-pub use tracked::schemas_for_tracked;
+pub use tracked::{schema_for_path, schemas_for_tracked};
