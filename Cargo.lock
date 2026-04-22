@@ -1332,6 +1332,7 @@ version = "0.0.5"
 dependencies = [
  "anyhow",
  "dirs",
+ "futures",
  "nave_config",
  "nave_github",
  "nave_scan",

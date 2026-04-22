@@ -18,38 +18,52 @@ pub(crate) struct PenArgs {
 
 #[derive(Debug, Subcommand)]
 pub(crate) enum PenAction {
+    /// Create a pen by filtering the fleet and cloning matching repos.
     Create(PenCreateArgs),
+    /// List pens, optionally filtered by state.
     List(PenListArgs),
+    /// Show a single pen's details.
     Show(PenShowArgs),
+    /// Show per-repo state for a pen: working tree, freshness, run state, divergence.
     Status(PenStatusArgs),
+    /// Refresh a pen's synced baseline against the fleet cache.
     Sync(PenSyncArgs),
+    /// Discard uncommitted working-tree changes across a pen's repos.
     Clean(PenSimpleArgs),
+    /// Drop local commits on the pen branch, returning to the synced baseline.
     Revert(PenAllowDirtyArgs),
+    /// Rebuild the pen branch from origin's default branch.
     Reinit(PenAllowDirtyArgs),
+    /// Run a command in each pen repo, optionally committing/pushing changes.
     Exec(PenExecArgs),
+    /// Remove a pen's local workspace and definition.
     Rm(PenRmArgs),
 }
 
 #[derive(Debug, Args)]
 pub(crate) struct PenCreateArgs {
+    /// Explicit pen name. Defaults to `nave/<slug>` derived from the first term.
     #[arg(short, long)]
     pub name: Option<String>,
+    /// Treat filter terms case-insensitively (same as `nave search -i`).
     #[arg(short, long)]
     pub ignore_case: bool,
-    /// Structural predicate (see `nave build --match`).
+    /// Structural predicate to narrow the repo set. Same syntax as `nave build --match`.
     #[arg(long = "match", value_name = "PREDICATE")]
     pub match_preds: Vec<String>,
-    /// Filter terms (see `nave search`).
+    /// Filter terms. Same syntax as `nave search`: `[scope:]value[|value...]`.
     #[arg(required = true, num_args = 1..)]
     pub terms: Vec<String>,
 }
 
 #[derive(Debug, Args, Default)]
 pub(crate) struct PenListArgs {
-    /// docker-style `key=value` filters over state. Keys: `working-tree`,
-    /// `freshness`, `run-state`, `divergence`. Multiple allowed.
+    /// Filter by state. Keys: `working-tree`, `freshness`,
+    /// `run-state`. Values are the state labels (e.g. `dirty`, `stale`, `run-local`).
+    /// Multiple allowed.
     #[arg(short = 'f', long = "filter", value_name = "KEY=VALUE")]
     pub filters: Vec<String>,
+    /// Emit JSON instead of text.
     #[arg(long)]
     pub json: bool,
 }
@@ -59,62 +73,74 @@ pub(crate) struct PenShowArgs {
     /// Pen name, or empty when `--filter` is used.
     #[arg(default_value = "")]
     pub name: String,
-    /// Regex over pen name; must match exactly one pen.
+    /// Regex over pen names. Must match exactly one pen.
     #[arg(long)]
     pub filter: Option<String>,
+    /// Emit JSON instead of text.
     #[arg(long)]
     pub json: bool,
 }
 
 #[derive(Debug, Args)]
 pub(crate) struct PenStatusArgs {
+    /// Pen name.
     pub name: String,
+    /// Emit JSON instead of text.
     #[arg(long)]
     pub json: bool,
 }
 
 #[derive(Debug, Args)]
 pub(crate) struct PenSyncArgs {
+    /// Pen name.
     pub name: String,
+    /// Report what would change without touching anything.
     #[arg(long)]
     pub dry_run: bool,
 }
 
 #[derive(Debug, Args)]
 pub(crate) struct PenSimpleArgs {
+    /// Pen name.
     pub name: String,
 }
 
 #[derive(Debug, Args)]
 pub(crate) struct PenAllowDirtyArgs {
+    /// Pen name.
     pub name: String,
+    /// Discard uncommitted working-tree changes before proceeding.
+    /// Without this, dirty repos cause the command to abort.
     #[arg(long)]
     pub allow_dirty: bool,
 }
 
 #[derive(Debug, Args)]
 pub(crate) struct PenExecArgs {
+    /// Pen name.
     pub name: String,
-    /// Only run in this repo (matches bare name or `owner/name`).
+    /// Restrict execution to a single repo, matched by bare name or `owner/name`.
     #[arg(long)]
     pub only: Option<String>,
-    /// Commit any changes after running.
+    /// Commit any changes after running the command.
     #[arg(long)]
     pub commit: bool,
-    /// Commit and push.
+    /// Commit and push to `origin/<pen-branch>`. Implies `--commit`.
     #[arg(long = "push-changes")]
     pub push_changes: bool,
-    /// Commit message.
+    /// Commit message. Defaults to "nave pen exec".
     #[arg(short = 'm', long)]
     pub message: Option<String>,
-    /// The command to execute after `--`.
+    /// The command to execute. Everything after `--` is passed through.
     #[arg(last = true, required = true)]
     pub cmd: Vec<String>,
 }
 
 #[derive(Debug, Args)]
 pub(crate) struct PenRmArgs {
+    /// Pen name.
     pub name: String,
+    /// Remove the pen even if any repo has uncommitted changes.
     #[arg(long)]
     pub allow_dirty: bool,
 }

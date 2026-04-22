@@ -1,6 +1,7 @@
 //! Mutation operations on a pen: sync, clean, revert, reinit, exec.
 
 use std::path::Path;
+use std::process::Stdio;
 
 use anyhow::{Context, Result, bail};
 use time::OffsetDateTime;
@@ -123,13 +124,13 @@ pub async fn revert_pen(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> Result
 /// Rebuild the pen branch from origin's default branch. Equivalent to
 /// reclone-and-rebranch in place.
 pub async fn reinit_pen(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> Result<()> {
+    use futures::{StreamExt, stream};
+
+    // Pre-flight: check cleanliness sequentially (cheap, and fails fast).
     if !allow_dirty {
         for r in &pen.repos {
             let dir = pen_repo_clone_dir(pen_root, &pen.name, &r.owner, &r.name);
-            if !dir.exists() {
-                continue;
-            }
-            if !working_tree_clean(&dir).await? {
+            if dir.exists() && !working_tree_clean(&dir).await? {
                 bail!(
                     "repo {}/{} has uncommitted changes; pass --allow-dirty to discard",
                     r.owner,
@@ -138,36 +139,44 @@ pub async fn reinit_pen(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> Result
             }
         }
     }
-    for r in &pen.repos {
-        let dir = pen_repo_clone_dir(pen_root, &pen.name, &r.owner, &r.name);
-        if !dir.exists() {
-            continue;
-        }
-        if allow_dirty {
-            run_git_quiet(&dir, &["reset", "--hard", "HEAD"], "reset").await?;
-            run_git_quiet(&dir, &["clean", "-fd"], "clean").await?;
-        }
-        // Fetch the default branch's tip, then reset pen branch to it.
-        run_git_quiet(
-            &dir,
-            &["fetch", "--depth=1", "origin", &r.default_branch],
-            "fetch",
-        )
-        .await?;
-        run_git_quiet(
-            &dir,
-            &["reset", "--hard", &format!("origin/{}", r.default_branch)],
-            "reset to origin default",
-        )
-        .await?;
-        // Ensure we're on the pen branch.
-        let _ = Command::new("git")
-            .arg("-C")
-            .arg(&dir)
-            .args(["checkout", "-B", &pen.branch])
-            .status()
-            .await;
-        info!(repo = %format!("{}/{}", r.owner, r.name), "reinitialised");
+
+    let results: Vec<Result<()>> = stream::iter(pen.repos.iter())
+        .map(|r| {
+            let dir = pen_repo_clone_dir(pen_root, &pen.name, &r.owner, &r.name);
+            let pen_branch = pen.branch.clone();
+            let default_branch = r.default_branch.clone();
+            let label = format!("{}/{}", r.owner, r.name);
+            async move {
+                if !dir.exists() {
+                    return Ok(());
+                }
+                if allow_dirty {
+                    run_git_quiet(&dir, &["reset", "--hard", "HEAD"], "reset").await?;
+                    run_git_quiet(&dir, &["clean", "-fd"], "clean").await?;
+                }
+                run_git_quiet(
+                    &dir,
+                    &["fetch", "--depth=1", "origin", &default_branch],
+                    "fetch",
+                )
+                .await?;
+                run_git_quiet(
+                    &dir,
+                    &["reset", "--hard", &format!("origin/{default_branch}")],
+                    "reset to origin default",
+                )
+                .await?;
+                run_git_quiet(&dir, &["checkout", "-B", &pen_branch], "checkout branch").await?;
+                info!(repo = %label, "reinitialised");
+                Ok(())
+            }
+        })
+        .buffer_unordered(6)
+        .collect()
+        .await;
+
+    for r in results {
+        r?;
     }
     Ok(())
 }
@@ -249,6 +258,8 @@ async fn run_git_impl(dir: &Path, args: &[&str], label: &str, mode: GitOutput) -
                 .arg("-C")
                 .arg(dir)
                 .args(args)
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
                 .status()
                 .await
                 .with_context(|| format!("spawning git {label}"))?;
@@ -263,6 +274,8 @@ async fn run_git_impl(dir: &Path, args: &[&str], label: &str, mode: GitOutput) -
                 .arg("-C")
                 .arg(dir)
                 .args(args)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
                 .output()
                 .await
                 .with_context(|| format!("spawning git {label}"))?;
