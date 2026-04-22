@@ -174,22 +174,6 @@ pub fn object_ancestors(root: &Value, addr: &str) -> Vec<String> {
     out
 }
 
-/// Deepest non-root object ancestor shared by `a` and `b` in `root`,
-/// or `None` if they share only the document root or nothing.
-pub fn deepest_shared_object_ancestor(root: &Value, a: &str, b: &str) -> Option<String> {
-    let anc_a = object_ancestors(root, a);
-    let anc_b = object_ancestors(root, b);
-    let mut lca: Option<String> = None;
-    for (x, y) in anc_a.iter().zip(anc_b.iter()) {
-        if x == y {
-            lca = Some(x.clone());
-        } else {
-            break;
-        }
-    }
-    lca.filter(|s| !s.is_empty())
-}
-
 /// Resolve an address to a subtree in `root`. Returns `None` if the
 /// address doesn't exist.
 pub fn subtree_at(root: &Value, addr: &str) -> Option<Value> {
@@ -255,30 +239,6 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn lca_is_step_for_uses_and_with_command() {
-        let tree = json!({
-            "jobs": {
-                "release": {
-                    "steps": [
-                        {
-                            "uses": "PyO3/maturin-action@v1",
-                            "with": {"command": "upload"}
-                        }
-                    ]
-                }
-            }
-        });
-        assert_eq!(
-            deepest_shared_object_ancestor(
-                &tree,
-                "jobs.release.steps[0].uses",
-                "jobs.release.steps[0].with.command",
-            ),
-            Some("jobs.release.steps[0]".to_string()),
-        );
-    }
-
-    #[test]
     fn subtree_at_extracts_object() {
         let tree = json!({
             "jobs": {
@@ -289,14 +249,5 @@ mod tests {
         });
         let sub = subtree_at(&tree, "jobs.release.steps[0]").unwrap();
         assert_eq!(sub, json!({"uses": "x", "with": {"command": "upload"}}));
-    }
-
-    #[test]
-    fn only_document_root_in_common() {
-        let tree = json!({
-            "a": "maturin-action@v1",
-            "b": {"command": "upload"}
-        });
-        assert!(deepest_shared_object_ancestor(&tree, "a", "b.command").is_none());
     }
 }

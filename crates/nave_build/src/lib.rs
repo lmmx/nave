@@ -24,7 +24,7 @@ use tracing::{debug, warn};
 
 use nave_config::{
     NaveConfig, PathMatcher, Term,
-    address::{deepest_shared_object_ancestor, find_addresses, subtree_at},
+    address::{find_addresses, subtree_at},
     cache::{read_repo_meta, read_tracked},
     match_pred::{MatchPredicate, find_match_addresses},
 };
@@ -175,8 +175,10 @@ pub fn run_build(
                         value: full_tree,
                     }]
                 } else {
-                    // --co-occur: build a uniform list of per-constraint address sets,
-                    // with --where terms first (anchor = first), match-preds after.
+                    // --co-occur: a site qualifies iff every constraint has ≥1 hit inside it.
+                    // Candidates are object-ancestors of any hit; we keep the deepest
+                    // (minimal under containment) qualifying set. No anchor — constraints
+                    // are treated symmetrically.
                     let mut addrs_per_constraint: Vec<Vec<String>> =
                         Vec::with_capacity(options.where_terms.len() + options.match_preds.len());
 
@@ -206,44 +208,31 @@ pub fn run_build(
                         continue;
                     }
 
-                    // Need at least one "anchor" set. Prefer the first --where term;
-                    // if only --match predicates were given, fall back to the first
-                    // predicate's hits as anchor.
-                    let anchor_addrs = &addrs_per_constraint[0].clone();
-                    let other_constraints: Vec<&Vec<String>> =
-                        addrs_per_constraint.iter().skip(1).collect();
-
-                    // Flatten all hits into (constraint_index, address) pairs.
-                    let mut all_hits: Vec<(usize, String)> = Vec::new();
-                    for (ci, addrs) in addrs_per_constraint.iter().enumerate() {
-                        for a in addrs {
-                            all_hits.push((ci, a.clone()));
-                        }
-                    }
+                    // Flatten (constraint_index, address) for the qualification check.
                     let num_constraints = addrs_per_constraint.len();
+                    let all_hits: Vec<(usize, &str)> = addrs_per_constraint
+                        .iter()
+                        .enumerate()
+                        .flat_map(|(ci, addrs)| addrs.iter().map(move |a| (ci, a.as_str())))
+                        .collect();
 
-                    // Candidate sites: every object-ancestor address of every hit.
-                    // (Using a set to dedup.)
-                    let mut candidate_set: std::collections::BTreeSet<String> =
-                        std::collections::BTreeSet::new();
-                    for (_, a) in &all_hits {
-                        for anc in nave_config::address::object_ancestors(&full_tree, a) {
-                            if !anc.is_empty() {
-                                candidate_set.insert(anc);
-                            }
-                        }
-                    }
-                    let mut candidates: Vec<String> = candidate_set.into_iter().collect();
+                    // Candidate sites: object-ancestors of every hit, deduped.
+                    let mut candidates: Vec<String> = all_hits
+                        .iter()
+                        .flat_map(|(_, a)| nave_config::address::object_ancestors(&full_tree, a))
+                        .filter(|anc| !anc.is_empty())
+                        .collect::<std::collections::BTreeSet<_>>()
+                        .into_iter()
+                        .collect();
 
-                    // A candidate qualifies if every constraint has ≥1 hit inside it.
+                    // Qualify: every constraint has ≥1 hit inside.
                     candidates.retain(|cand| {
                         (0..num_constraints)
                             .all(|ci| all_hits.iter().any(|(c, a)| *c == ci && is_within(cand, a)))
                     });
 
-                    // Drop candidates that strictly contain another qualifying candidate.
-                    // Deepest-only.
-                    let deepest: Vec<String> = candidates
+                    // Deepest-only: drop candidates strictly containing another qualifier.
+                    let sites: Vec<String> = candidates
                         .iter()
                         .filter(|cand| {
                             !candidates
@@ -253,9 +242,6 @@ pub fn run_build(
                         .cloned()
                         .collect();
 
-                    let mut sites = deepest;
-                    sites.sort();
-                    sites.dedup();
                     if sites.is_empty() {
                         continue;
                     }
