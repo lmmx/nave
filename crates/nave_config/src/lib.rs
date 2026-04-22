@@ -6,9 +6,12 @@
 //!   3. Environment variables prefixed `NAVE_`
 //!   4. CLI overrides supplied by the binary
 
+pub mod address;
 pub mod cache;
+pub mod match_pred;
 pub mod matcher;
 pub mod paths;
+pub mod term;
 
 use std::path::PathBuf;
 
@@ -18,8 +21,11 @@ use figment2::{
 };
 use serde::{Deserialize, Serialize};
 
+pub use crate::address::{Match, find_addresses, walk_matches};
+pub use crate::match_pred::{MatchPredicate, Op as MatchOp, find_match_addresses};
 pub use crate::matcher::PathMatcher;
 pub use crate::paths::{cache_root, user_config_path};
+pub use crate::term::Term;
 
 /// The fully-resolved nave configuration.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -33,15 +39,10 @@ pub struct NaveConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct GithubConfig {
-    /// GitHub username. `None` means "ask" or "probe via gh CLI".
     pub username: Option<String>,
-    /// Whether to try `gh auth status` / `gh auth token` to fill gaps.
     pub use_gh_cli: bool,
-    /// Per-page size on `/users/{user}/repos` (max 100).
     pub per_page: u32,
-    /// `owner`, `all`, or `member`.
     pub repo_type: String,
-    /// GitHub API base; override for GHES.
     pub api_base: String,
 }
 
@@ -60,30 +61,14 @@ impl Default for GithubConfig {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct CacheConfig {
-    /// Override for `~/.cache/nave`. `None` = use XDG default.
     pub root: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ScanConfig {
-    /// Glob patterns for files to track, relative to repo root.
-    ///
-    /// Globs follow gitignore-ish semantics:
-    ///   - `*` matches within a path component (not crossing `/`)
-    ///   - `**` matches zero or more components
-    ///   - `?`, `[abc]`, `{a,b}` work as expected
-    ///
-    /// Defaults cover: `pyproject.toml`, `Cargo.toml`, pre-commit configs,
-    /// `.github/workflows/*`, and the top-level dependabot config.
     pub tracked_paths: Vec<String>,
-
-    /// Match paths case-insensitively. Defaults to true to catch typos like
-    /// `Pyproject.toml`; most real configs are lowercase.
     pub case_insensitive: bool,
-
-    /// Exclude forks from scan. Defaults to true — forks typically inherit
-    /// upstream's configs and we'd rather model the canonical source.
     pub exclude_forks: bool,
 }
 
@@ -97,8 +82,6 @@ impl Default for ScanConfig {
     }
 }
 
-/// The canonical default list of tracked file patterns. Public so `init`
-/// and other tools can show it to the user verbatim.
 pub fn default_tracked_paths() -> Vec<String> {
     vec![
         "pyproject.toml".to_string(),
@@ -112,7 +95,6 @@ pub fn default_tracked_paths() -> Vec<String> {
     ]
 }
 
-/// Load with no CLI overrides.
 pub fn load_default() -> anyhow::Result<NaveConfig> {
     let mut figment = Figment::from(Serialized::defaults(NaveConfig::default()));
 
@@ -126,11 +108,6 @@ pub fn load_default() -> anyhow::Result<NaveConfig> {
     Ok(figment.extract()?)
 }
 
-/// Load `NaveConfig` in the standard precedence stack, with CLI overrides
-/// (must serialize to a map, e.g. a struct with `#[derive(Serialize)]`).
-///
-/// `cli_overrides` should be a `Serialize` type holding any CLI-provided values.
-/// Pass `()` if there are none.
 pub fn load<T: Serialize>(cli_overrides: T) -> anyhow::Result<NaveConfig> {
     let mut figment = Figment::from(Serialized::defaults(NaveConfig::default()));
 
