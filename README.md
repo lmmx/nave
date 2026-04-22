@@ -8,6 +8,10 @@
 
 **Fleet-level operations for OSS package repos.**
 
+<div align="center">
+  <img width="160" height="160" alt="nave logo" src="https://github.com/user-attachments/assets/15aaaa82-0300-45ca-a616-8535cf46c416" />
+</div>
+
 If you maintain multiple repos, each with its own `pyproject.toml`, CI workflows, dependabot config,
 pre-commit hooks, and so on, `nave` lets you query and manage these as a _fleet_.
 
@@ -17,16 +21,11 @@ Examples of questions `nave` is built to answer:
 - What's the shared skeleton across all my dependabot configs, and where do they diverge?
 - Which repos still pin an old Python version in `pyproject.toml`?
 
-If you have one repo, or a monorepo, this isn't for you. If you have a sprawl of
-related-but-drifting configs and you've written shell loops over the GitHub API to
+If you have a sprawl of related but drifting configs and you've written shell loops over the GitHub API to
 keep track of them, read on.
 
-<div align="center">
-  <img width="160" height="160" alt="nave logo" src="https://github.com/user-attachments/assets/15aaaa82-0300-45ca-a616-8535cf46c416" />
-</div>
-
-Nave is built in Rust (`nave-rs`) with a Python package as a command line entry point (`nave`).
-Background on the design is in the [Fleet Ops](https://cog.spin.systems/fleet-ops) blog series.
+Nave is built in Rust with a Python package as a command line entry point (`nave`).
+Further background on the design is in the [Fleet Ops](https://cog.spin.systems/fleet-ops) blog series.
 
 ## Install
 
