@@ -123,3 +123,37 @@ fn atomic_write(path: &Path, text: &str) -> Result<()> {
     std::fs::rename(&tmp, path)?;
     Ok(())
 }
+
+// ---------- schema cache paths ----------
+//
+// Schema cache layout:
+// ```text
+// ~/.cache/nave/schemas/
+//   schemastore/<name>.json
+//   github_actions/<owner>__<repo>/refs/<sha>/action.yml
+// ```
+
+pub fn schemas_dir(cache_root: &Path) -> PathBuf {
+    cache_root.join("schemas")
+}
+
+pub fn schemastore_dir(cache_root: &Path) -> PathBuf {
+    schemas_dir(cache_root).join("schemastore")
+}
+
+pub fn schemastore_schema_path(cache_root: &Path, name: &str) -> PathBuf {
+    schemastore_dir(cache_root).join(format!("{name}.json"))
+}
+
+pub fn action_repo_dir(cache_root: &Path, owner: &str, repo: &str) -> PathBuf {
+    schemas_dir(cache_root)
+        .join("github_actions")
+        .join(format!("{owner}__{repo}"))
+}
+
+pub fn action_yml_path(cache_root: &Path, owner: &str, repo: &str, sha: &str) -> PathBuf {
+    action_repo_dir(cache_root, owner, repo)
+        .join("refs")
+        .join(sha)
+        .join("action.yml")
+}

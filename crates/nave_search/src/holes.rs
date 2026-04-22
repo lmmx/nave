@@ -87,7 +87,7 @@ fn parse_to_json(bytes: &[u8], path: &str) -> Option<serde_json::Value> {
         _ => return None,
     };
     let doc = parse_bytes(bytes, fmt).ok()?;
-    nave_build::to_common_tree(&doc).ok()
+    nave_parse::to_json(&doc).ok()
 }
 
 fn short_snippet(s: &str) -> String {

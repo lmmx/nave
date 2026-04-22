@@ -13,6 +13,7 @@ pub mod matcher;
 pub mod paths;
 pub mod term;
 
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use figment2::{
@@ -34,6 +35,7 @@ pub struct NaveConfig {
     pub github: GithubConfig,
     pub cache: CacheConfig,
     pub scan: ScanConfig,
+    pub schemas: SchemasConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -79,6 +81,36 @@ impl Default for ScanConfig {
             case_insensitive: true,
             exclude_forks: true,
         }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct SchemasConfig {
+    /// `SchemaStore` name → URL. Overridable per-schema for pinning or mirrors.
+    pub sources: BTreeMap<String, String>,
+}
+
+impl Default for SchemasConfig {
+    fn default() -> Self {
+        let mut sources = BTreeMap::new();
+        sources.insert(
+            "dependabot".into(),
+            "https://json.schemastore.org/dependabot-2.0.json".into(),
+        );
+        sources.insert(
+            "github-workflow".into(),
+            "https://json.schemastore.org/github-workflow.json".into(),
+        );
+        sources.insert(
+            "github-action".into(),
+            "https://json.schemastore.org/github-action.json".into(),
+        );
+        sources.insert(
+            "pyproject".into(),
+            "https://json.schemastore.org/pyproject.json".into(),
+        );
+        Self { sources }
     }
 }
 
