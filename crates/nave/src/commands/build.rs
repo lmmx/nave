@@ -2,20 +2,32 @@ use anyhow::{Context, Result};
 use clap::Args;
 
 use nave_build::{BuildOptions, BuildReport, GroupReport, HoleReport, SourceHint, run_build};
-use nave_config::{NaveConfig, Term, cache_root, load_default};
+use nave_config::{MatchPredicate, NaveConfig, Term, cache_root, load_default};
 
 #[derive(Args, Debug)]
 pub(crate) struct BuildArgs {
     /// Emit as JSON instead of text.
     #[arg(long)]
     pub json: bool,
-    /// Restrict to groups whose pattern contains this substring.
+    /// Restrict output to groups whose pattern contains this substring.
     #[arg(long)]
     pub filter: Option<String>,
     /// Narrow the input to files satisfying every term.
     /// Grammar: `[scope:]value[|value...]`, same as `nave search`.
     #[arg(long = "where", value_name = "TERM")]
     pub where_terms: Vec<String>,
+    /// Structural predicate of the form `[scope:]path op literal`, where
+    /// `op` is `=` (exact) or `~` (substring). Matches tree nodes whose
+    /// relative `path` resolves to a scalar satisfying the comparison.
+    /// Composes with `--where` and `--co-occur`.
+    #[arg(long = "match", value_name = "PREDICATE")]
+    pub match_preds: Vec<String>,
+    /// Anti-unify the subtrees where `--where` terms co-occur rather
+    /// than whole files. A co-occurrence site is the deepest non-root
+    /// object ancestor shared by an anchor-term match and at least one
+    /// match from each other term. Requires ≥ 2 `--where` terms.
+    #[arg(long)]
+    pub co_occur: bool,
 }
 
 #[allow(clippy::unused_async)]
@@ -38,7 +50,23 @@ pub(crate) async fn run(args: BuildArgs) -> Result<()> {
         .map(|s| Term::parse(s).with_context(|| format!("parsing --where term {s:?}")))
         .collect::<Result<_>>()?;
 
-    let mut report = run_build(&root, &cfg, &BuildOptions { where_terms })?;
+    let match_preds: Vec<MatchPredicate> = args
+        .match_preds
+        .iter()
+        .map(|s| {
+            MatchPredicate::parse(s).with_context(|| format!("parsing --match predicate {s:?}"))
+        })
+        .collect::<Result<_>>()?;
+
+    let mut report = run_build(
+        &root,
+        &cfg,
+        &BuildOptions {
+            where_terms,
+            match_preds,
+            co_occur: args.co_occur,
+        },
+    )?;
 
     if let Some(f) = &args.filter {
         report.groups.retain(|g| g.pattern.contains(f));

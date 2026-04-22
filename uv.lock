@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.9"
 
 [options]
-exclude-newer = "2026-04-17T15:01:30.641797005Z"
+exclude-newer = "2026-04-18T09:19:45.941212094Z"
 exclude-newer-span = "P3D"
 
 [[package]]
@@ -37,7 +37,7 @@ patchelf = [
 
 [[package]]
 name = "nave"
-version = "0.0.2"
+version = "0.0.3"
 source = { editable = "." }
 
 [package.dev-dependencies]
