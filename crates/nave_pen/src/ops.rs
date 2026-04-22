@@ -60,15 +60,23 @@ pub struct SyncReport {
 
 /// Discard uncommitted changes in every pen repo.
 pub async fn clean_pen(pen_root: &Path, pen: &Pen) -> Result<()> {
+    let mut cleaned = 0usize;
+    let mut skipped = 0usize;
     for r in &pen.repos {
         let dir = pen_repo_clone_dir(pen_root, &pen.name, &r.owner, &r.name);
         if !dir.exists() {
             continue;
         }
-        run_git(&dir, &["reset", "--hard", "HEAD"], "reset").await?;
-        run_git(&dir, &["clean", "-fd"], "clean").await?;
+        if working_tree_clean(&dir).await? {
+            skipped += 1;
+            continue;
+        }
+        run_git_quiet(&dir, &["reset", "--hard", "HEAD"], "reset").await?;
+        run_git_quiet(&dir, &["clean", "-fd"], "clean").await?;
         info!(repo = %format!("{}/{}", r.owner, r.name), "cleaned");
+        cleaned += 1;
     }
+    info!(cleaned, skipped, "clean complete");
     Ok(())
 }
 
@@ -97,11 +105,11 @@ pub async fn revert_pen(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> Result
             continue;
         }
         if allow_dirty {
-            run_git(&dir, &["reset", "--hard", "HEAD"], "reset").await?;
-            run_git(&dir, &["clean", "-fd"], "clean").await?;
+            run_git_quiet(&dir, &["reset", "--hard", "HEAD"], "reset").await?;
+            run_git_quiet(&dir, &["clean", "-fd"], "clean").await?;
         }
         // Reset pen branch to default branch's tip (the synced baseline).
-        run_git(
+        run_git_quiet(
             &dir,
             &["reset", "--hard", &r.default_branch],
             "reset to default",
@@ -136,17 +144,17 @@ pub async fn reinit_pen(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> Result
             continue;
         }
         if allow_dirty {
-            run_git(&dir, &["reset", "--hard", "HEAD"], "reset").await?;
-            run_git(&dir, &["clean", "-fd"], "clean").await?;
+            run_git_quiet(&dir, &["reset", "--hard", "HEAD"], "reset").await?;
+            run_git_quiet(&dir, &["clean", "-fd"], "clean").await?;
         }
         // Fetch the default branch's tip, then reset pen branch to it.
-        run_git(
+        run_git_quiet(
             &dir,
             &["fetch", "--depth=1", "origin", &r.default_branch],
             "fetch",
         )
         .await?;
-        run_git(
+        run_git_quiet(
             &dir,
             &["reset", "--hard", &format!("origin/{}", r.default_branch)],
             "reset to origin default",
@@ -202,7 +210,7 @@ pub async fn exec_pen(
         }
 
         if commit {
-            run_git(&dir, &["add", "-A"], "add").await?;
+            run_git_quiet(&dir, &["add", "-A"], "add").await?;
             // Skip commit if nothing changed.
             let diff = Command::new("git")
                 .arg("-C")
@@ -212,12 +220,12 @@ pub async fn exec_pen(
                 .await?;
             if !diff.success() {
                 let msg = commit_message.unwrap_or("nave pen exec");
-                run_git(&dir, &["commit", "-m", msg], "commit").await?;
+                run_git_quiet(&dir, &["commit", "-m", msg], "commit").await?;
             }
         }
 
         if push {
-            run_git(
+            run_git_quiet(
                 &dir,
                 &["push", "--set-upstream", "origin", &pen.branch],
                 "push",
@@ -228,18 +236,57 @@ pub async fn exec_pen(
     Ok(())
 }
 
-async fn run_git(dir: &Path, args: &[&str], label: &str) -> Result<()> {
-    let status = Command::new("git")
-        .arg("-C")
-        .arg(dir)
-        .args(args)
-        .status()
-        .await
-        .with_context(|| format!("spawning git {label}"))?;
-    if !status.success() {
-        bail!("git {label} failed in {}", dir.display());
+enum GitOutput {
+    Status,
+    #[allow(dead_code)]
+    Output,
+}
+
+async fn run_git_impl(dir: &Path, args: &[&str], label: &str, mode: GitOutput) -> Result<()> {
+    match mode {
+        GitOutput::Status => {
+            let status = Command::new("git")
+                .arg("-C")
+                .arg(dir)
+                .args(args)
+                .status()
+                .await
+                .with_context(|| format!("spawning git {label}"))?;
+
+            if !status.success() {
+                bail!("git {label} failed in {}", dir.display());
+            }
+        }
+
+        GitOutput::Output => {
+            let out = Command::new("git")
+                .arg("-C")
+                .arg(dir)
+                .args(args)
+                .output()
+                .await
+                .with_context(|| format!("spawning git {label}"))?;
+
+            if !out.status.success() {
+                bail!(
+                    "git {label} failed in {}: {}",
+                    dir.display(),
+                    String::from_utf8_lossy(&out.stderr).trim()
+                );
+            }
+        }
     }
+
     Ok(())
+}
+
+async fn run_git_quiet(dir: &Path, args: &[&str], label: &str) -> Result<()> {
+    run_git_impl(dir, args, label, GitOutput::Status).await
+}
+
+#[allow(dead_code)]
+async fn run_git_with_output(dir: &Path, args: &[&str], label: &str) -> Result<()> {
+    run_git_impl(dir, args, label, GitOutput::Output).await
 }
 
 async fn working_tree_clean(dir: &Path) -> Result<bool> {
