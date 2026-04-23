@@ -1,12 +1,12 @@
 [project]
 site_name = "Nave"
 site_url = "https://lmmx.github.io/nave"
-site_description = "nave: fleet-level ops for OSS repos"
+site_description = "Fleet-level operations for OSS package repos"
 site_author = "Louis Maddox"
 docs_dir = "docs"
 repo_name = "lmmx/nave"
 repo_url = "https://github.com/lmmx/nave"
-# Navigation
+
 nav = [
   {"Home" = "index.md"},
   {"Concepts" = [

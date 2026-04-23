@@ -8,3 +8,4 @@ dist/
 wheels/
 .ruff_cache/
 site/
+*.sw[op]

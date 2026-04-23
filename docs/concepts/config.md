@@ -1,8 +1,11 @@
 # Config
 
-**TL;DR:** All user-level settings live in `~/.config/nave.toml` (XDG-compliant), with
-env-var overrides using `NAVE_` prefix and `__` section separator. `nave init` writes
-a commented default.
+All user-level settings live in `~/.config/nave.toml` (`$XDG_CONFIG_HOME`), with
+env-var overrides using `NAVE_` prefix and `__` section separator (using [figment2]).
+
+[figment2]: https://docs.rs/figment2/latest/figment2/
+
+`nave init` writes a commented default.
 
 ## Layout
 
