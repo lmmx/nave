@@ -10,7 +10,7 @@ Create a pen by filtering the fleet and cloning matching repos.
 
 ## What it does
 
-1. Resolves the filter against the cache (same engine as [++"nave search"++](../reference/cli/search.md)).
+1. Resolves the filter against the cache (same engine as [++"nave search"++](../search.md)).
 2. Generates a pen name if not given (`nave/<slug>` from the first term, truncated
    to 20 chars, suffixed with `-<n>` on clash).
 3. Creates `~/.local/share/nave/pens/<name>/` as the pen root.
@@ -56,8 +56,8 @@ nave pen create -i MATURIN \
 
 ## What it doesn't do
 
-- Does not run any codemod — use [++"nave pen exec"++](../reference/cli/pen/exec.md) (or the planned [++"nave pen run"++](../reference/cli/pen/run.md)).
-- Does not push branches — those live locally until [++"nave pen exec --push-changes"++](../reference/cli/pen/exec.md) or [++"nave pen run"++](../reference/cli/pen/run.md).
+- Does not run any codemod — use [++"nave pen exec"++](exec.md) (or the planned [++"nave pen run"++](run.md)).
+- Does not push branches — those live locally until [++"nave pen exec --push-changes"++](exec.md) or [++"nave pen run"++](run.md).
 - Does not open PRs.
 
 Freshly created pens have run state `not-run` and clean working trees.

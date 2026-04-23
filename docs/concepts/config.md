@@ -42,14 +42,14 @@ sources = { dependabot = "https://...", ... }   # override URLs if needed
 
 ## Resolution order
 
-For each setting, [++nave++](../reference/cli/main.md) consults in order:
+For each setting, [++"nave"++](../reference/cli/main.md) consults in order:
 
 1. CLI flag (where applicable)
 2. Environment variable
 3. `~/.config/nave.toml`
 4. Baked-in default
 
-[++nave++](../reference/cli/main.md) uses [figment2] to load config from this hierarchy of 'providers'.
+[++"nave"++](../reference/cli/main.md) uses [figment2] to load config from this hierarchy of 'providers'.
 
 [figment2]: https://docs.rs/figment2/latest/figment2/
 

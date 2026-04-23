@@ -6,6 +6,9 @@ build-backend = "maturin"
 dev = [
   "maturin[patchelf]>=1.13"
 ]
+docs = [
+  "zensical>=0.0.2"
+]
 
 [project]
 name = "nave"

@@ -1,0 +1,12 @@
+Validate tracked files in a pen against their schemas
+
+Usage: nave schemas validate [OPTIONS] <PEN>
+
+Arguments:
+  <PEN>  Pen name to validate
+
+Options:
+      --check-actions  Also validate workflow action `with:` blocks against upstream `action.yml`. Requires network for first-time ref resolution
+      --fail-fast      Stop at the first failing file
+      --json
+  -h, --help           Print help

@@ -1,0 +1,7 @@
+List schemas and their cache status
+
+Usage: nave schemas list [OPTIONS]
+
+Options:
+      --json
+  -h, --help  Print help

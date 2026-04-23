@@ -1,0 +1,7 @@
+Populate the schema cache based on tracked paths
+
+Usage: nave schemas pull [OPTIONS]
+
+Options:
+      --refresh  Re-fetch all schemas even if cached
+  -h, --help     Print help

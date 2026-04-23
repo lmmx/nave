@@ -56,7 +56,7 @@ nave search --match 'file:pyproject.toml project.requires-python~>=3.10'
 nave search --match 'file:.github/dependabot.yml updates[0].schedule.interval=weekly'
 ```
 
-See [Query language § Structural predicates](../../concepts/queries.md#structural-predicates-match).
+See [Query language § Structural predicates](../../concepts/queries.md#structural-predicates).
 
 ## Modifiers
 

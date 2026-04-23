@@ -2,7 +2,7 @@
 snippets:
     @echo "Generating CLI snippets..."
 
-    mkdir -p docs/_snippets/cli/pen
+    mkdir -p docs/_snippets/cli/{pen,schemas}
 
     # main command
     nave --help | sed 's/\x1b\[[0-9;]*m//g' > docs/_snippets/cli/nave.txt
@@ -17,6 +17,12 @@ snippets:
     for cmd in create list show status sync clean revert reinit exec rm; do \
         echo "→ pen $cmd"; \
         nave pen $cmd --help | sed 's/\x1b\[[0-9;]*m//g' > docs/_snippets/cli/pen/$cmd.txt; \
+    done
+
+    # schemas subcommands
+    for cmd in pull list validate; do \
+        echo "→ schemas $cmd"; \
+        nave schemas $cmd --help | sed 's/\x1b\[[0-9;]*m//g' > docs/_snippets/cli/schemas/$cmd.txt; \
     done
 
 # Check every snippet has matching markdown doc

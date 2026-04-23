@@ -37,6 +37,9 @@ nav = [
     "reference/cli/build.md",
     "reference/cli/check.md",
     "reference/cli/schemas.md",
+    "reference/cli/schemas/pull.md",
+    "reference/cli/schemas/list.md",
+    "reference/cli/schemas/validate.md",
     "reference/cli/pen.md",
     "reference/cli/pen/create.md",
     "reference/cli/pen/list.md",
@@ -47,7 +50,10 @@ nav = [
     "reference/cli/pen/revert.md",
     "reference/cli/pen/reinit.md",
     "reference/cli/pen/exec.md",
-    "reference/cli/pen/rm.md"
+    "reference/cli/pen/rm.md",
+    "reference/cli/pen/open.md",
+    "reference/cli/pen/merge.md",
+    "reference/cli/pen/close.md"
   ]}
 ]
 extra_css = ["assets/stylesheets/extra.css"]

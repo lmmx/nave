@@ -1,6 +1,6 @@
 # Queries
 
-Multiple commands in [++nave++](../reference/cli/main.md) allow you to query for search terms,
+Multiple commands in [++"nave"++](../reference/cli/main.md) allow you to query for search terms,
 using a simple query language based around terms and where they can be found.
 
 ## Query language
