@@ -3,6 +3,13 @@
 /* Instrument Serif */
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400;1,400&display=swap');
 
+h1#nave {
+	font-size: 7rem;
+	margin-bottom: 0;
+}
+.mid {
+	text-align: center;
+}
 .md-typeset h1 {
 	font-family: "Instrument Serif";
 	font-size: 5rem;

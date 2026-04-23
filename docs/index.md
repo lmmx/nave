@@ -1,10 +1,10 @@
-# Nave
-
-**Fleet-level operations for OSS package repositories.**
+<h1 id="nave" class="mid">Nave</h1>
 
 <div align="center">
   <img width="200" height="200" alt="nave logo" src="https://lmmx.github.io/nave/assets/images/nave.png" />
 </div>
+
+<p class="mid"><strong>Fleet-level operations for OSS package repositories.</strong></p>
 
 Nave treats the set of repos a user or org maintains as a single structured dataset
 rather than a heap of independent projects. If you're maintaining dozens of packages
