@@ -11,7 +11,7 @@ rather than a heap of independent projects. If you're maintaining dozens of pack
 — each with its own `pyproject.toml`, GitHub Actions workflows, dependabot config,
 and pre-commit hooks — Nave lets you query, diff, and bulk-edit them as a fleet.
 
-## The shape of the idea
+## Primitives
 
 - **Fleet** — every repo a user owns, taken together.
 - **Cache** — a local sparse-checkout projection of the fleet's tracked files.

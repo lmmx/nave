@@ -63,4 +63,4 @@ Nave holds a *projection* of it locally in the cache.
 The cache is eventually consistent with the fleet:
 `nave scan` refreshes it incrementally based on each repo's `pushed_at` timestamp.
 
-See [Cache](cache.md) and [State model](state-model.md).
+See [Cache](cache.md) and [Core Primitives](core-primitives.md).
