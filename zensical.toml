@@ -53,6 +53,7 @@ nav = [
     "reference/cli/relationships.md"
   ]}
 ]
+extra_css = ["assets/stylesheets/extra.css"]
 
 [project.markdown_extensions.pymdownx.highlight]
 
@@ -65,6 +66,7 @@ nav = [
 [project.theme]
 favicon = "assets/images/nave.png"
 logo = "assets/images/nave.svg"
+font.text = "Work Sans"
 variant = "modern"
 language = "en"
 features = [
@@ -74,6 +76,9 @@ features = [
   "search.highlight",
   "content.code.copy"
 ]
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
 
 # Light / dark mode toggle
 [[project.theme.palette]]

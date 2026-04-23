@@ -1,0 +1,32 @@
+/* Encode Sans Condensed */
+@import url('https://fonts.googleapis.com/css2?family=Encode+Sans+Condensed:wght@300;400;500;600;700&display=swap');
+/* Instrument Serif */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400;1,400&display=swap');
+
+.md-typeset h1 {
+	font-family: "Instrument Serif";
+	font-size: 5rem;
+	font-weight: normal;
+	margin-bottom: 1rem;
+}
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+	font-family: "Encode Sans Condensed";
+}
+
+.md-typeset h2 { 
+	font-size: 1.6rem;
+}
+.md-typeset h3 { 
+	font-size: 1.3rem;
+}
+.md-typeset h4 { 
+	font-size: 1rem;
+}
+.md-typeset h5 { 
+}
+.md-typeset h6 {
+}
