@@ -6,7 +6,7 @@ Validate tracked files in a pen against their schemas.
 
 ```bash
 --8<-- "docs/_snippets/cli/schemas/validate.txt"
-````
+```
 
 ## Description
 

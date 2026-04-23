@@ -6,7 +6,7 @@ Populate the schema cache based on tracked paths.
 
 ```bash
 --8<-- "docs/_snippets/cli/schemas/pull.txt"
-````
+```
 
 ## Description
 

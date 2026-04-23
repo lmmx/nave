@@ -6,7 +6,7 @@ List schemas and their cache status.
 
 ```bash
 --8<-- "docs/_snippets/cli/schemas/list.txt"
-````
+```
 
 ## Description
 
