@@ -1,0 +1,10 @@
+Show per-repo state for a pen: working tree, freshness, run state, divergence
+
+Usage: nave pen status [OPTIONS] <NAME>
+
+Arguments:
+  <NAME>  Pen name
+
+Options:
+      --json  Emit JSON instead of text
+  -h, --help  Print help

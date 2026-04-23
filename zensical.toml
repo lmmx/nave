@@ -8,8 +8,50 @@ repo_name = "lmmx/nave"
 repo_url = "https://github.com/lmmx/nave"
 # Navigation
 nav = [
-  {"Home" = "index.md"}
+  {"Home" = "index.md"},
+  {"Concepts" = [
+    "concepts/fleet.md",
+    "concepts/fleet-model.md",
+    "concepts/state-model.md",
+    "concepts/query-language.md",
+    "concepts/query-language-spec.md",
+    "concepts/cache.md",
+    "concepts/operations.md",
+    "concepts/cli-model.md",
+    "concepts/config-model.md",
+    "concepts/pens.md",
+    "concepts/pen-lifecycle.md"
+  ]},
+  {"Lifecycle" = [
+    "lifecycle/overview.md",
+    "lifecycle/flow.md",
+    "lifecycle/stages.md",
+    "lifecycle/state-flow.md"
+  ]},
+  {"Examples" = [
+    "examples/search-fleet.md",
+    "examples/drift-analysis.md",
+    "examples/pen-workflow.md",
+    "examples/task-based.md",
+    "examples/real-world.md"
+  ]},
+  {"CLI" = [
+    "reference/cli/overview.md",
+    "reference/cli/nave.md",
+    "reference/cli/init.md",
+    "reference/cli/scan.md",
+    "reference/cli/pull.md",
+    "reference/cli/search.md",
+    "reference/cli/build.md",
+    "reference/cli/check.md",
+    "reference/cli/schemas.md",
+    "reference/cli/pen.md",
+    "reference/cli/pen/create.md",
+    "reference/cli/relationships.md"
+  ]}
 ]
+
+[project.markdown_extensions.pymdownx.snippets]
 
 [project.plugins.search]
 

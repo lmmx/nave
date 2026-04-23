@@ -1,0 +1,9 @@
+List a user's repos and cache the set of tracked files
+
+Usage: nave scan [OPTIONS]
+
+Options:
+      --user <USER>     Override the GitHub username for this run
+      --no-interaction  Don't prompt; fail fast if anything is missing
+      --prune           Remove cached repo directories that no longer match the current user's repos or scan filters (forks, archived, missing tracked files, etc). Only effective on a full (non-incremental) run
+  -h, --help            Print help

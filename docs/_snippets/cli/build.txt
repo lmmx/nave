@@ -1,0 +1,11 @@
+Simplify configs across repos into shared templates
+
+Usage: nave build [OPTIONS]
+
+Options:
+      --json               Emit as JSON instead of text
+      --filter <FILTER>    Restrict output to groups whose pattern contains this substring
+      --where <TERM>       Narrow the input to files satisfying every term. Grammar: `[scope:]value[|value...]`, same as `nave search`
+      --match <PREDICATE>  Structural predicate of the form `[scope:]path op literal`, where `op` is `=` (exact) or `~` (substring). Matches tree nodes whose relative `path` resolves to a scalar satisfying the comparison. Composes with `--where` and `--co-occur`
+      --co-occur           Anti-unify the subtrees where `--where` terms co-occur rather than whole files. A co-occurrence site is the deepest non-root object ancestor shared by an anchor-term match and at least one match from each other term. Requires ≥ 2 `--where` terms
+  -h, --help               Print help

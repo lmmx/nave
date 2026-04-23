@@ -1,0 +1,6 @@
+Sparse-checkout scanned repos into the cache
+
+Usage: nave pull
+
+Options:
+  -h, --help  Print help

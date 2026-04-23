@@ -1,0 +1,10 @@
+Remove a pen's local workspace and definition
+
+Usage: nave pen rm [OPTIONS] <NAME>
+
+Arguments:
+  <NAME>  Pen name
+
+Options:
+      --allow-dirty  Remove the pen even if any repo has uncommitted changes
+  -h, --help         Print help

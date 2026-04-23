@@ -1,4 +1,6 @@
 import ".just/ship.just"
+import ".just/docs_nav.just"
+import ".just/docs_snippets.just"
 
 set shell := ["bash", "-cu"]
 
@@ -50,6 +52,13 @@ lint:
 test:
     cargo nextest run --no-fail-fast
 
+# Full docs refresh (snippets + build)
+docs:
+    just snippets
+    zensical build --clean
+
+check-docs: check-docs-nav check-docs-snippets
+
 # Pre-commit: fast stuff only — fmt check + clippy + python lint
 pre-commit:
     just fmt
@@ -57,6 +66,7 @@ pre-commit:
     just clippy
     ruff check python/
     ruff format --check python/
+    just check-docs
 
 # Pre-push: also run the test suite
 pre-push:
