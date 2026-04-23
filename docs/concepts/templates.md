@@ -1,9 +1,9 @@
 # Templates
 
-**TL;DR:** A template is the shared skeleton across a set of configs, produced by
-*anti-unification* over their parsed trees. Where the configs agree, the template
-preserves the literal value; where they disagree, the template emits a *hole* —
-a named variable whose observed values and cohort sizes you can inspect.
+A template is the shared skeleton across a set of configs, produced by
+simplifying their parsed trees. Where the configs agree, the template
+preserves the literal value; where they disagree, the template places a
+variable *"hole"* whose values and counts you can inspect.
 
 ## Anti-unification
 

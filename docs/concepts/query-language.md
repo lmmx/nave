@@ -1,6 +1,6 @@
 # Query language
 
-**TL;DR:** A small, uniform filter grammar used by `search`, `build`, and `pen create`.
+A small, uniform filter grammar used by `search`, `build`, and `pen create`.
 Space-separated terms AND together; `|` inside a term ORs alternatives; `scope:` prefixes
 restrict matching to a file kind.
 

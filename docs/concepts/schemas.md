@@ -1,9 +1,10 @@
 # Schemas
 
-**TL;DR:** Nave maintains a local cache of JSON Schemas for each tracked file kind,
-plus a dynamic validator for GitHub Action `with:` blocks. Schemas let you check
-that a config (or a proposed codemod output) is well-formed *before* it hits the
-fleet.
+Nave maintains a local cache of JSON Schemas for each tracked file kind,
+plus a dynamic validator for GitHub Action `with:` blocks.
+
+Schemas let you check that a config (or a proposed codemod output) is
+well-formed *before* it writing to a pen.
 
 ## Why schemas
 
@@ -33,22 +34,23 @@ still parsed (and therefore `check` covers them), but aren't validated against a
 
 ## Enumerated values
 
-Schemas are often richer than their parsed structure. Take the `interval` hole in a
-dependabot config: at the type level it's just a string, but the schema constrains
-it to an enum:
+Configs are often more well-typed than their deserialised structure types alone,
+they typically have well-defined schemas.
+
+Take the `interval` hole in a dependabot config: at the type level it's just a string,
+but the schema constrains it to an enum:
 
 ```json
 "schedule-interval": {
   "type": "string",
   "enum": [
-    "daily", "weekly", "monthly", "quarterly",
-    "semiannually", "yearly", "cron"
+    "daily", "weekly", "monthly", "quarterly", "semiannually", "yearly", "cron"
   ]
 }
 ```
 
-If a codemod substitutes `"montly"` (typo) into a dependabot config, bare parsing
-won't catch it — the value is still a valid string. Schema validation will.
+If a codemod substitutes `"monthly"` into a dependabot config, parsing alone
+won't catch it, the value is still a valid string, but schema validation will.
 
 ## Action `with:` validation
 
@@ -60,21 +62,20 @@ its `inputs` declaration.
 `nave schemas validate --check-actions` does exactly this:
 
 1. Parse every workflow in the pen.
-2. For each `uses: owner/repo@ref`, fetch `action.yml` at that ref (cached).
-3. Check each `with:` key against the action's `inputs`:
-   - Missing required inputs → error.
-   - Unknown inputs → error.
-   - Deprecated inputs → warning with the deprecation message.
+2. For each `uses: owner/repo@ref`, fetch `action.yml` at that revision (which is cached).
+3. Check each `with:` key against the action's `inputs`, invalidate any missing required
+   inputs or unknown inputs, and warn for deprecated inputs.
 
-This catches a class of bugs that no static schema can: "you upgraded the action
-version and one of its inputs got renamed."
+This catches a common class of bugs that static schema would let through, upgrading an action
+version and one of its inputs got renamed. CI tests can catch them but it's better
+not to wait for the rubber to hit the road.
 
-Subpath actions (`owner/repo/path@ref`) are currently skipped.
+Subpath actions (`owner/repo/path@ref`) are currently not supported and are skipped.
 
 ## Validation workflow
 
 ```bash
-# Pull schemas on first run (also done automatically by `nave init`)
+# Pull schemas on first run
 nave schemas pull
 
 # Check a pen's tracked files
@@ -87,12 +88,13 @@ nave schemas validate my-pen --check-actions
 nave schemas validate my-pen --fail-fast
 ```
 
-Output is one line per file, with a summary at the end. `--json` gives the structured
-form for scripting.
+The output shows one line per repo in the pen, with a summary at the end
+of failures per file. As with many nave commands the `--json` flag gives this
+in a structured form for machine reading.
 
 ## What schemas don't do
 
 Schema validation is a *structural* check. It doesn't verify semantics ("does this
 workflow actually do what you think?") or runtime behaviour ("does the build
-succeed?"). For those you still need CI — which is why pen codemods push to branches
-and integrate with PR checks. See [Pens](pens.md).
+succeed?"). For those you still need CI, which is why pen codemods push to branches
+to integrate with PR checks. See [Pens](pens.md).

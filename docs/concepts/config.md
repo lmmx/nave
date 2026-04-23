@@ -1,9 +1,7 @@
 # Config
 
 All user-level settings live in `~/.config/nave.toml` (`$XDG_CONFIG_HOME`), with
-env-var overrides using `NAVE_` prefix and `__` section separator (using [figment2]).
-
-[figment2]: https://docs.rs/figment2/latest/figment2/
+env-var overrides using `NAVE_` prefix and `__` section separator.
 
 `nave init` writes a commented default.
 
@@ -11,7 +9,7 @@ env-var overrides using `NAVE_` prefix and `__` section separator (using [figmen
 
 ```toml
 [github]
-username = "lmmx"       # optional; probed from `gh status` if missing
+username = "your-user"  # optional; probed from `gh status` if available
 per_page = 100          # GitHub API page size (max 100)
 use_gh_cli = true       # probe `gh` for auth/username
 
@@ -33,23 +31,27 @@ exclude_forks = true
 exclude_archived = true
 
 [cache]
-# root = "/custom/path"   # defaults to XDG cache dir
+root = "/custom/path"   # defaults to XDG cache dir
 
 [pen]
-# root = "/custom/path"   # defaults to XDG data dir
+root = "/custom/path"   # defaults to XDG data dir
 
 [schemas]
-# sources = { dependabot = "https://...", ... }   # override URLs if needed
+sources = { dependabot = "https://...", ... }   # override URLs if needed
 ```
 
 ## Resolution order
 
-For each setting, Nave consults in order:
+For each setting, nave consults in order:
 
 1. CLI flag (where applicable)
 2. Environment variable
 3. `~/.config/nave.toml`
 4. Baked-in default
+
+nave uses [figment2] to load config from this hierarchy of 'providers'.
+
+[figment2]: https://docs.rs/figment2/latest/figment2/
 
 ## Environment overrides
 
@@ -64,11 +66,12 @@ NAVE_SCAN__CASE_INSENSITIVE=true
 
 This is handy for CI and for one-off runs without editing the file.
 
+
 ## Auth
 
-- `NAVE_GITHUB_TOKEN` — explicit token. Highest priority.
-- `gh` CLI auth — used if `use_gh_cli = true` and no token is set.
-- Anonymous — hits the 60 req/hr rate limit quickly on first `nave scan`.
+- `gh` CLI auth — used if `use_gh_cli = true` and no token is set (recommended).
+- `NAVE_GITHUB_TOKEN` — explicit token, overriding the one from `gh auth token`.
+- Anonymous — fallback which will hit the 60 req/hr rate limit quickly on first `nave scan`.
 
 ## Tracked paths
 
@@ -88,5 +91,7 @@ NAVE_LOG=debug nave scan
 NAVE_LOG=trace nave pen run my-pen
 ```
 
-Follows `tracing-subscriber`'s `EnvFilter` syntax, so per-module filtering works
+Follows [tracing-subscriber]'s `EnvFilter` syntax, so per-module filtering works
 (`NAVE_LOG=nave_pen=debug,info`).
+
+[tracing-subscriber]: https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html

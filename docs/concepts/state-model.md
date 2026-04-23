@@ -1,6 +1,6 @@
 # State model
 
-**TL;DR:** Nave has five explicit states — Fleet, Scan, Cache, Analysis, Pen — and strict
+Nave has five explicit states — Fleet, Scan, Cache, Analysis, Pen — and strict
 rules about which operations are allowed to touch which state. Reads never write. Only
 pens mutate.
 

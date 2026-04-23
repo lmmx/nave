@@ -1,22 +1,28 @@
 # Pens
 
-**TL;DR:** A pen is a named, ephemeral, per-transaction workspace containing full
-shallow clones of a filtered subset of the fleet. Pens are where codemods run.
+A pen is a named, ephemeral (meaning disposable) yet durable transaction workspace
+containing full shallow clones (all files in the repo, to a history depth of 1)
+of a filtered subset of the fleet.
+
+Pens are where codemods run, so they are always on a non-default branch (which matches
+the pen's name).
+
 Everything else in Nave is read-only; pens are the only writer.
 
 ## What a pen is
 
 A pen is the combination of:
 
-- A **filter over repos** — its selection rule (same query syntax as `search`).
+- A **filter over repos** — its selection rule (same query syntax as `nave search`).
 - A **set of intended transformations** — the codemod.
 - A **contract** — applicability conditions, primarily freshness of the cache
   against the remote.
 
-Pens live at `~/.local/share/nave/pens/<pen-name>/`. That path is in the
-user-local application data directory (`$XDG_DATA_HOME`), not `/tmp`: pens are
-ephemeral in intent but durable for the duration of a transaction, so they need to
-survive reboots and be crash-safe mid-operation.
+Pens live at `~/.local/share/nave/pens/<pen-name>/`, in the user-local application data directory
+(`$XDG_DATA_HOME`).
+
+They don't live in `/tmp`: pens are ephemeral in intent but durable for the duration of a transaction,
+so they need to survive reboots and be crash-safe mid-operation.
 
 ## Why full clones instead of cache reuse
 
@@ -25,9 +31,11 @@ couple two concerns that have different lifecycles: the cache is an eventually
 consistent read projection, the pen is an isolated write transaction.
 
 So pens clone fresh, shallowly but not sparsely. "Not sparse" matters because
-codemods sometimes need to touch files outside the tracked set — updating a lockfile
-after a dependency bump, for example. A shallow-but-full clone keeps pen storage
-proportional to the number of repos, not the fleet size × history.
+code edits sometimes need to touch files outside the tracked set,
+such as updating a lockfile after a dependency bump.
+
+A shallow-but-full clone keeps pen storage size on disk proportional to the number of repos,
+not the fleet size × history.
 
 ## Lifecycle
 
