@@ -53,11 +53,11 @@ h1#nave-home {
 }
 
 /* Mark stubs */
-a.md-nav__link[href$="reference/cli/pen/run/"],
+a.md-nav__link[href$="reference/cli/pen/close/"],
 a.md-nav__link[href$="reference/cli/pen/merge/"],
 a.md-nav__link[href$="reference/cli/pen/open/"],
-a.md-nav__link[href$="reference/cli/pen/close/"],
-a.md-nav__link[href$="reference/cli/pen/prune/"]
+a.md-nav__link[href$="reference/cli/pen/prune/"],
+a.md-nav__link[href$="reference/cli/pen/run/"]
 {
   text-decoration: line-through;
 }

@@ -42,20 +42,21 @@ nav = [
     "reference/cli/schemas/validate.md",
     "reference/cli/pen.md",
     "reference/cli/pen/clean.md",
-    "reference/cli/pen/close.md",
     "reference/cli/pen/create.md",
     "reference/cli/pen/exec.md",
     "reference/cli/pen/list.md",
-    "reference/cli/pen/merge.md",
-    "reference/cli/pen/open.md",
-    "reference/cli/pen/prune.md",
     "reference/cli/pen/reinit.md",
     "reference/cli/pen/revert.md",
     "reference/cli/pen/rm.md",
-    "reference/cli/pen/run.md",
     "reference/cli/pen/show.md",
     "reference/cli/pen/status.md",
-    "reference/cli/pen/sync.md"
+    "reference/cli/pen/sync.md",
+    # Forthcoming (stubs):
+    "reference/cli/pen/close.md",
+    "reference/cli/pen/merge.md",
+    "reference/cli/pen/open.md",
+    "reference/cli/pen/prune.md",
+    "reference/cli/pen/run.md"
   ]}
 ]
 extra_css = ["assets/stylesheets/extra.css"]
