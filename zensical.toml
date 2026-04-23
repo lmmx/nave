@@ -63,6 +63,7 @@ nav = [
 [project.plugins.search]
 
 [project.theme]
+favicon = "assets/images/nave.png"
 logo = "assets/images/nave.svg"
 variant = "modern"
 language = "en"
