@@ -134,27 +134,28 @@ fn run_list(args: &ListArgs) -> Result<()> {
     Ok(())
 }
 
-async fn run_validate(args: ValidateArgs) -> Result<()> {
-    use nave_parse::{parse_file, to_json};
-    use nave_pen::{load_pen, resolve_pen_root, tracked_files_in_pen};
-    use nave_schemas::{SchemaId, SchemaRegistry, schema_for_path};
+#[derive(serde::Serialize, Clone)]
+struct FileOutcome {
+    owner: String,
+    repo: String,
+    path: String,
+    schema: Option<&'static str>,
+    schema_errors: Vec<String>,
+    action_errors: Vec<String>,
+}
 
-    #[derive(serde::Serialize)]
-    struct FileOutcome {
-        owner: String,
-        repo: String,
-        path: String,
-        schema: Option<&'static str>,
-        schema_errors: Vec<String>,
-        action_errors: Vec<String>,
-    }
+async fn run_validate(args: ValidateArgs) -> Result<()> {
+    use std::collections::BTreeMap;
+    use std::sync::{Arc, Mutex};
+
+    use nave_pen::{load_pen, resolve_pen_root, tracked_files_in_pen};
 
     let cfg = load_default()?;
     let pen_root_path = resolve_pen_root(&cfg.pen)?;
     let pen = load_pen(&pen_root_path, &args.pen)?;
 
     let cache = cache_root()?;
-    let mut registry = SchemaRegistry::new(&cache, cfg.schemas.clone())?;
+    let registry = SchemaRegistry::new(&cache, cfg.schemas.clone())?;
 
     // Make sure every schema we might need is cached up-front.
     let needed = [
@@ -171,70 +172,78 @@ async fn run_validate(args: ValidateArgs) -> Result<()> {
 
     let files = tracked_files_in_pen(&pen_root_path, &pen, &cfg.scan)?;
 
-    let mut outcomes = Vec::new();
-    let mut failures = 0usize;
-
-    for tf in &files {
-        let schema = schema_for_path(&tf.relpath);
-        let mut schema_errors: Vec<String> = Vec::new();
-        let mut action_errors: Vec<String> = Vec::new();
-
-        if let Some(id) = schema {
-            match parse_file(&tf.abspath) {
-                Ok(doc) => match to_json(&doc) {
-                    Ok(instance) => match registry.validate(id, &instance) {
-                        Ok(errs) => schema_errors = errs,
-                        Err(e) => schema_errors.push(format!("validator error: {e}")),
-                    },
-                    Err(e) => schema_errors.push(format!("json conversion: {e}")),
-                },
-                Err(e) => schema_errors.push(format!("parse: {e}")),
-            }
-
-            if args.check_actions
-                && matches!(id, SchemaId::GithubWorkflow)
-                && let Err(e) =
-                    validate_workflow_actions(&http, &cache, &tf.abspath, &mut action_errors).await
-            {
-                action_errors.push(format!("action check failed: {e}"));
-            }
-        }
-
-        let failed = !schema_errors.is_empty() || !action_errors.is_empty();
-        if failed {
-            failures += 1;
-        }
-
-        outcomes.push(FileOutcome {
-            owner: tf.owner.clone(),
-            repo: tf.repo.clone(),
-            path: tf.relpath.clone(),
-            schema: schema.map(|s| s.as_str()),
-            schema_errors,
-            action_errors,
-        });
-
-        if failed && args.fail_fast {
-            break;
-        }
+    // Group files by (owner, repo) — each group becomes one progress bar.
+    let mut groups: BTreeMap<(String, String), Vec<nave_pen::TrackedFile>> = BTreeMap::new();
+    for tf in files {
+        groups
+            .entry((tf.owner.clone(), tf.repo.clone()))
+            .or_default()
+            .push(tf);
     }
+
+    // `SchemaRegistry::validate` takes `&mut self`, so share via Mutex.
+    let registry = Arc::new(Mutex::new(registry));
+    let http = Arc::new(http);
+    let cache = Arc::new(cache);
+
+    let label_width = groups
+        .keys()
+        .map(|(o, r)| o.len() + 1 + r.len())
+        .max()
+        .unwrap_or(0);
+
+    let outcomes: Vec<FileOutcome> = if args.json {
+        run_validate_quiet(
+            &groups,
+            &registry,
+            &http,
+            &cache,
+            args.check_actions,
+            args.fail_fast,
+        )
+        .await?
+    } else {
+        run_validate_with_bars(
+            groups,
+            registry.clone(),
+            http.clone(),
+            cache.clone(),
+            args.check_actions,
+            args.fail_fast,
+            label_width,
+        )
+        .await?
+    };
+
+    let failures = outcomes
+        .iter()
+        .filter(|o| !o.schema_errors.is_empty() || !o.action_errors.is_empty())
+        .count();
 
     if args.json {
         println!("{}", serde_json::to_string_pretty(&outcomes)?);
     } else {
-        for o in &outcomes {
-            let mark = if o.schema_errors.is_empty() && o.action_errors.is_empty() {
-                "✓"
-            } else {
-                "✗"
-            };
-            let schema = o.schema.unwrap_or("-");
-            println!("{mark} {:<40} [{}]  {}/{}", o.path, schema, o.owner, o.repo);
-            for e in &o.schema_errors {
-                println!("    schema: {e}");
-            }
-            for e in &o.action_errors {
-                println!("    action: {e}");
+        let any_failed = failures > 0;
+        if any_failed {
+            println!();
+            println!("── failures ──");
+            for o in &outcomes {
+                if o.schema_errors.is_empty() && o.action_errors.is_empty() {
+                    continue;
+                }
+                println!(
+                    "✗ {}/{} :: {}  [{}]",
+                    o.owner,
+                    o.repo,
+                    o.path,
+                    o.schema.unwrap_or("-"),
+                );
+                for e in &o.schema_errors {
+                    println!("    schema: {e}");
+                }
+                for e in &o.action_errors {
+                    println!("    action: {e}");
+                }
             }
         }
         println!("\n{} files, {} failed", outcomes.len(), failures);
@@ -244,6 +253,177 @@ async fn run_validate(args: ValidateArgs) -> Result<()> {
         std::process::exit(1);
     }
     Ok(())
+}
+
+/// JSON / quiet path: straightforward sequential validation, no bars.
+async fn run_validate_quiet(
+    groups: &std::collections::BTreeMap<(String, String), Vec<nave_pen::TrackedFile>>,
+    registry: &std::sync::Arc<std::sync::Mutex<SchemaRegistry>>,
+    http: &reqwest::Client,
+    cache: &std::path::Path,
+    check_actions: bool,
+    fail_fast: bool,
+) -> Result<Vec<FileOutcome>> {
+    let mut outcomes = Vec::new();
+    for files in groups.values() {
+        for tf in files {
+            let outcome = validate_one(tf, registry, http, cache, check_actions).await;
+            let failed = !outcome.schema_errors.is_empty() || !outcome.action_errors.is_empty();
+            outcomes.push(outcome);
+            if failed && fail_fast {
+                return Ok(outcomes);
+            }
+        }
+    }
+    Ok(outcomes)
+}
+
+/// Interactive path: one `indicatif` bar per repo, all coordinated through `MultiProgress`.
+/// Repos run concurrently as async tasks; each bar ticks steadily so animation is smooth.
+async fn run_validate_with_bars(
+    groups: std::collections::BTreeMap<(String, String), Vec<nave_pen::TrackedFile>>,
+    registry: std::sync::Arc<std::sync::Mutex<SchemaRegistry>>,
+    http: std::sync::Arc<reqwest::Client>,
+    cache: std::sync::Arc<std::path::PathBuf>,
+    check_actions: bool,
+    fail_fast: bool,
+    label_width: usize,
+) -> Result<Vec<FileOutcome>> {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::time::Duration;
+
+    use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+
+    let mp = MultiProgress::new();
+
+    let style =
+        ProgressStyle::with_template("{prefix:.bold} [{bar:30.cyan/blue}] {pos}/{len} {wide_msg}")
+            .unwrap()
+            .progress_chars("=>-");
+
+    let finished_style = ProgressStyle::with_template("{prefix} {msg}").unwrap();
+
+    // Build every bar up front.
+    let mut work: Vec<((String, String), Vec<nave_pen::TrackedFile>, ProgressBar)> =
+        Vec::with_capacity(groups.len());
+    for ((owner, repo), files) in groups {
+        let pb = mp.add(ProgressBar::new(files.len() as u64));
+        pb.set_style(style.clone());
+        let label = format!("{owner}/{repo}");
+        pb.set_prefix(format!("{label:<label_width$}"));
+        // Steady tick is what actually makes the MultiProgress animate.
+        pb.enable_steady_tick(Duration::from_millis(50));
+        work.push(((owner, repo), files, pb));
+    }
+
+    let stop = Arc::new(AtomicBool::new(false));
+
+    // Spawn one async task per repo. Concurrency without threads.
+    let mut tasks = Vec::with_capacity(work.len());
+    for ((owner, repo), files, pb) in work {
+        let registry = registry.clone();
+        let http = http.clone();
+        let cache = cache.clone();
+        let stop = stop.clone();
+        let finished_style = finished_style.clone();
+
+        let handle = tokio::spawn(async move {
+            let mut out: Vec<FileOutcome> = Vec::with_capacity(files.len());
+            let mut bad = 0usize;
+
+            for tf in &files {
+                if stop.load(Ordering::Relaxed) {
+                    break;
+                }
+
+                pb.set_message(tf.relpath.clone());
+
+                let outcome = validate_one(tf, &registry, &http, &cache, check_actions).await;
+
+                let failed = !outcome.schema_errors.is_empty() || !outcome.action_errors.is_empty();
+                if failed {
+                    bad += 1;
+                    if fail_fast {
+                        stop.store(true, Ordering::Relaxed);
+                    }
+                }
+                out.push(outcome);
+                pb.inc(1);
+
+                // Yield so other repo-tasks get a turn and the bar paints.
+                tokio::task::yield_now().await;
+            }
+
+            pb.set_style(finished_style);
+            if bad == 0 {
+                pb.finish_with_message(format!("✓ {owner}/{repo}"));
+            } else {
+                pb.finish_with_message(format!("✗ {owner}/{repo}  ({bad} failed)"));
+            }
+            out
+        });
+        tasks.push(handle);
+    }
+
+    let mut outcomes = Vec::new();
+    for t in tasks {
+        outcomes.extend(t.await?);
+    }
+
+    drop(mp);
+    Ok(outcomes)
+}
+
+async fn validate_one(
+    tf: &nave_pen::TrackedFile,
+    registry: &std::sync::Arc<std::sync::Mutex<SchemaRegistry>>,
+    http: &reqwest::Client,
+    cache: &std::path::Path,
+    check_actions: bool,
+) -> FileOutcome {
+    use nave_parse::{parse_file, to_json};
+    use nave_schemas::schema_for_path;
+
+    let schema = schema_for_path(&tf.relpath);
+    let mut schema_errors: Vec<String> = Vec::new();
+    let mut action_errors: Vec<String> = Vec::new();
+
+    if let Some(id) = schema {
+        match parse_file(&tf.abspath) {
+            Ok(doc) => match to_json(&doc) {
+                Ok(instance) => {
+                    let result = {
+                        let mut reg = registry.lock().unwrap();
+                        reg.validate(id, &instance)
+                    };
+                    match result {
+                        Ok(errs) => schema_errors = errs,
+                        Err(e) => schema_errors.push(format!("validator error: {e}")),
+                    }
+                }
+                Err(e) => schema_errors.push(format!("json conversion: {e}")),
+            },
+            Err(e) => schema_errors.push(format!("parse: {e}")),
+        }
+
+        if check_actions
+            && matches!(id, SchemaId::GithubWorkflow)
+            && let Err(e) =
+                validate_workflow_actions(http, cache, &tf.abspath, &mut action_errors).await
+        {
+            action_errors.push(format!("action check failed: {e}"));
+        }
+    }
+
+    FileOutcome {
+        owner: tf.owner.clone(),
+        repo: tf.repo.clone(),
+        path: tf.relpath.clone(),
+        schema: schema.map(|s| s.as_str()),
+        schema_errors,
+        action_errors,
+    }
 }
 
 async fn validate_workflow_actions(

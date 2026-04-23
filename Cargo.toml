@@ -20,6 +20,7 @@ nave_schemas = {path = "crates/nave_schemas"}
 nave_pen = {path = "crates/nave_pen"}
 anyhow = {version = "1.0.80"}
 clap = {version = "4.5.3", features = ["derive"]}
+indicatif = {version = "0.17"}
 figment2 = {version = "0.11", features = ["toml", "env"]}
 jsonschema = {version = "0.46", default-features = false, features = ["resolve-http", "tls-aws-lc-rs"]}
 globset = {version = "0.4"}
