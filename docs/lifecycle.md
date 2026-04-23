@@ -47,8 +47,8 @@ These are all read-only operations, and fast to run since they're using the loca
 
 ### 4. Rewrite
 
-[++"nave pen"++](../reference/cli/pen.md) is the write layer. Pens create scoped workspaces, run codemods, push
-branches, and (eventually) open and merge PRs. See [Pens](../concepts/pens.md).
+[++"nave pen"++](reference/cli/pen.md) is the write layer. Pens create scoped workspaces, run codemods, push
+branches, and (eventually) open and merge PRs. See [Pens](concepts/pens.md).
 
 ## The typical flow
 
@@ -72,4 +72,4 @@ The stages group into three phases:
 
 Every command belongs to exactly one phase. The phases compose upward only: you
 can't mutate without analysing (the filter is a query), you can't analyse without
-data (the cache must exist). See [Invariants](invariants.md) for the strict rules.
+data (the cache must exist). See [Invariants](concepts/primitives.md#invariants) for the strict rules.
