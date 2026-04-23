@@ -3,8 +3,8 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use std::sync::Arc;
+use std::sync::Mutex;
 
 use anyhow::{Context, Result, anyhow};
 use jsonschema::Validator;

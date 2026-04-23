@@ -296,12 +296,14 @@ async fn run_validate_with_bars(
 
     let mp = MultiProgress::new();
 
-    let style =
-        ProgressStyle::with_template("{prefix:.bold} [{bar:30.cyan/blue}] {pos}/{len} {wide_msg}")
-            .unwrap()
-            .progress_chars("=>-");
+    let style = ProgressStyle::with_template(
+        "{prefix:.bold} [{bar:30.cyan/blue}] {pos}/{len} {wide_msg:.dim}",
+    )
+    .unwrap()
+    .progress_chars("=>-");
 
-    let finished_style = ProgressStyle::with_template("{prefix} {msg}").unwrap();
+    let ok_style = ProgressStyle::with_template("{prefix:.green} {msg:.green}").unwrap();
+    let fail_style = ProgressStyle::with_template("{prefix:.red} {msg:.red}").unwrap();
 
     // Build every bar up front.
     let mut work: Vec<((String, String), Vec<nave_pen::TrackedFile>, ProgressBar)> =
@@ -320,12 +322,13 @@ async fn run_validate_with_bars(
 
     // Spawn one async task per repo. Concurrency without threads.
     let mut tasks = Vec::with_capacity(work.len());
-    for ((owner, repo), files, pb) in work {
+    for ((_owner, _repo), files, pb) in work {
         let registry = registry.clone();
         let http = http.clone();
         let cache = cache.clone();
         let stop = stop.clone();
-        let finished_style = finished_style.clone();
+        let ok_style = ok_style.clone();
+        let fail_style = fail_style.clone();
 
         let handle = tokio::spawn(async move {
             let mut out: Vec<FileOutcome> = Vec::with_capacity(files.len());
@@ -354,11 +357,12 @@ async fn run_validate_with_bars(
                 tokio::task::yield_now().await;
             }
 
-            pb.set_style(finished_style);
             if bad == 0 {
-                pb.finish_with_message(format!("✓ {owner}/{repo}"));
+                pb.set_style(ok_style);
+                pb.finish_with_message("✓".to_string());
             } else {
-                pb.finish_with_message(format!("✗ {owner}/{repo}  ({bad} failed)"));
+                pb.set_style(fail_style);
+                pb.finish_with_message(format!("✗ {bad} failed"));
             }
             out
         });
