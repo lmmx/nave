@@ -63,6 +63,7 @@ nav = [
 [project.plugins.search]
 
 [project.theme]
+logo = "images/logo.svg"
 variant = "modern"
 language = "en"
 features = [
