@@ -13,7 +13,7 @@ and pre-commit hooks — Nave lets you query, diff, and bulk-edit them as a flee
 
 ## Primitives
 
-- **Fleet** — every repo a user owns, taken together.
+- **Fleet** — every repo a user owns, not including archived, forked, or private repos.
 - **Cache** — a local sparse-checkout projection of the fleet's tracked files.
 - **Template** — the shared skeleton across a set of configs, with variable *holes* where they diverge.
 - **Schema** — a JSON Schema layer that validates tracked files (and GitHub Action `with:` blocks) before and after edits.
