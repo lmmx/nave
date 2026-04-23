@@ -106,5 +106,5 @@ action input will only show up at CI runtime otherwise.
 
 ### Step 6: open PRs
 
-🚧 `nave pen open` is planned but not yet shipped. In the meantime, use `gh pr
-create` inside each repo, or script the loop manually.
+🚧 [++"nave pen open"++](../reference/cli/pen/open.md) is planned but not yet shipped.
+In the meantime, use `gh pr create` inside each repo, or script the loop manually.

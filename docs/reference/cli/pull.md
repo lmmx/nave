@@ -1,4 +1,4 @@
-# `nave pull`
+# ++"nave pull"++
 
 Sparse-checkout scanned repositories into the local cache.
 

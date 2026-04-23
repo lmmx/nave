@@ -1,4 +1,4 @@
-# `nave pen revert`
+# ++"nave pen revert"++
 
 Drop local commits on the pen branch, returning to the synced baseline.
 

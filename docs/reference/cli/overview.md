@@ -1,32 +1,32 @@
 # CLI overview
 
-The `nave` CLI maps directly onto the lifecycle stages. Each subcommand belongs to
+The [++"nave"++](main.md) CLI maps directly onto the lifecycle stages. Each subcommand belongs to
 exactly one group, and each group corresponds to a [state layer](../../concepts/operations.md).
 
 ## Command groups
 
 ### Setup
 
-- [`nave init`](init.md) — create `~/.config/nave.toml`.
+- [++"nave init"++](init.md) — create `~/.config/nave.toml`.
 
 ### Read (data)
 
-- [`nave scan`](scan.md) — enumerate repos; index tracked files.
-- [`nave pull`](pull.md) — sparse-checkout tracked files into the cache.
+- [++"nave scan"++](scan.md) — enumerate repos; index tracked files.
+- [++"nave pull"++](pull.md) — sparse-checkout tracked files into the cache.
 
 ### Read (analysis)
 
-- [`nave search`](search.md) — substring and structural queries.
-- [`nave build`](build.md) — anti-unified templates and hole reports.
+- [++"nave search"++](search.md) — substring and structural queries.
+- [++"nave build"++](build.md) — anti-unified templates and hole reports.
 
 ### Validate
 
-- [`nave check`](check.md) — parse and round-trip tracked files.
-- [`nave schemas`](schemas.md) — manage schema cache; validate pens.
+- [++"nave check"++](check.md) — parse and round-trip tracked files.
+- [++"nave schemas"++](schemas.md) — manage schema cache; validate pens.
 
 ### Write
 
-- [`nave pen`](pen.md) — pens, subcommands for the full lifecycle.
+- [++"nave pen"++](pen.md) — pens, subcommands for the full lifecycle.
 
 ## Global conventions
 

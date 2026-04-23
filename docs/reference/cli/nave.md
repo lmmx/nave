@@ -1,4 +1,4 @@
-# `nave`
+# ++"nave"++
 
 Top-level entrypoint. Dispatches to subcommands.
 

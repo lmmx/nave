@@ -1,4 +1,4 @@
-# `nave pen reinit`
+# ++"nave pen reinit"++
 
 Rebuild the pen branch from origin's default branch.
 

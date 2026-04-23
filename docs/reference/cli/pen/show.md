@@ -1,4 +1,4 @@
-# `nave pen show`
+# ++"nave pen show"++
 
 Show a single pen's details.
 

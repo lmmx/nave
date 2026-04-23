@@ -1,4 +1,4 @@
-# `nave pen list`
+# ++"nave pen list"++
 
 List pens, optionally filtered by state.
 

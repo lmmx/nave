@@ -59,7 +59,8 @@ repo's `action.yml`. There's no single schema that covers every `with:` block â€
 have to fetch the referenced action at the pinned ref and check the `with:` against
 its `inputs` declaration.
 
-`nave schemas validate --check-actions` does exactly this:
+[++"nave schemas validate --check-actions"++](../reference/cli/schemas.md)
+does exactly this:
 
 1. Parse every workflow in the pen.
 2. For each `uses: owner/repo@ref`, fetch `action.yml` at that revision (which is cached).
@@ -89,7 +90,7 @@ nave schemas validate my-pen --fail-fast
 ```
 
 The output shows one line per repo in the pen, with a summary at the end
-of failures per file. As with many nave commands the `--json` flag gives this
+of failures per file. As with many [++"nave"++](../reference/cli/main.md) commands the `--json` flag gives this
 in a structured form for machine reading.
 
 ## What schemas don't do

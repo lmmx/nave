@@ -1,6 +1,6 @@
 # Queries
 
-Multiple commands in nave allow you to query for search terms,
+Multiple commands in [++nave++](../reference/cli/main.md) allow you to query for search terms,
 using a simple query language based around terms and where they can be found.
 
 ## Query language
@@ -79,7 +79,7 @@ other term in the same block".
 A co-occurrence site is the deepest non-root object ancestor shared by a match of
 the first term and at least one match of every other term. Requires ≥ 2 `--where` terms.
 
-See [`nave build`](../reference/cli/build.md) for worked examples.
+See [++"nave build"++](../reference/cli/build.md) for worked examples.
 
 ## Addresses
 

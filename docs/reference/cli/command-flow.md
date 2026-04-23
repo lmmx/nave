@@ -41,7 +41,9 @@ Each command checks its preconditions before doing work:
 | `pen exec` / `sync` / etc.| Pen exists                         |
 
 Preconditions that fail produce a clear error explaining how to satisfy them (e.g.
-"cache root /home/u/.cache/nave does not exist; run `nave scan` + `nave pull` first").
+"cache root /home/u/.cache/nave does not exist; run
+[++"nave scan"++](scan.md) +
+[++"nave pull"++](pull.md) first").
 
 ## State layering
 

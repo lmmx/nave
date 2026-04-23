@@ -1,4 +1,4 @@
-# `nave search`
+# ++"nave search"++
 
 Search cached repositories for patterns across tracked files.
 

@@ -1,4 +1,4 @@
-# `nave check`
+# ++"nave check"++
 
 Verify that tracked configuration files parse and round-trip cleanly.
 

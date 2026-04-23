@@ -1,4 +1,4 @@
-# `nave init`
+# ++"nave init"++
 
 Create `~/.config/nave.toml` interactively.
 
@@ -18,7 +18,7 @@ Create `~/.config/nave.toml` interactively.
    - `per_page` (clamped to 1–100).
 4. Writes a commented config with the default `tracked_paths` list.
 5. Pulls the schema cache (non-fatal on network failure — re-run
-   `nave schemas pull` later if offline).
+   [++"nave schemas pull"++](../reference/cli/schemas/pull.md) later if offline).
 
 ## Example
 

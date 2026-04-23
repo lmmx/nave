@@ -1,4 +1,4 @@
-# `nave scan`
+# ++"nave scan"++
 
 Enumerate a user's repositories and index tracked configuration files.
 
@@ -19,7 +19,8 @@ Enumerate a user's repositories and index tracked configuration files.
 
 - **Only public repos.** The `GET /users/{username}/repos` endpoint returns public
   repos only, even with authentication. Private repos are out of scope.
-- **No file bodies.** Scan indexes file *existence*; `nave pull` fetches the bodies.
+- **No file bodies.** Scan indexes file *existence*; 
+  [++"nave pull"++](../reference/cli/pull.md) fetches the bodies.
 
 ## Incrementality
 

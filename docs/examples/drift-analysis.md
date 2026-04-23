@@ -1,11 +1,14 @@
 ## Drift analysis: dependabot configs
 
-This is the canonical introductory example: use `nave build` to find the shared
+This is the canonical introductory example: use [++"nave build"++](../reference/cli/build.md) to find the shared
 skeleton across a set of configs, then act on the drift it surfaces.
 
 ### Setup
 
-Assuming `nave init`, `nave scan`, `nave pull` have run:
+Assuming [++"nave init"++](../reference/cli/init.md),
+[++"nave scan"++](../reference/cli/scan.md),
+[++"nave pull"++](../reference/cli/pull.md),
+have run:
 
 ```bash
 nave build --filter dependabot

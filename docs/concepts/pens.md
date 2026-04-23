@@ -13,7 +13,7 @@ Everything else in Nave is read-only; pens are the only writer.
 
 A pen is the combination of:
 
-- A **filter over repos** — its selection rule (same query syntax as `nave search`).
+- A **filter over repos** — its selection rule (same query syntax as [++"nave search"++](../reference/cli/search.md)).
 - A **set of intended transformations** — the codemod.
 - A **contract** — applicability conditions, primarily freshness of the cache
   against the remote.
@@ -52,7 +52,7 @@ create ──► sync ──► exec/run ──► (open) ──► (merge) ─�
 5. **open / merge / close** — PR lifecycle. 🚧 *PR integration is planned but not yet shipped.*
 6. **rm** — remove local state. `--purge` also removes remote branches.
 
-See [`nave pen`](../reference/cli/pen.md) for the full command list.
+See [++"nave pen"++](../reference/cli/pen.md) for the full command list.
 
 ## States
 
@@ -65,13 +65,14 @@ Every pen repo has three orthogonal state axes:
 | Run state     | not-run / run-local / run-pushed           | pen's own run ledger           |
 | Divergence    | up-to-date / ahead / behind / diverged     | vs. origin/pen-branch          |
 
-`nave pen status` surfaces all four. `nave pen list` summarises counts.
+[++"nave pen status"++](../reference/cli/pen/status.md) surfaces all four.
+[++"nave pen list"++](../reference/cli/pen/list.md) summarises counts.
 
 These states are operational gates:
 
-- `pen run` refuses to proceed on a stale pen (use `--freshen` to sync first).
-- `pen run` refuses on a dirty tree (use `--allow-dirty`).
-- `pen revert` / `reinit` refuse on a dirty tree (use `--allow-dirty`).
+- [++"nave pen run"++](../reference/cli/pen/run.md) refuses to proceed on a stale pen (use `--freshen` to sync first).
+- [++"nave pen run"++](../reference/cli/pen/run.md) also refuses on a dirty tree (use `--allow-dirty`).
+- [++"nave pen revert"++](../reference/cli/pen/revert.md) / [++"nave pen reinit"++](../reference/cli/pen/reinit.md) refuse on a dirty tree (use `--allow-dirty`).
 
 The friction is deliberate: a codemod applied to a stale filter silently skips repos
 that would now match; a codemod applied over uncommitted garbage silently includes it.
@@ -86,7 +87,8 @@ is still the set that matches the filter *now*. Two ways a pen can go stale:
 - **Repos leaving the pen** — a repo's pen branch gets merged, the default branch
   changes, and the filter no longer matches.
 
-`nave pen sync` reconciles this. `--dry-run` reports without touching anything.
+[++"nave pen sync"++](../reference/cli/pen/sync.md) reconciles this.
+`--dry-run` reports without touching anything.
 `--prune` removes repos that no longer match.
 
 ## Naming

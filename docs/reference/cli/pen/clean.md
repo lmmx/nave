@@ -1,4 +1,4 @@
-# `nave pen clean`
+# ++"nave pen clean"++
 
 Discard uncommitted working-tree changes across a pen's repos.
 

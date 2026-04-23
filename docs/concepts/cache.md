@@ -6,9 +6,9 @@ incrementally from `pushed_at` timestamps.
 
 The cache has two components living under the same root (`~/.cache/nave/` by default):
 
-1. **Scan index** populated by `nave scan`: `meta.toml`, recording per-repo metadata: `pushed_at`, default branch,
+1. **Scan index** populated by [++"nave scan"++](../reference/cli/scan.md): `meta.toml`, recording per-repo metadata: `pushed_at`, default branch,
    tracked file paths, HEAD SHA at time of scan (to check the "freshness" of repos).
-2. **Sparse checkouts** populated by `nave pull`: one directory per repo, containing only tracked
+2. **Sparse checkouts** populated by [++"nave pull"++](../reference/cli/pull.md): one directory per repo, containing only tracked
    files. It uses the index to decide what to fetch (only new or stale repos).
 
 ## Why a sparse checkout?
@@ -25,7 +25,7 @@ For most fleets this is a ~100× space saving.
 
 ## Incrementality
 
-`nave scan` only re-examines repos whose `pushed_at` is newer than the most recent scan,
+[++"nave scan"++](../reference/cli/scan.md) only re-examines repos whose `pushed_at` is newer than the most recent scan,
 so repeated scans are instant if none of the remote repos in the user's fleet were pushed to
 in the interim.
 

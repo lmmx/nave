@@ -1,4 +1,4 @@
-# `nave pen sync`
+# ++"nave pen sync"++
 
 Refresh a pen's synced baseline against the fleet cache.
 

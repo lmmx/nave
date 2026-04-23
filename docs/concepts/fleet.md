@@ -25,7 +25,7 @@ mutation on top of that model.
 
 ## What's in the fleet
 
-By default, `nave scan` calls `GET /users/{username}/repos`, which returns only **public**
+By default, [++"nave scan"++](../reference/cli/scan.md) calls `GET /users/{username}/repos`, which returns only **public**
 repos even when authenticated. Forks and archived repos are filtered out. This is
 configurable in `~/.config/nave.toml`:
 
@@ -61,6 +61,6 @@ The fleet lives on GitHub and is read-only.
 
 Nave holds a *projection* of it locally in the cache.
 The cache is eventually consistent with the fleet:
-`nave scan` refreshes it incrementally based on each repo's `pushed_at` timestamp.
+[++"nave scan"++](../reference/cli/scan.md) refreshes it incrementally based on each repo's `pushed_at` timestamp.
 
 See [Cache](cache.md) and [Core Primitives](primitives.md).

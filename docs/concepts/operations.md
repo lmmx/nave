@@ -57,9 +57,10 @@ The read/validate/write split has two safety properties:
   fast and cheap because you're not round-tripping to GitHub.
 - **Writes are audited by construction.** Every pen write leaves a trail: first a
   pen workspace on disk (on a branch whose name matches the pen name), then as a
-  branch on the remote (pushed on `nave run`), and eventually a PR (on `nave pen open`),
-  merged with `nave pen merge`. You can revert or clean up at any stage without touching
-  your default branch.
+  branch on the remote (pushed on [++"nave run"++](../reference/cli/run.md)), and eventually a PR
+  (on [++"nave pen open"++](../reference/cli/pen/open.md)),
+  merged with [++"nave pen merge"++](../reference/cli/pen/merge.md).
+  You can revert or clean up at any stage without touching your default branch.
 
 ## Failure modes
 
@@ -67,7 +68,7 @@ Each phase is conscious of the potential issues and care is taken so the fleet m
 without leaving any individual repo in an inconsistent state.
 
 Several commands will halt if the workspace has untracked/uncommitted files (what git calls
-a "dirty" state), and repos are checked for freshness by `nave scan` to avoid commits
+a "dirty" state), and repos are checked for freshness by [++"nave scan"++](../reference/cli/scan.md) to avoid commits
 being rejected upon push (where the local git state was not updated to reflect the remote's).
 
 Additionally, since editing config files can produce invalid config,
@@ -77,7 +78,8 @@ based on the declared inputs from the remote `action.yml`).
 There is a "four dimensional" model of the state of each repo that can be tracked using the
 `status`/`show`/`list` commands:
 
-1. Working tree cleanliness (vs. the git state), which can be ensured by `nave pen clean`
-2. Local repo freshness (vs. the remote), which can be ensured by `nave pen revert`
-3. Completion of a rewrite operation (committing and pushing to the remote) from `nave pen run`
-4. PR state, modified upon `nave pen open`, `nave pen merge` and `nave pen close`
+1. Working tree cleanliness (vs. the git state), which can be ensured by [++"nave pen clean"++](../reference/cli/pen/clean.md)
+2. Local repo freshness (vs. the remote), which can be ensured by [++"nave pen revert"++](../reference/cli/pen/revert.md)
+3. Completion of a rewrite operation (committing and pushing to the remote) from [++"nave pen run"++](../reference/cli/pen/run.md)
+4. PR state, modified upon [++"nave pen open"++](../reference/cli/pen/open.md), [++"nave pen merge"++](../reference/cli/pen/merge.md)
+   and [++"nave pen close"++](../reference/cli/pen/close.md)

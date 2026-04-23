@@ -54,6 +54,8 @@ extra_css = ["assets/stylesheets/extra.css"]
 
 [project.markdown_extensions.pymdownx.highlight]
 
+[project.markdown_extensions.pymdownx.keys]
+
 [project.markdown_extensions.pymdownx.snippets]
 
 [project.markdown_extensions.pymdownx.superfences]

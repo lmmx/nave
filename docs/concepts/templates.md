@@ -18,9 +18,9 @@ It's thresholdless (no tuning parameters) and has been well-studied since
 See the [Wikipedia article](https://en.wikipedia.org/wiki/Anti-unification) for the
 formal treatment.
 
-## What Nave does with it
+## What [++"nave"++](../reference/cli/main.md) does with it
 
-`nave build` groups tracked files by their logical kind (e.g. "all dependabot
+[++"nave build"++](../reference/cli/build.md) groups tracked files by their logical kind (e.g. "all dependabot
 configs") and anti-unifies each group. The output, for a fleet of 9 dependabot
 configs, looks like this:
 
@@ -95,7 +95,8 @@ A cohort is the subset of files sharing the same value at a given hole. "6× wee
 
 Cohorts are how you decide which configs to bulk-edit. "Move the 3 monthly repos to
 weekly" is a single codemod targeting a single cohort; you pass the same query to
-`nave pen create` that you'd pass to `nave build --match` to isolate it.
+[++"nave pen create"++](../reference/cli/pen/create.md) that you'd pass to
+[++"nave build --match"++](../reference/cli/build.md) to isolate it.
 
 ## Why it works on configs
 
@@ -110,7 +111,8 @@ Whole-file anti-unification can be too coarse. If you have 20 workflow files, ea
 containing 5 steps, and you only care about the `uses:` pattern for a specific
 action, template-ing the whole file drowns the signal.
 
-`nave build --co-occur --where ... --where ...` addresses this by anti-unifying
-*subtrees* where multiple `--where` terms co-occur, rather than whole files. See
-[`nave build`](../reference/cli/build.md) for the exact rule (shortest form:
-"deepest non-root object ancestor shared by all anchor matches").
+[++"nave build --co-occur --where ... --where ..."++](../reference/cli/build.md)
+addresses this by anti-unifying *subtrees*
+where multiple `--where` terms co-occur, rather than whole files.
+The rule can be considered as
+"the deepest non-root object ancestor shared by all anchor matches".

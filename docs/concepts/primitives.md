@@ -46,7 +46,7 @@ for a much cleaner user experience downstream.
 It also lets local-only analysis run at native speed; in the [design spec](https://cog.spin.systems/fleet-ops-devtool-design)
 we called this the *fast-path local-only mode* but in practice it's just a nice aspect that's now default.
 
-## Where nave's state lives
+## Where state lives
 
 - Scan index & fleet cache: `~/.cache/nave/` (or `$XDG_CACHE_HOME/nave/`)
 - Schemas: under the same cache root, in a separate namespace

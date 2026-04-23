@@ -1,4 +1,4 @@
-<h1 id="nave" class="mid">Nave</h1>
+<h1 id="nave-home" class="mid">Nave</h1>
 
 <div align="center">
   <img width="200" height="200" alt="nave logo" src="https://lmmx.github.io/nave/assets/images/nave.png" />

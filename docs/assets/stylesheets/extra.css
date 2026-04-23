@@ -3,7 +3,7 @@
 /* Instrument Serif */
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400;1,400&display=swap');
 
-h1#nave {
+h1#nave-home {
 	font-size: 7rem;
 	margin-bottom: 0;
 }
@@ -16,7 +16,7 @@ h1#nave {
 	font-weight: normal;
 	margin-bottom: 1rem;
 }
-.md-typeset h1 code {
+.md-typeset h1 kbd {
 	font-size: 3rem;
 }
 .md-typeset h2,
@@ -39,4 +39,12 @@ h1#nave {
 .md-typeset h5 {
 }
 .md-typeset h6 {
+}
+
+.md-typeset kbd {
+  font-size: .8em;
+  margin-left: 0.3rem;
+  margin-right: 0.3rem;
+  vertical-align: text-bottom;
+  color: blue;
 }

@@ -1,4 +1,4 @@
-# `nave pen status`
+# ++"nave pen status"++
 
 Show per-repo state for a pen.
 

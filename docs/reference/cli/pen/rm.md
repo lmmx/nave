@@ -1,4 +1,4 @@
-# `nave pen rm`
+# ++"nave pen rm"++
 
 Remove a pen's local workspace and definition.
 

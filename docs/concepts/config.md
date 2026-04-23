@@ -3,7 +3,7 @@
 All user-level settings live in `~/.config/nave.toml` (`$XDG_CONFIG_HOME`), with
 env-var overrides using `NAVE_` prefix and `__` section separator.
 
-`nave init` writes a commented default.
+[++"nave init"++](../reference/cli/init.md) writes a commented default.
 
 ## Layout
 
@@ -42,14 +42,14 @@ sources = { dependabot = "https://...", ... }   # override URLs if needed
 
 ## Resolution order
 
-For each setting, nave consults in order:
+For each setting, [++nave++](../reference/cli/main.md) consults in order:
 
 1. CLI flag (where applicable)
 2. Environment variable
 3. `~/.config/nave.toml`
 4. Baked-in default
 
-nave uses [figment2] to load config from this hierarchy of 'providers'.
+[++nave++](../reference/cli/main.md) uses [figment2] to load config from this hierarchy of 'providers'.
 
 [figment2]: https://docs.rs/figment2/latest/figment2/
 
@@ -71,7 +71,7 @@ This is handy for CI and for one-off runs without editing the file.
 
 - `gh` CLI auth — used if `use_gh_cli = true` and no token is set (recommended).
 - `NAVE_GITHUB_TOKEN` — explicit token, overriding the one from `gh auth token`.
-- Anonymous — fallback which will hit the 60 req/hr rate limit quickly on first `nave scan`.
+- Anonymous — fallback which will hit the 60 req/hr rate limit quickly on first [++"nave scan"++](../reference/cli/scan.md).
 
 ## Tracked paths
 
@@ -79,8 +79,8 @@ This is handy for CI and for one-off runs without editing the file.
 `{a,b}` all work. Path components are matched relative to each repo's root.
 
 The list is intentionally narrow by default. Broadening it increases scan time
-roughly linearly. Narrowing it mid-project requires `nave scan --prune` (and
-removing `~/.cache/nave/meta.toml`) to evict repos that no longer match.
+roughly linearly. Narrowing it mid-project requires [++"nave scan --prune"++](../reference/cli/scan.md)
+(and removing `~/.cache/nave/meta.toml`) to evict repos that no longer match.
 
 ## Logging
 

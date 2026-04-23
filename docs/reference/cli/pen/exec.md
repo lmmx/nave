@@ -1,4 +1,4 @@
-# `nave pen exec`
+# ++"nave pen exec"++
 
 Run a command in each pen repo, optionally committing/pushing changes.
 
@@ -44,6 +44,6 @@ nave pen exec nave/lowest-direct -- git status -s
 
 ## Interaction with the planned `run`
 
-`exec` is the general-purpose escape hatch. The planned `nave pen run` will be a
+`exec` is the general-purpose escape hatch. The planned [++"nave pen run"++](../reference/cli/pen/run.md) will be a
 structured alternative: declarative codemod specifications with schema validation,
 rather than arbitrary commands. `exec` will remain available.

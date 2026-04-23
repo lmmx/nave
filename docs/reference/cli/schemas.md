@@ -1,4 +1,4 @@
-# `nave schemas`
+# ++"nave schemas"++
 
 Manage the JSON Schema cache and validate tracked files.
 
@@ -10,7 +10,7 @@ Manage the JSON Schema cache and validate tracked files.
 
 ## Subcommands
 
-### `nave schemas pull`
+### ++"nave schemas pull"++
 
 ```
 Populate the schema cache based on tracked paths
@@ -24,9 +24,9 @@ Options:
 
 Fetches JSON Schemas for each schema kind that applies to the current
 `tracked_paths`. Network-dependent; failures are logged but non-fatal (so that
-`nave init` completes offline).
+[++"nave init"++](../reference/cli/init.md) completes offline).
 
-### `nave schemas list`
+### ++"nave schemas list"++
 
 ```
 List schemas and their cache status
@@ -49,7 +49,7 @@ One line per schema:
 
 `·` for missing, `✓` for cached.
 
-### `nave schemas validate`
+### ++"nave schemas validate"++
 
 ```
 Validate tracked files in a pen against their schemas
