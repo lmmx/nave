@@ -181,8 +181,7 @@ async fn run_validate(args: ValidateArgs) -> Result<()> {
             .push(tf);
     }
 
-    // `SchemaRegistry::validate` takes `&mut self`, so share via Mutex.
-    let registry = Arc::new(tokio::sync::Mutex::new(registry));
+    let registry = Arc::new(registry);
     let http = Arc::new(http);
     let cache = Arc::new(cache);
 
@@ -258,7 +257,7 @@ async fn run_validate(args: ValidateArgs) -> Result<()> {
 /// JSON / quiet path: straightforward sequential validation, no bars.
 async fn run_validate_quiet(
     groups: &std::collections::BTreeMap<(String, String), Vec<nave_pen::TrackedFile>>,
-    registry: &std::sync::Arc<tokio::sync::Mutex<SchemaRegistry>>,
+    registry: &std::sync::Arc<SchemaRegistry>,
     http: &reqwest::Client,
     cache: &std::path::Path,
     check_actions: bool,
@@ -282,7 +281,7 @@ async fn run_validate_quiet(
 /// Repos run concurrently as async tasks; each bar ticks steadily so animation is smooth.
 async fn run_validate_with_bars(
     groups: std::collections::BTreeMap<(String, String), Vec<nave_pen::TrackedFile>>,
-    registry: std::sync::Arc<tokio::sync::Mutex<SchemaRegistry>>,
+    registry: std::sync::Arc<SchemaRegistry>,
     http: std::sync::Arc<reqwest::Client>,
     cache: std::sync::Arc<std::path::PathBuf>,
     check_actions: bool,
@@ -377,7 +376,7 @@ async fn run_validate_with_bars(
 
 async fn validate_one(
     tf: &nave_pen::TrackedFile,
-    registry: &std::sync::Arc<tokio::sync::Mutex<SchemaRegistry>>,
+    registry: &std::sync::Arc<SchemaRegistry>,
     http: &reqwest::Client,
     cache: &std::path::Path,
     check_actions: bool,
@@ -393,10 +392,7 @@ async fn validate_one(
         match parse_file(&tf.abspath) {
             Ok(doc) => match to_json(&doc) {
                 Ok(instance) => {
-                    let result = {
-                        let mut reg = registry.lock().await;
-                        reg.validate(id, &instance)
-                    };
+                    let result = registry.validate(id, &instance);
                     match result {
                         Ok(errs) => schema_errors = errs,
                         Err(e) => schema_errors.push(format!("validator error: {e}")),

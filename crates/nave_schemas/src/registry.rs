@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use std::sync::Arc;
 
 use anyhow::{Context, Result, anyhow};
@@ -19,8 +20,8 @@ pub struct SchemaRegistry {
     cache_root: PathBuf,
     sources: SchemasConfig,
     http: reqwest::Client,
-    raw: HashMap<SchemaId, Value>,
-    compiled: HashMap<SchemaId, Arc<Validator>>,
+    raw: Mutex<HashMap<SchemaId, Value>>,
+    compiled: Mutex<HashMap<SchemaId, Arc<Validator>>>,
 }
 
 impl SchemaRegistry {
@@ -32,8 +33,8 @@ impl SchemaRegistry {
             cache_root: cache_root.into(),
             sources,
             http,
-            raw: HashMap::new(),
-            compiled: HashMap::new(),
+            raw: Mutex::new(HashMap::new()),
+            compiled: Mutex::new(HashMap::new()),
         })
     }
 
@@ -47,8 +48,8 @@ impl SchemaRegistry {
             cache_root: cache_root.into(),
             sources,
             http,
-            raw: HashMap::new(),
-            compiled: HashMap::new(),
+            raw: Mutex::new(HashMap::new()),
+            compiled: Mutex::new(HashMap::new()),
         }
     }
 
@@ -107,35 +108,43 @@ impl SchemaRegistry {
         self.ensure_cached(SchemaId::all()).await
     }
 
-    fn load_raw(&mut self, id: SchemaId) -> Result<&Value> {
-        if !self.raw.contains_key(&id) {
-            let path = self.schema_path(id);
-            let bytes = std::fs::read(&path)
-                .with_context(|| format!("reading cached schema {}", path.display()))?;
-            let v: Value = serde_json::from_slice(&bytes)?;
-            self.raw.insert(id, v);
-        }
-        Ok(self.raw.get(&id).unwrap())
-    }
-
-    fn get_validator(&mut self, id: SchemaId) -> Result<Arc<Validator>> {
-        if let Some(v) = self.compiled.get(&id) {
+    fn load_raw(&self, id: SchemaId) -> Result<Value> {
+        let mut raw = self.raw.lock().unwrap();
+        if let Some(v) = raw.get(&id) {
             return Ok(v.clone());
         }
-        let raw = self.load_raw(id)?.clone();
+        let path = self.schema_path(id);
+        let bytes = std::fs::read(&path)
+            .with_context(|| format!("reading cached schema {}", path.display()))?;
+        let v: Value = serde_json::from_slice(&bytes)?;
+        raw.insert(id, v.clone());
+        Ok(v)
+    }
+
+    fn get_validator(&self, id: SchemaId) -> Result<Arc<Validator>> {
+        {
+            let compiled = self.compiled.lock().unwrap();
+            if let Some(v) = compiled.get(&id) {
+                return Ok(v.clone());
+            }
+        }
+        // Compile outside the lock, then insert
+        let raw = self.load_raw(id)?;
         let v = Arc::new(
             jsonschema::options()
                 .with_draft(jsonschema::Draft::Draft7)
                 .build(&raw)
                 .map_err(|e| anyhow!("compiling schema {}: {e}", id.as_str()))?,
         );
-        self.compiled.insert(id, v.clone());
+        let mut compiled = self.compiled.lock().unwrap();
+        // Another task may have compiled it while we were building — use theirs
+        compiled.entry(id).or_insert(v.clone());
         Ok(v)
     }
 
     /// Validate an instance. Returns the list of error strings;
     /// an empty Vec means the instance is valid.
-    pub fn validate(&mut self, id: SchemaId, instance: &Value) -> Result<Vec<String>> {
+    pub fn validate(&self, id: SchemaId, instance: &Value) -> Result<Vec<String>> {
         let validator = self.get_validator(id)?;
         Ok(validator
             .iter_errors(instance)
