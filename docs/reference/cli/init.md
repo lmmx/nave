@@ -1,15 +1,42 @@
-# nave init
+# `nave init`
 
-Interactively create `~/.config/nave.toml`.
+Create `~/.config/nave.toml` interactively.
 
-## Purpose
+## Usage
 
-Initial configuration step for Nave.
+```
+Interactively create `~/.config/nave.toml`
 
-This defines:
+Usage: nave init [OPTIONS]
 
-- GitHub identity
-- tracked file patterns
-- discovery rules
+Options:
+      --no-interaction  Accept all suggested defaults without prompting
+      --force           Overwrite an existing config without prompting
+  -h, --help            Print help
+```
 
-Without this, no fleet can be built.
+## What it does
+
+1. Checks for an existing config and prompts before overwriting (unless `--force`).
+2. Probes `gh status` for your GitHub username (unless `--no-interaction`, in which
+   case it uses whatever `gh` reports or leaves the field blank).
+3. Prompts for:
+   - whether to use `gh` for auth;
+   - `per_page` (clamped to 1–100).
+4. Writes a commented config with the default `tracked_paths` list.
+5. Pulls the schema cache (non-fatal on network failure — re-run
+   `nave schemas pull` later if offline).
+
+## Example
+
+```bash
+nave init                 # interactive
+nave init --no-interaction  # take all defaults
+nave init --force         # overwrite existing
+```
+
+## The written file
+
+See [Config](../../concepts/config.md) for the full schema. The file is a commented
+TOML document; the comments explain glob syntax and which fields are most commonly
+edited.
