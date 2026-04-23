@@ -16,7 +16,7 @@ The following are designed and described in the
 [orchestration essay](https://cog.spin.systems/fleet-ops-orchestrating-codemods)
 but not yet available in the CLI:
 
-[++"nave pen open"++](../reference/cli/pen/open.md)
+[++"nave pen open"++](pen/open.md)
 
 - [++"nave pen run"++](pen/run.md) — apply a declarative codemod + push branches.
 - [++"nave pen open"++](pen/open.md) — create PRs (wrapping `gh pr create`).

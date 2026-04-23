@@ -57,8 +57,8 @@ The read/validate/write split has two safety properties:
   fast and cheap because you're not round-tripping to GitHub.
 - **Writes are audited by construction.** Every pen write leaves a trail: first a
   pen workspace on disk (on a branch whose name matches the pen name), then as a
-  branch on the remote (pushed on [++"nave run"++](../reference/cli/run.md)), and eventually a PR
-  (on [++"nave pen open"++](../reference/cli/pen/open.md)),
+  branch on the remote (pushed on [++"nave pen run"++](../reference/cli/pen/run.md)),
+  and eventually a PR (on [++"nave pen open"++](../reference/cli/pen/open.md)),
   merged with [++"nave pen merge"++](../reference/cli/pen/merge.md).
   You can revert or clean up at any stage without touching your default branch.
 

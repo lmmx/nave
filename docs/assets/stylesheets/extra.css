@@ -16,8 +16,11 @@ h1#nave-home {
 	font-weight: normal;
 	margin-bottom: 1rem;
 }
+.md-typeset h1 .keys {
+	display: flex;
+}
 .md-typeset h1 kbd {
-	font-size: 3rem;
+	font-size: 2.5rem;
 }
 .md-typeset h2,
 .md-typeset h3,

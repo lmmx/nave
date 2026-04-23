@@ -18,7 +18,7 @@ It's thresholdless (no tuning parameters) and has been well-studied since
 See the [Wikipedia article](https://en.wikipedia.org/wiki/Anti-unification) for the
 formal treatment.
 
-## What [++"nave"++](../reference/cli/main.md) does with it
+## What [++"nave"++](../reference/cli/nave.md) does with it
 
 [++"nave build"++](../reference/cli/build.md) groups tracked files by their logical kind (e.g. "all dependabot
 configs") and anti-unifies each group. The output, for a fleet of 9 dependabot

@@ -1,4 +1,5 @@
 import ".just/ship.just"
+import ".just/docs_links.just"
 import ".just/docs_nav.just"
 import ".just/docs_snippets.just"
 
@@ -60,7 +61,7 @@ docs:
 build-docs:
     uv run --with zensical --no-project zensical build
 
-check-docs: check-docs-nav check-docs-snippets
+check-docs: check-docs-nav check-docs-snippets check-docs-links
 
 # Pre-commit: fast stuff only — fmt check + clippy + python lint
 pre-commit:
