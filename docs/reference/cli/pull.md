@@ -4,13 +4,8 @@ Sparse-checkout scanned repositories into the local cache.
 
 ## Usage
 
-```
-Sparse-checkout scanned repos into the cache
-
-Usage: nave pull
-
-Options:
-  -h, --help  Print help
+```bash
+--8<-- "docs/_snippets/cli/pull.txt"
 ```
 
 ## What it does

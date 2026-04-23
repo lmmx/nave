@@ -4,17 +4,8 @@ Remove a pen's local workspace and definition.
 
 ## Usage
 
-```
-Remove a pen's local workspace and definition
-
-Usage: nave pen rm [OPTIONS] <NAME>
-
-Arguments:
-  <NAME>  Pen name
-
-Options:
-      --allow-dirty  Remove the pen even if any repo has uncommitted changes
-  -h, --help         Print help
+```bash
+--8<-- "docs/_snippets/cli/pen/rm.txt"
 ```
 
 ## What it does

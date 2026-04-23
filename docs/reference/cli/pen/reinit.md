@@ -4,19 +4,8 @@ Rebuild the pen branch from origin's default branch.
 
 ## Usage
 
-```
-Rebuild the pen branch from origin's default branch
-
-Usage: nave pen reinit [OPTIONS] <NAME>
-
-Arguments:
-  <NAME>  Pen name
-
-Options:
-      --allow-dirty  Discard uncommitted working-tree changes before
-                     proceeding. Without this, dirty repos cause the
-                     command to abort.
-  -h, --help         Print help
+```bash
+--8<-- "docs/_snippets/cli/pen/reinit.txt"
 ```
 
 ## What it does

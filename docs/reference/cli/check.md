@@ -4,16 +4,8 @@ Verify that tracked configuration files parse and round-trip cleanly.
 
 ## Usage
 
-```
-Check tracked configs parse and round-trip cleanly
-
-Usage: nave check [OPTIONS]
-
-Options:
-      --json           Emit results as JSON instead of text
-      --failures-only  Only print failures (skip rows marked `ok`).
-                       Text mode only.
-  -h, --help           Print help
+```bash
+--8<-- "docs/_snippets/cli/check.txt"
 ```
 
 ## What it does

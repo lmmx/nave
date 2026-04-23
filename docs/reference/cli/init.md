@@ -4,15 +4,8 @@ Create `~/.config/nave.toml` interactively.
 
 ## Usage
 
-```
-Interactively create `~/.config/nave.toml`
-
-Usage: nave init [OPTIONS]
-
-Options:
-      --no-interaction  Accept all suggested defaults without prompting
-      --force           Overwrite an existing config without prompting
-  -h, --help            Print help
+```bash
+--8<-- "docs/_snippets/cli/init.txt"
 ```
 
 ## What it does

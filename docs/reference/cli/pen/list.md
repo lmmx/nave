@@ -4,18 +4,8 @@ List pens, optionally filtered by state.
 
 ## Usage
 
-```
-List pens, optionally filtered by state
-
-Usage: nave pen list [OPTIONS]
-
-Options:
-  -f, --filter <KEY=VALUE>  Filter by state. Keys: `working-tree`,
-                            `freshness`, `run-state`. Values are the state
-                            labels (e.g. `dirty`, `stale`, `run-local`).
-                            Multiple allowed.
-      --json                Emit JSON instead of text
-  -h, --help                Print help
+```bash
+--8<-- "docs/_snippets/cli/pen/list.txt"
 ```
 
 ## Output

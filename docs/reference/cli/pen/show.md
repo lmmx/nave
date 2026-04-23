@@ -4,18 +4,8 @@ Show a single pen's details.
 
 ## Usage
 
-```
-Show a single pen's details
-
-Usage: nave pen show [OPTIONS] [NAME]
-
-Arguments:
-  [NAME]  Pen name, or empty when `--filter` is used [default: ]
-
-Options:
-      --filter <FILTER>  Regex over pen names. Must match exactly one pen.
-      --json             Emit JSON instead of text
-  -h, --help             Print help
+```bash
+--8<-- "docs/_snippets/cli/pen/show.txt"
 ```
 
 ## Output

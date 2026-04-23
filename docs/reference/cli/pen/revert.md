@@ -4,19 +4,8 @@ Drop local commits on the pen branch, returning to the synced baseline.
 
 ## Usage
 
-```
-Drop local commits on the pen branch, returning to the synced baseline
-
-Usage: nave pen revert [OPTIONS] <NAME>
-
-Arguments:
-  <NAME>  Pen name
-
-Options:
-      --allow-dirty  Discard uncommitted working-tree changes before
-                     proceeding. Without this, dirty repos cause the
-                     command to abort.
-  -h, --help         Print help
+```bash
+--8<-- "docs/_snippets/cli/pen/revert.txt"
 ```
 
 ## What it does

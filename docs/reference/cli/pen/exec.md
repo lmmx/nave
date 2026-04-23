@@ -4,23 +4,8 @@ Run a command in each pen repo, optionally committing/pushing changes.
 
 ## Usage
 
-```
-Run a command in each pen repo, optionally committing/pushing changes
-
-Usage: nave pen exec [OPTIONS] <NAME> -- <CMD>...
-
-Arguments:
-  <NAME>    Pen name
-  <CMD>...  The command to execute. Everything after `--` is passed through.
-
-Options:
-      --only <ONLY>        Restrict execution to a single repo, matched by
-                           bare name or `owner/name`
-      --commit             Commit any changes after running the command
-      --push-changes       Commit and push to `origin/<pen-branch>`.
-                           Implies `--commit`.
-  -m, --message <MESSAGE>  Commit message. Defaults to "nave pen exec".
-  -h, --help               Print help
+```bash
+--8<-- "docs/_snippets/cli/pen/exec.txt"
 ```
 
 ## What it does

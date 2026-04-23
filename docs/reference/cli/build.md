@@ -4,25 +4,8 @@ Anti-unify configuration files across repos to expose shared templates and drift
 
 ## Usage
 
-```
-Simplify configs across repos into shared templates
-
-Usage: nave build [OPTIONS]
-
-Options:
-      --json                     Emit as JSON instead of text
-      --filter <FILTER>          Restrict output to groups whose pattern
-                                 contains this substring
-      --where <TERM>             Narrow the input to files satisfying every
-                                 term. Grammar: `[scope:]value[|value...]`,
-                                 same as `nave search`.
-      --match <PREDICATE>        Structural predicate of the form
-                                 `[scope:]path op literal`, where `op` is
-                                 `=` (exact) or `~` (substring). Composes
-                                 with `--where` and `--co-occur`.
-      --co-occur                 Anti-unify the subtrees where `--where`
-                                 terms co-occur rather than whole files
-  -h, --help                     Print help
+```bash
+--8<-- "docs/_snippets/cli/build.txt"
 ```
 
 ## What it does

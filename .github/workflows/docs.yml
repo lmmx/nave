@@ -18,8 +18,7 @@ jobs:
       - uses: actions/configure-pages@v6
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v8.1.0
-      - run: uv tool install zensical
-      - run: uv run --no-project zensical build --clean
+      - run: uv run --with zensical --no-project zensical build --clean
       - uses: actions/upload-pages-artifact@v4
         with:
           path: site

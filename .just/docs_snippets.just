@@ -4,6 +4,9 @@ snippets:
 
     mkdir -p docs/_snippets/cli/pen
 
+    # main command
+    nave --help | sed 's/\x1b\[[0-9;]*m//g' > docs/_snippets/cli/nave.txt
+
     # top-level commands
     for cmd in init scan pull check build schemas search pen; do \
         echo "→ $cmd"; \

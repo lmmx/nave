@@ -57,6 +57,9 @@ docs:
     just snippets
     zensical build --clean
 
+build-docs:
+    uv run --with zensical --no-project zensical build
+
 check-docs: check-docs-nav check-docs-snippets
 
 # Pre-commit: fast stuff only — fmt check + clippy + python lint

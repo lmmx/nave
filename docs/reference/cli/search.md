@@ -4,29 +4,8 @@ Search cached repositories for patterns across tracked files.
 
 ## Usage
 
-```
-Search cached repos for substring patterns across tracked files
-
-Usage: nave search [OPTIONS] <TERMS>...
-
-Arguments:
-  <TERMS>...  One or more search terms. Each is `[scope:]value[|value...]`.
-
-Options:
-      --match <PREDICATE>  Structural predicate of the form
-                           `[scope:]path op literal`, where `op` is
-                           `=` (exact) or `~` (substring). Same syntax as
-                           `nave build --match`.
-      --output <OUTPUT>    Output projection [default: repos]
-                           [possible values: repos, files, holes]
-      --json               Emit JSON instead of the projected text form
-      --count              Print only the count of matches
-      --explain            Show which files satisfied each term per repo
-  -i, --ignore-case        Case-insensitive substring match (ASCII)
-      --sort <SORT>        Sort results by a key
-                           [possible values: pushed-at, name]
-      --limit <LIMIT>      Limit to the first N results (applied after sorting)
-  -h, --help               Print help
+```bash
+--8<-- "docs/_snippets/cli/search.txt"
 ```
 
 ## Term grammar

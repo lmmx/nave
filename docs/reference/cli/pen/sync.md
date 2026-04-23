@@ -4,17 +4,8 @@ Refresh a pen's synced baseline against the fleet cache.
 
 ## Usage
 
-```
-Refresh a pen's synced baseline against the fleet cache
-
-Usage: nave pen sync [OPTIONS] <NAME>
-
-Arguments:
-  <NAME>  Pen name
-
-Options:
-      --dry-run  Report what would change without touching anything
-  -h, --help     Print help
+```bash
+--8<-- "docs/_snippets/cli/pen/sync.txt"
 ```
 
 ## What it does

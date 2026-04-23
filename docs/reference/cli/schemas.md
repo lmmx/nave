@@ -4,19 +4,8 @@ Manage the JSON Schema cache and validate tracked files.
 
 ## Usage
 
-```
-Manage the JSON Schema cache and validate tracked files
-
-Usage: nave schemas <COMMAND>
-
-Commands:
-  pull      Populate the schema cache based on tracked paths
-  list      List schemas and their cache status
-  validate  Validate tracked files in a pen against their schemas
-  help      Print this message or the help of the given subcommand(s)
-
-Options:
-  -h, --help  Print help
+```bash
+--8<-- "docs/_snippets/cli/schemas.txt"
 ```
 
 ## Subcommands

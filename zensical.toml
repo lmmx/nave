@@ -55,7 +55,11 @@ nav = [
   ]}
 ]
 
+[project.markdown_extensions.pymdownx.highlight]
+
 [project.markdown_extensions.pymdownx.snippets]
+
+[project.markdown_extensions.pymdownx.superfences]
 
 [project.plugins.search]
 

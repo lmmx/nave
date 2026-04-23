@@ -4,23 +4,8 @@ Create a pen by filtering the fleet and cloning matching repos.
 
 ## Usage
 
-```
-Create a pen by filtering the fleet and cloning matching repos
-
-Usage: nave pen create [OPTIONS] <TERMS>...
-
-Arguments:
-  <TERMS>...  Filter terms. Same syntax as `nave search`:
-              `[scope:]value[|value...]`
-
-Options:
-  -n, --name <NAME>             Explicit pen name. Defaults to
-                                `nave/<slug>` derived from the first term.
-  -i, --ignore-case             Treat filter terms case-insensitively
-                                (same as `nave search -i`)
-      --match <PREDICATE>       Structural predicate to narrow the repo set.
-                                Same syntax as `nave build --match`.
-  -h, --help                    Print help
+```bash
+--8<-- "docs/_snippets/cli/pen/create.txt"
 ```
 
 ## What it does

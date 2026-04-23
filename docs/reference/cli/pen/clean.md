@@ -4,16 +4,8 @@ Discard uncommitted working-tree changes across a pen's repos.
 
 ## Usage
 
-```
-Discard uncommitted working-tree changes across a pen's repos
-
-Usage: nave pen clean <NAME>
-
-Arguments:
-  <NAME>  Pen name
-
-Options:
-  -h, --help  Print help
+```bash
+--8<-- "docs/_snippets/cli/pen/clean.txt"
 ```
 
 ## What it does
