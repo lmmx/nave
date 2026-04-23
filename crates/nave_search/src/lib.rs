@@ -56,6 +56,7 @@ pub struct FileMatch {
 
 pub struct SearchOptions {
     pub terms: Vec<Term>,
+    pub match_preds: Vec<nave_config::MatchPredicate>,
     pub ignore_case: bool,
     /// Whether to enrich results with hole-level addresses.
     pub enrich_holes: bool,
@@ -143,10 +144,10 @@ fn match_repo(
         return Ok(None);
     }
 
-    // Classify each tracked file into its matching tracked-path pattern.
-    // We load bytes once per file and reuse across terms.
-    let mut files: Vec<(String, String, Vec<u8>)> = Vec::new();
-    //                ^pattern ^path   ^bytes
+    let needs_tree = !options.match_preds.is_empty();
+
+    // Classify, load bytes, and optionally parse to a tree.
+    let mut files: Vec<FileEntry> = Vec::new();
     for path in tracked.files.keys() {
         let Some(pattern) = classify(pattern_matchers, path) else {
             continue;
@@ -156,32 +157,57 @@ fn match_repo(
             debug!(owner = %meta.owner, repo = %meta.name, %path, "could not read file");
             continue;
         };
-        files.push((pattern.to_string(), path.clone(), bytes));
+        let tree = if needs_tree {
+            parse_tree(&bytes, path)
+        } else {
+            None
+        };
+        files.push(FileEntry {
+            pattern: pattern.to_string(),
+            path: path.clone(),
+            bytes,
+            tree,
+        });
     }
 
-    // Evaluate each term. A term is satisfied iff at least one
-    // in-scope file's content matches one of the term's needles.
+    // Terms: each must be satisfied by ≥ 1 in-scope file. Record evidence.
     let mut hits: Vec<TermHit> = Vec::new();
     for term in &options.terms {
         let mut file_matches: Vec<FileMatch> = Vec::new();
-        for (pattern, path, bytes) in &files {
-            if !term.applies_to_pattern(pattern) {
+        for f in &files {
+            if !term.applies_to_pattern(&f.pattern) {
                 continue;
             }
-            if let Some(needle) = term.matches_content(bytes, options.ignore_case) {
+            if let Some(needle) = term.matches_content(&f.bytes, options.ignore_case) {
                 file_matches.push(FileMatch {
-                    path: path.clone(),
+                    path: f.path.clone(),
                     matched_needle: needle.to_string(),
                 });
             }
         }
         if file_matches.is_empty() {
-            return Ok(None); // this term failed → repo doesn't match
+            return Ok(None);
         }
         hits.push(TermHit {
             term: term.raw.clone(),
             files: file_matches,
         });
+    }
+
+    // Match predicates: each must hit in ≥ 1 in-scope file's parsed tree.
+    for pred in &options.match_preds {
+        let any = files.iter().any(|f| {
+            if !pred.applies_to_pattern(&f.pattern) {
+                return false;
+            }
+            let Some(tree) = f.tree.as_ref() else {
+                return false;
+            };
+            !nave_config::find_match_addresses(tree, pred).is_empty()
+        });
+        if !any {
+            return Ok(None);
+        }
     }
 
     Ok(Some(RepoMatch {
@@ -190,6 +216,27 @@ fn match_repo(
         pushed_at: meta.pushed_at,
         hits,
     }))
+}
+
+struct FileEntry {
+    pattern: String,
+    path: String,
+    bytes: Vec<u8>,
+    tree: Option<serde_json::Value>,
+}
+
+fn parse_tree(bytes: &[u8], path: &str) -> Option<serde_json::Value> {
+    use nave_parse::{Format, parse_bytes, to_json};
+    let ext = std::path::Path::new(path)
+        .extension()
+        .and_then(|e| e.to_str())?;
+    let fmt = match ext.to_ascii_lowercase().as_str() {
+        "toml" => Format::Toml,
+        "yml" | "yaml" => Format::Yaml,
+        _ => return None,
+    };
+    let doc = parse_bytes(bytes, fmt).ok()?;
+    to_json(&doc).ok()
 }
 
 fn classify<'a>(pattern_matchers: &'a [(String, PathMatcher)], path: &str) -> Option<&'a str> {

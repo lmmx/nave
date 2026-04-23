@@ -29,10 +29,12 @@ enum Command {
     Check(commands::check::CheckArgs),
     /// Simplify configs across repos into shared templates.
     Build(commands::build::BuildArgs),
-    /// Validate schemas for tracked files.
+    /// Manage the JSON Schema cache and validate tracked files.
     Schemas(commands::schemas::SchemasArgs),
     /// Search cached repos for substring patterns across tracked files.
     Search(commands::search::SearchArgs),
+    /// Operations on pens (named subsets of the fleet).
+    Pen(commands::pen::PenArgs),
 }
 
 #[tokio::main]
@@ -49,5 +51,6 @@ async fn main() -> Result<()> {
         Command::Build(args) => commands::build::run(args).await,
         Command::Schemas(args) => commands::schemas::run(args).await,
         Command::Search(args) => commands::search::run(args).await,
+        Command::Pen(args) => commands::pen::run(args).await,
     }
 }

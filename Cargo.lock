@@ -1002,6 +1002,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "indicatif"
+version = "0.17.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "183b3088984b400f4cfac3620d5e076c84da5364016b4f49473de574b2586235"
+dependencies = [
+ "console",
+ "number_prefix",
+ "portable-atomic",
+ "unicode-width",
+ "web-time",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1116,6 +1129,8 @@ dependencies = [
  "referencing",
  "regex",
  "regex-syntax",
+ "reqwest",
+ "rustls",
  "serde",
  "serde_json",
  "unicode-general-category",
@@ -1238,14 +1253,19 @@ dependencies = [
  "cargo-husky",
  "clap",
  "dialoguer",
+ "indicatif",
  "nave_build",
  "nave_check",
  "nave_config",
  "nave_github",
+ "nave_parse",
+ "nave_pen",
  "nave_pull",
  "nave_scan",
  "nave_schemas",
  "nave_search",
+ "regex",
+ "reqwest",
  "serde",
  "serde_json",
  "tokio",
@@ -1318,6 +1338,24 @@ dependencies = [
  "serde_norway",
  "thiserror 1.0.69",
  "toml",
+]
+
+[[package]]
+name = "nave_pen"
+version = "0.0.5"
+dependencies = [
+ "anyhow",
+ "dirs",
+ "futures",
+ "nave_config",
+ "nave_github",
+ "nave_scan",
+ "nave_search",
+ "serde",
+ "time",
+ "tokio",
+ "toml",
+ "tracing",
 ]
 
 [[package]]
@@ -1471,6 +1509,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "number_prefix"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "830b246a0e5f20af87141b25c173cd1b609bd7779a4617d6ec582abaf90870f3"
+
+[[package]]
 name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1534,6 +1578,12 @@ name = "pin-project-lite"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
+
+[[package]]
+name = "portable-atomic"
+version = "1.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c33a9471896f1c69cecef8d20cbe2f7accd12527ce60845ff44c153bb2a21b49"
 
 [[package]]
 name = "potential_utf"
@@ -1779,7 +1829,9 @@ dependencies = [
  "base64",
  "bytes",
  "encoding_rs",
+ "futures-channel",
  "futures-core",
+ "futures-util",
  "h2",
  "http",
  "http-body",

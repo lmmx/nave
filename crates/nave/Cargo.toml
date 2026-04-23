@@ -9,8 +9,10 @@ nave_scan = {workspace = true}
 nave_pull = {workspace = true}
 nave_check = {workspace = true}
 nave_build = {workspace = true}
+nave_parse = {workspace = true}
 nave_schemas = {workspace = true}
 nave_search = {workspace = true}
+nave_pen = {workspace = true}
 anyhow = {workspace = true}
 clap = {workspace = true}
 tokio = {workspace = true}
@@ -19,7 +21,10 @@ tracing-subscriber = {workspace = true}
 dialoguer = {workspace = true}
 serde = {workspace = true}
 toml = {workspace = true}
+reqwest = {workspace = true}
 serde_json = {workspace = true}
+regex = {workspace = true}
+indicatif = {workspace = true}
 
 [dev-dependencies]
 cargo-husky = {version = "1.5.0", default-features = false, features = ["user-hooks"]}

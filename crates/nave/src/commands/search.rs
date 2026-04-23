@@ -13,6 +13,12 @@ pub(crate) struct SearchArgs {
     #[arg(required = true, num_args = 1..)]
     pub terms: Vec<String>,
 
+    /// Structural predicate of the form `[scope:]path op literal`, where
+    /// `op` is `=` (exact) or `~` (substring). Same syntax as
+    /// `nave build --match`.
+    #[arg(long = "match", value_name = "PREDICATE")]
+    pub match_preds: Vec<String>,
+
     /// Output projection.
     #[arg(long, value_enum, default_value_t = Projection::Repos)]
     pub output: Projection,
@@ -75,8 +81,18 @@ pub(crate) async fn run(args: SearchArgs) -> Result<()> {
         .map(|s| Term::parse(s).with_context(|| format!("parsing term {s:?}")))
         .collect::<Result<_>>()?;
 
+    let match_preds: Vec<nave_config::MatchPredicate> = args
+        .match_preds
+        .iter()
+        .map(|s| {
+            nave_config::MatchPredicate::parse(s)
+                .with_context(|| format!("parsing --match predicate {s:?}"))
+        })
+        .collect::<Result<_>>()?;
+
     let options = SearchOptions {
         terms,
+        match_preds,
         ignore_case: args.ignore_case,
         enrich_holes: matches!(args.output, Projection::Holes),
     };

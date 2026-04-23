@@ -8,6 +8,7 @@
 
 pub mod address;
 pub mod cache;
+pub mod file_filter;
 pub mod match_pred;
 pub mod matcher;
 pub mod paths;
@@ -23,9 +24,10 @@ use figment2::{
 use serde::{Deserialize, Serialize};
 
 pub use crate::address::{Match, find_addresses, walk_matches};
+pub use crate::file_filter::FileFilter;
 pub use crate::match_pred::{MatchPredicate, Op as MatchOp, find_match_addresses};
 pub use crate::matcher::PathMatcher;
-pub use crate::paths::{cache_root, user_config_path};
+pub use crate::paths::{cache_root, pen_root, user_config_path};
 pub use crate::term::Term;
 
 /// The fully-resolved nave configuration.
@@ -36,6 +38,7 @@ pub struct NaveConfig {
     pub cache: CacheConfig,
     pub scan: ScanConfig,
     pub schemas: SchemasConfig,
+    pub pen: PenConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,6 +115,16 @@ impl Default for SchemasConfig {
         );
         Self { sources }
     }
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default)]
+pub struct PenConfig {
+    /// Root directory for pen workspaces.
+    /// Defaults to `~/.local/share/nave/pens/` if unset.
+    pub root: Option<PathBuf>,
+    /// Branch name prefix for pen branches. Defaults to `"nave/"`.
+    pub branch_prefix: Option<String>,
 }
 
 pub fn default_tracked_paths() -> Vec<String> {
