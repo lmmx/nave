@@ -36,7 +36,32 @@ pip install nave      # or: uv tool install nave
 You'll also want the [`gh` CLI](https://cli.github.com/) authenticated, or a `NAVE_GITHUB_TOKEN` in your environment.
 Anonymous access works but hits the 60 req/hr rate limit quickly on first `nave scan`.
 
-## What it does
+## Usage
+
+For usage on each of the commands pass `--help`:
+
+```bash
+Fleet ops for OSS package repos
+
+Usage: nave <COMMAND>
+
+Commands:
+  init     Interactively create `~/.config/nave.toml`
+  scan     List a user's repos and cache the set of tracked files
+  pull     Sparse-checkout scanned repos into the cache
+  check    Check tracked configs parse and round-trip cleanly
+  build    Simplify configs across repos into shared templates
+  schemas  Manage the JSON Schema cache and validate tracked files
+  search   Search cached repos for substring patterns across tracked files
+  pen      Operations on pens (named subsets of the fleet)
+  help     Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+```
+
+## What nave does
 
 ### Structural simplification of configs
 
@@ -112,14 +137,51 @@ pyproject.toml  tool.maturin                (2 hits)
 Other useful flags: `--explain` (show matched files and terms), `--json`, `--count`,
 `--sort pushed-at --limit N` (most recently touched first).
 
+### Pens: code editing
+
+Codemods (declarative transforms and imperative actions) are carried out across
+subsets of a fleet (the full set of a user's repos), by passing search terms
+to `nave pen create` and related commands.
+
+A pen is a full, shallow clone of a repo, and they are kept as durable
+but ephemeral transactional state in `~/.local/share/nave/pens/`.
+
+🚧 **Pens are still under construction**
+
+- Code modification will pre- and post-validate against JSON Schemas where possible
+- The commands implemented so far are for creating pens locally and syncing
+- PR integration coming soon
+
+```bash
+Operations on pens (named subsets of the fleet)
+
+Usage: nave pen <COMMAND>
+
+Commands:
+  create  Create a pen by filtering the fleet and cloning matching repos
+  list    List pens, optionally filtered by state
+  show    Show a single pen's details
+  status  Show per-repo state for a pen: working tree, freshness, run state, divergence
+  sync    Refresh a pen's synced baseline against the fleet cache
+  clean   Discard uncommitted working-tree changes across a pen's repos
+  revert  Drop local commits on the pen branch, returning to the synced baseline
+  reinit  Rebuild the pen branch from origin's default branch
+  exec    Run a command in each pen repo, optionally committing/pushing changes
+  rm      Remove a pen's local workspace and definition
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
+```
+
 ## Setup commands
 
 Three plumbing commands you'll run in order on first use:
 
 ```bash
-nave init            # write ~/.config/nave.toml (one-shot)
-nave scan        # enumerate repos and index tracked files
-nave pull           # sparse-checkout tracked files into ~/.cache/nave/
+nave init   # write ~/.config/nave.toml (one-shot)
+nave scan   # enumerate repos and index tracked files
+nave pull   # sparse-checkout tracked files into ~/.cache/nave/
 ```
 
 By default, `scan` only looks at repos that have changed since the previous `scan`.
