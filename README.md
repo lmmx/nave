@@ -9,7 +9,7 @@
 **Fleet-level operations for OSS package repos.**
 
 <div align="center">
-  <img width="160" height="160" alt="nave logo" src="https://github.com/user-attachments/assets/15aaaa82-0300-45ca-a616-8535cf46c416" />
+  <img width="160" height="160" alt="nave logo" src="https://lmmx.github.io/nave/assets/images/nave.png" />
 </div>
 
 If you maintain multiple repos, each with its own `pyproject.toml`, CI workflows, dependabot config,

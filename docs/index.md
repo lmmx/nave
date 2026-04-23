@@ -3,7 +3,7 @@
 **Fleet-level operations for OSS package repositories.**
 
 <div align="center">
-  <img width="160" height="160" alt="nave logo" src="https://lmmx.github.io/nave/assets/images/nave.png" />
+  <img width="200" height="200" alt="nave logo" src="https://lmmx.github.io/nave/assets/images/nave.png" />
 </div>
 
 Nave treats the set of repos a user or org maintains as a single structured dataset
