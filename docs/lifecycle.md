@@ -1,4 +1,4 @@
-# Lifecycle overview
+# Lifecycle
 
 Nave follows a pipeline beginning with `init`, `scan`, and `pull` to set up the fleet cache,
 then analyse with `search`/`build`/`check`/`schemas`, and then operate on

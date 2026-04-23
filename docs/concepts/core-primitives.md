@@ -1,11 +1,9 @@
-# State model
+# Primitives
 
 Nave has a few core primitives — most importantly the **fleet** and the **pen**.
 
 It also has certain operations that are important to understand: the **scan** of the remote,
 the fleet **cache**, and building the **templates** with **holes** which are used for search queries.
-
-## Core primitives
 
 | Primitive | What it is                                      | Scope         |
 |-----------|-------------------------------------------------|---------------|

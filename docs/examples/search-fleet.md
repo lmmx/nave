@@ -1,8 +1,8 @@
-# Searching the fleet
+## Searching the fleet
 
 Three common shapes of search query, and the projection each one uses.
 
-## Find repos matching a pattern
+### Find repos matching a pattern
 
 Default output (`--output repos`):
 
@@ -19,7 +19,7 @@ lmmx/polars-luxical
 
 One line per repo, only repos where every term matched something.
 
-## Find files within those repos
+### Find files within those repos
 
 ```bash
 nave search maturin workflow:pytest --output files
@@ -36,7 +36,7 @@ lmmx/polars-fastembed:pyproject.toml
 A file that satisfies multiple terms prints once; use `--explain` to see *which*
 terms matched it.
 
-## Find positions within those files
+### Find positions within those files
 
 ```bash
 nave search maturin workflow:pytest --output holes | rg -v workflows
@@ -56,21 +56,21 @@ Useful for answering "where in the file?" rather than just "which file?".
 
 Add `--explain` to see the matched repos and snippet per hit.
 
-## Useful combinations
+### Useful combinations
 
 ```bash
-# Count matches without listing them
+## Count matches without listing them
 nave search maturin workflow:pytest --count
 
-# Sort by most recently pushed
+## Sort by most recently pushed
 nave search maturin workflow:pytest --sort pushed-at --limit 10
 
-# Case-insensitive
+## Case-insensitive
 nave search -i MATURIN
 
-# Structural: only repos with requires-python containing 3.10
+## Structural: only repos with requires-python containing 3.10
 nave search --match 'file:pyproject.toml project.requires-python~3.10'
 
-# JSON for scripting
+## JSON for scripting
 nave search maturin --json | jq '.repos[].repo'
 ```

@@ -19,15 +19,12 @@ nav = [
     "concepts/operations.md",
     "concepts/config.md"
   ]},
-  {"Lifecycle" = [
-    "lifecycle/overview.md",
-    "lifecycle/invariants.md"
-  ]},
+  {"Lifecycle" = "lifecycle.md"},
   {"Examples" = [
     "examples/drift-analysis.md",
     "examples/search-fleet.md",
     "examples/lower-bound-rollout.md",
-    "examples/binding-surveillance.md"
+    "examples/binding-upkeep.md"
   ]},
   {"CLI" = [
     "reference/cli/overview.md",
@@ -66,7 +63,6 @@ extra_css = ["assets/stylesheets/extra.css"]
 [project.theme]
 favicon = "assets/images/nave.png"
 logo = "assets/images/nave.svg"
-font.text = "Work Sans"
 variant = "modern"
 language = "en"
 features = [
@@ -76,6 +72,7 @@ features = [
   "search.highlight",
   "content.code.copy"
 ]
+font.text = "Work Sans"
 
 [project.theme.icon]
 repo = "fontawesome/brands/github"

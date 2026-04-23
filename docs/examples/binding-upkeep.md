@@ -1,4 +1,4 @@
-# Surveillance over Rust-binding repos
+## Surveillance over Rust-binding repos
 
 A niche but illustrative example: if you maintain Python packages that wrap Rust
 crates via PyO3 / maturin, bumping the underlying crate version isn't sufficient.
@@ -7,7 +7,7 @@ longer cover, and "does it build?" won't catch it.
 
 This motivates an informational fleet operation: surveillance, not mutation.
 
-## Goal
+### Goal
 
 For each Rust-binding repo: detect when the upstream crate has gained public API
 surface that the bindings don't expose.
@@ -19,7 +19,7 @@ Tools involved:
 - [`griffe check`](https://github.com/mkdocstrings/griffe) — the Python-side
   equivalent for public API diffing.
 
-## Step 1: identify binding repos
+### Step 1: identify binding repos
 
 Binding repos share two markers: a `[tool.maturin]` block in `pyproject.toml`, and a
 dependency on a Rust crate from within the repo's Rust source.
@@ -33,7 +33,7 @@ nave search \
 The `--match` predicate is a presence check — the `~` substring match against an
 empty string matches whenever the address exists.
 
-## Step 2: tabulate the versions
+### Step 2: tabulate the versions
 
 ```bash
 nave search \
@@ -46,7 +46,7 @@ nave search \
 This surfaces every `Cargo.toml` field pointed to by the binding repos — useful for
 seeing which crate versions are pinned across the fleet.
 
-## Step 3: build a pen for surveillance
+### Step 3: build a pen for surveillance
 
 Surveillance isn't a codemod, but the pen model still fits: you need isolated
 workspaces to run `cargo public-api` in each repo, and you want the results

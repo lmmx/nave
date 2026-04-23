@@ -1,9 +1,9 @@
-# Drift analysis: dependabot configs
+## Drift analysis: dependabot configs
 
 This is the canonical introductory example: use `nave build` to find the shared
 skeleton across a set of configs, then act on the drift it surfaces.
 
-## Setup
+### Setup
 
 Assuming `nave init`, `nave scan`, `nave pull` have run:
 
@@ -37,7 +37,7 @@ Output on a 9-repo fleet:
         3× "monthly"
 ```
 
-## Reading the report
+### Reading the report
 
 - **9 instances** — all dependabot configs across your fleet share the same shape.
 - **3 holes** — three positions where they diverge.
@@ -46,7 +46,7 @@ Output on a 9-repo fleet:
 - **Intervals split 6/3** — likely a "most repos are weekly, stragglers are monthly"
   situation. Probably worth aligning.
 
-## Acting on it
+### Acting on it
 
 To find the 3 monthly repos:
 
@@ -69,7 +69,7 @@ nave pen create \
 The positional `monthly` is a fallback search term; the `--match` predicate is what
 actually narrows the selection structurally.
 
-## JSON output for scripting
+### JSON output for scripting
 
 ```bash
 nave build --filter dependabot --json > dependabot-drift.json

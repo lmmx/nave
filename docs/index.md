@@ -26,7 +26,7 @@ Reads are cheap and happen against the cache. Writes only ever happen in pens.
 - **Concepts** — the model, in increasing order of depth: fleet → state → cache → query language → templates → schemas → pens → operations → config.
 - **Lifecycle** — how the pieces compose (`init` → `scan` → `pull` → analyse → pen).
 - **CLI reference** — every command, every flag.
-- **Examples** — drift analysis, lower-bound rollout, Rust-binding surveillance.
+- **Examples** — drift analysis, lower-bound rollout, Rust-binding upkeep.
 
 ## Design background
 

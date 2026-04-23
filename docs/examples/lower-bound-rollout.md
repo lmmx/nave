@@ -1,11 +1,11 @@
-# Rolling out `--resolution lowest-direct`
+## Rolling out `--resolution lowest-direct`
 
 A realistic bulk-edit scenario from the
 [design series](https://cog.spin.systems/fleet-ops-modelling-repos): you've read that
 CI tests should use `--resolution lowest-direct` alongside `--frozen`, and you want to
 roll this out across every repo that has a pytest CI workflow.
 
-## The pattern
+### The pattern
 
 The target is the [MCP Python SDK's workflow](https://github.com/modelcontextprotocol/python-sdk/blob/main/.github/workflows/shared.yml#L53):
 
@@ -26,7 +26,7 @@ dependencies (and latest for transitives), catching "my pinned lower bound doesn
 actually work" bugs that pure lockfile runs miss. Full details in
 [uv's resolution docs](https://docs.astral.sh/uv/concepts/resolution/#resolution-strategy).
 
-## Step 1: find the target repos
+### Step 1: find the target repos
 
 Which repos have pytest in a CI workflow and use `uv`?
 
@@ -43,7 +43,7 @@ nave search \
   --match 'file:pyproject.toml project.requires-python~>='
 ```
 
-## Step 2: see what currently exists
+### Step 2: see what currently exists
 
 Does any of your fleet already have a `dep-resolution` matrix? If so, you want to
 align with it rather than create a second pattern:
@@ -54,7 +54,7 @@ nave search workflow:dep-resolution --explain
 
 If zero results, you're greenfielding. If some results, go read those first.
 
-## Step 3: build a template of the current workflows
+### Step 3: build a template of the current workflows
 
 To see the shared shape of your pytest workflows before you mutate them:
 
@@ -65,7 +65,7 @@ nave build --filter workflow --match 'file:.github/workflows/*.yml jobs.test~pyt
 This gives you the anti-unified template, with holes showing exactly which parts vary
 today. The codemod needs to slot into those holes cleanly.
 
-## Step 4: create a pen
+### Step 4: create a pen
 
 ```bash
 nave pen create \
@@ -83,7 +83,7 @@ nave pen show nave/lowest-direct
 nave pen status nave/lowest-direct
 ```
 
-## Step 5: apply the edit
+### Step 5: apply the edit
 
 🚧 Declarative codemods are still under design. For now, use `pen exec` to run an
 arbitrary command in each repo:
@@ -104,7 +104,7 @@ nave schemas validate nave/lowest-direct --check-actions
 `--check-actions` is important here — you're editing workflow files, and a mistyped
 action input will only show up at CI runtime otherwise.
 
-## Step 6: open PRs
+### Step 6: open PRs
 
 🚧 `nave pen open` is planned but not yet shipped. In the meantime, use `gh pr
 create` inside each repo, or script the loop manually.
