@@ -9,7 +9,7 @@ dev = [
 
 [project]
 name = "nave"
-version = "0.0.5"
+version = "0.0.6"
 description = "Fleet-level modelling and operations for OSS package repos, in Rust."
 authors = [{name = "Louis Maddox", email = "louismmx@gmail.com"}]
 readme = "README.md"
