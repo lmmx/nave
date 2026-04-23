@@ -39,7 +39,7 @@ exactly one group, and each group corresponds to a [state layer](../../concepts/
 Two pieces of grammar are used across multiple commands:
 
 - **Terms** (`search`, `pen create`, `build --where`): `[scope:]value[|value...]`.
-  See [Query language](../../concepts/query-language.md).
+  See [Query language](../../concepts/queries.md).
 - **Match predicates** (`search --match`, `build --match`, `pen create --match`):
   `[scope:]path op literal` where `op` is `=` or `~`.
-  See [Query language § Structural predicates](../../concepts/query-language.md#structural-predicates-match).
+  See [Query language § Structural predicates](../../concepts/queries.md#structural-predicates-match).

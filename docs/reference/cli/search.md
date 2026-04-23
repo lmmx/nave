@@ -16,7 +16,7 @@ Each positional `TERMS` argument is a term:
 - `scope:value` — scoped substring match (`file:`, `workflow:`).
 - `a|b` — OR inside a term.
 
-Terms space-separated are ANDed together. See [Query language](../../concepts/query-language.md).
+Terms space-separated are ANDed together. See [Query language](../../concepts/queries.md).
 
 ## Projections
 
@@ -56,7 +56,7 @@ nave search --match 'file:pyproject.toml project.requires-python~>=3.10'
 nave search --match 'file:.github/dependabot.yml updates[0].schedule.interval=weekly'
 ```
 
-See [Query language § Structural predicates](../../concepts/query-language.md#structural-predicates-match).
+See [Query language § Structural predicates](../../concepts/queries.md#structural-predicates-match).
 
 ## Modifiers
 

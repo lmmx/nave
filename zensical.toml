@@ -12,7 +12,7 @@ nav = [
     "concepts/fleet.md",
     "concepts/core-primitives.md",
     "concepts/cache.md",
-    "concepts/query-language.md",
+    "concepts/queries.md",
     "concepts/templates.md",
     "concepts/schemas.md",
     "concepts/pens.md",

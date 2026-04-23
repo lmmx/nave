@@ -1,8 +1,15 @@
-# Query language
+# Queries
+
+Multiple commands in nave allow you to query for search terms,
+using a simple query language based around terms and where they can be found.
+
+## Query language
 
 A small, uniform filter grammar used by `search`, `build`, and `pen create`.
-Space-separated terms AND together; `|` inside a term ORs alternatives; `scope:` prefixes
-restrict matching to a file kind.
+
+- Space-separated terms AND together;
+- `|` inside a term ORs alternatives;
+- `scope:` prefixes restrict matching to a file kind.
 
 ## Grammar
 
@@ -35,7 +42,7 @@ The scope set is small and fixed. It exists to remove the most common false posi
 (e.g. "the string `pytest` appears in `pyproject.toml` as a dev dependency, but I meant
 the CI workflow").
 
-## Structural predicates: `--match`
+## Structural predicates
 
 Substring search is a blunt tool — it finds needles in text without caring about
 structure. For "does this repo's `pyproject.toml` have `requires-python >= 3.10`?" you
@@ -62,7 +69,7 @@ nave search --match 'file:.github/dependabot.yml updates[0].schedule.interval=we
 
 `--match` composes with plain terms and with `--co-occur` (on `build`).
 
-## Co-occurrence: `--co-occur`
+## Co-occurrence
 
 Plain terms AND at the *file* level: a repo matches if each term finds its target
 somewhere in some tracked file. That's too loose when you want "this term and this

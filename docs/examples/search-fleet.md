@@ -51,7 +51,7 @@ pyproject.toml  tool.maturin                (2 hits)
 ```
 
 `--output holes` groups by structural address (see
-[Query language § Addresses](../concepts/query-language.md#addresses)).
+[Query language § Addresses](../concepts/queries.md#addresses)).
 Useful for answering "where in the file?" rather than just "which file?".
 
 Add `--explain` to see the matched repos and snippet per hit.
