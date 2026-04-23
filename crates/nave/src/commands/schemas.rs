@@ -146,7 +146,7 @@ struct FileOutcome {
 
 async fn run_validate(args: ValidateArgs) -> Result<()> {
     use std::collections::BTreeMap;
-    use std::sync::{Arc, Mutex};
+    use std::sync::Arc;
 
     use nave_pen::{load_pen, resolve_pen_root, tracked_files_in_pen};
 
@@ -182,7 +182,7 @@ async fn run_validate(args: ValidateArgs) -> Result<()> {
     }
 
     // `SchemaRegistry::validate` takes `&mut self`, so share via Mutex.
-    let registry = Arc::new(Mutex::new(registry));
+    let registry = Arc::new(tokio::sync::Mutex::new(registry));
     let http = Arc::new(http);
     let cache = Arc::new(cache);
 
@@ -258,7 +258,7 @@ async fn run_validate(args: ValidateArgs) -> Result<()> {
 /// JSON / quiet path: straightforward sequential validation, no bars.
 async fn run_validate_quiet(
     groups: &std::collections::BTreeMap<(String, String), Vec<nave_pen::TrackedFile>>,
-    registry: &std::sync::Arc<std::sync::Mutex<SchemaRegistry>>,
+    registry: &std::sync::Arc<tokio::sync::Mutex<SchemaRegistry>>,
     http: &reqwest::Client,
     cache: &std::path::Path,
     check_actions: bool,
@@ -282,7 +282,7 @@ async fn run_validate_quiet(
 /// Repos run concurrently as async tasks; each bar ticks steadily so animation is smooth.
 async fn run_validate_with_bars(
     groups: std::collections::BTreeMap<(String, String), Vec<nave_pen::TrackedFile>>,
-    registry: std::sync::Arc<std::sync::Mutex<SchemaRegistry>>,
+    registry: std::sync::Arc<tokio::sync::Mutex<SchemaRegistry>>,
     http: std::sync::Arc<reqwest::Client>,
     cache: std::sync::Arc<std::path::PathBuf>,
     check_actions: bool,
@@ -377,7 +377,7 @@ async fn run_validate_with_bars(
 
 async fn validate_one(
     tf: &nave_pen::TrackedFile,
-    registry: &std::sync::Arc<std::sync::Mutex<SchemaRegistry>>,
+    registry: &std::sync::Arc<tokio::sync::Mutex<SchemaRegistry>>,
     http: &reqwest::Client,
     cache: &std::path::Path,
     check_actions: bool,
@@ -394,7 +394,7 @@ async fn validate_one(
             Ok(doc) => match to_json(&doc) {
                 Ok(instance) => {
                     let result = {
-                        let mut reg = registry.lock().unwrap();
+                        let mut reg = registry.lock().await;
                         reg.validate(id, &instance)
                     };
                     match result {
