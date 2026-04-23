@@ -67,6 +67,7 @@ variant = "modern"
 language = "en"
 features = [
   "navigation.instant",
+  "navigation.instant.prefetch",
   "navigation.top",
   "search.suggest",
   "search.highlight",
