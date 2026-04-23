@@ -57,6 +57,6 @@ Each layer is strictly above its dependencies: writes never flow down.
 
 ## Related concept pages
 
-- [Core primitives](../../concepts/core-primitives.md) — core primitives and invariants.
+- [Core primitives](../../concepts/primitives.md) — core primitives and invariants.
 - [Operations](../../concepts/operations.md) — read/validate/write layering.
 - [Pens](../../concepts/pens.md) — transaction semantics.

@@ -10,7 +10,7 @@ nav = [
   {"Home" = "index.md"},
   {"Concepts" = [
     "concepts/fleet.md",
-    "concepts/core-primitives.md",
+    "concepts/primitives.md",
     "concepts/cache.md",
     "concepts/queries.md",
     "concepts/templates.md",

@@ -23,7 +23,7 @@ h1#nave {
 .md-typeset h3,
 .md-typeset h4,
 .md-typeset h5,
-.md-typeset h6 {
+.md-typeset h6, strong {
 	font-family: "Encode Sans Condensed";
 }
 
