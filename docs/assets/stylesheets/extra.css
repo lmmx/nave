@@ -9,6 +9,9 @@
 	font-weight: normal;
 	margin-bottom: 1rem;
 }
+.md-typeset h1 code {
+	font-size: 3rem;
+}
 .md-typeset h2,
 .md-typeset h3,
 .md-typeset h4,

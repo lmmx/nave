@@ -1,4 +1,4 @@
-# Command relationships
+# Command flow
 
 Nave's CLI is a pipeline, not a collection of independent tools. Commands produce
 state that other commands consume; running them out of order errors early.

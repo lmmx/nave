@@ -28,6 +28,7 @@ nav = [
   ]},
   {"CLI" = [
     "reference/cli/overview.md",
+    "reference/cli/command-flow.md",
     "reference/cli/nave.md",
     "reference/cli/init.md",
     "reference/cli/scan.md",
@@ -46,8 +47,7 @@ nav = [
     "reference/cli/pen/revert.md",
     "reference/cli/pen/reinit.md",
     "reference/cli/pen/exec.md",
-    "reference/cli/pen/rm.md",
-    "reference/cli/relationships.md"
+    "reference/cli/pen/rm.md"
   ]}
 ]
 extra_css = ["assets/stylesheets/extra.css"]
