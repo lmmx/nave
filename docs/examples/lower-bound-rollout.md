@@ -40,7 +40,7 @@ testing at the lower end:
 ```bash
 nave search \
   workflow:pytest workflow:uv \
-  --match 'file:pyproject.toml project.requires-python~>='
+  --match 'pyproject:project.requires-python^=>='
 ```
 
 ### Step 2: see what currently exists
@@ -59,7 +59,7 @@ If zero results, you're greenfielding. If some results, go read those first.
 To see the shared shape of your pytest workflows before you mutate them:
 
 ```bash
-nave build --filter workflow --match 'file:.github/workflows/*.yml jobs.test~pytest'
+nave build --filter workflow --match 'workflow:jobs.test*=pytest'
 ```
 
 This gives you the anti-unified template, with holes showing exactly which parts vary

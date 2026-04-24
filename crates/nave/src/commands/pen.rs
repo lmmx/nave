@@ -48,11 +48,16 @@ pub(crate) struct PenCreateArgs {
     /// Treat filter terms case-insensitively (same as `nave search -i`).
     #[arg(short, long)]
     pub ignore_case: bool,
-    /// Structural predicate to narrow the repo set. Same syntax as `nave build --match`.
+    /// Structural predicate to narrow the repo set, of the form
+    /// `[scope:]path op literal`, where `op` is one of `=`, `!=`, `^=`, `$=`, `*=`.
+    /// Same syntax as `nave build --match`.
     #[arg(long = "match", value_name = "PREDICATE")]
     pub match_preds: Vec<String>,
-    /// Filter terms. Same syntax as `nave search`: `[scope:]value[|value...]`.
-    #[arg(required = true, num_args = 1..)]
+    /// Filter terms. Each is `[scope:]value[|value...]`.
+    /// A scope restricts the term to files whose tracked-path pattern
+    /// contains `scope` as a substring (e.g. `pyproject:`, `workflow:`,
+    /// `dependabot:`).
+    #[arg(num_args = 0..)]
     pub terms: Vec<String>,
 }
 

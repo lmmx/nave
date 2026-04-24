@@ -23,7 +23,9 @@ use figment2::{
 };
 use serde::{Deserialize, Serialize};
 
-pub use crate::address::{Match, find_addresses, walk_matches};
+pub use crate::address::{
+    Match, SelectorSegment, find_addresses, parse_selector, resolve_selector, walk_matches,
+};
 pub use crate::file_filter::FileFilter;
 pub use crate::match_pred::{MatchPredicate, Op as MatchOp, find_match_addresses};
 pub use crate::matcher::PathMatcher;

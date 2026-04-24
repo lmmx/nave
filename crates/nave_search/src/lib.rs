@@ -14,7 +14,7 @@ use nave_config::{
     cache::{RepoMeta, read_repo_meta, read_tracked},
 };
 
-pub use holes::HoleHit;
+pub use holes::{HoleEvidence, HoleHit};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct SearchReport {
@@ -37,6 +37,10 @@ pub struct RepoMatch {
     /// Per-term evidence — one `TermHit` per term, listing which files
     /// satisfied the term for this repo.
     pub hits: Vec<TermHit>,
+    /// Per-predicate evidence — one `MatchHit` per `--match` predicate,
+    /// listing which files had qualifying addresses.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub match_hits: Vec<MatchHit>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -52,6 +56,21 @@ pub struct TermHit {
 pub struct FileMatch {
     pub path: String,
     pub matched_needle: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MatchHit {
+    /// Original predicate text, e.g. `dependabot:updates[].schedule.interval=weekly`.
+    pub predicate: String,
+    /// Files containing at least one address where the predicate held.
+    pub files: Vec<MatchFileHit>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MatchFileHit {
+    pub path: String,
+    /// Concrete scalar addresses where the predicate was satisfied.
+    pub addresses: Vec<String>,
 }
 
 pub struct SearchOptions {
@@ -79,9 +98,6 @@ pub fn run_search(
         return Ok(report);
     }
 
-    // Pre-build matchers for each tracked-path pattern — so we can
-    // classify a file's path into its pattern once, rather than testing
-    // every term against every pattern for every file.
     let pattern_matchers: Vec<(String, PathMatcher)> = cfg
         .scan
         .tracked_paths
@@ -146,7 +162,6 @@ fn match_repo(
 
     let needs_tree = !options.match_preds.is_empty();
 
-    // Classify, load bytes, and optionally parse to a tree.
     let mut files: Vec<FileEntry> = Vec::new();
     for path in tracked.files.keys() {
         let Some(pattern) = classify(pattern_matchers, path) else {
@@ -194,20 +209,34 @@ fn match_repo(
         });
     }
 
-    // Match predicates: each must hit in ≥ 1 in-scope file's parsed tree.
+    // Match predicates: each must hit in ≥ 1 in-scope file's parsed
+    // tree. Record the concrete addresses so `--output holes` and
+    // downstream consumers (rewrite engine) can use them.
+    let mut match_hits: Vec<MatchHit> = Vec::new();
     for pred in &options.match_preds {
-        let any = files.iter().any(|f| {
+        let mut files_hit: Vec<MatchFileHit> = Vec::new();
+        for f in &files {
             if !pred.applies_to_pattern(&f.pattern) {
-                return false;
+                continue;
             }
             let Some(tree) = f.tree.as_ref() else {
-                return false;
+                continue;
             };
-            !nave_config::find_match_addresses(tree, pred).is_empty()
-        });
-        if !any {
+            let addresses = nave_config::find_match_addresses(tree, pred);
+            if !addresses.is_empty() {
+                files_hit.push(MatchFileHit {
+                    path: f.path.clone(),
+                    addresses,
+                });
+            }
+        }
+        if files_hit.is_empty() {
             return Ok(None);
         }
+        match_hits.push(MatchHit {
+            predicate: pred.raw.clone(),
+            files: files_hit,
+        });
     }
 
     Ok(Some(RepoMatch {
@@ -215,6 +244,7 @@ fn match_repo(
         repo: meta.name.clone(),
         pushed_at: meta.pushed_at,
         hits,
+        match_hits,
     }))
 }
 
@@ -246,48 +276,69 @@ fn classify<'a>(pattern_matchers: &'a [(String, PathMatcher)], path: &str) -> Op
         .map(|(p, _)| p.as_str())
 }
 
+/// Gather the set of files that contributed evidence (from terms or
+/// predicates) into a list for hole enrichment. Each file appears once
+/// regardless of how many sources flagged it; its `source` tells
+/// `enrich_with_holes` how to surface addresses.
 fn collect_matched_files(
     report: &SearchReport,
     cache_root: &Path,
     cfg: &NaveConfig,
 ) -> Vec<holes::MatchedFile> {
-    use std::collections::BTreeSet;
+    use std::collections::BTreeMap;
 
-    let mut out: Vec<holes::MatchedFile> = Vec::new();
-    let mut seen: BTreeSet<(String, String, String, String)> = BTreeSet::new();
+    // Key files by (owner, repo, path). For each, accumulate term
+    // needles and predicate addresses. Load bytes once per file.
+    #[derive(Default)]
+    struct Agg {
+        needles: Vec<(String, String)>,   // (predicate_or_term_text, needle)
+        addresses: Vec<(String, String)>, // (predicate_raw, address)
+    }
+
+    let mut by_file: BTreeMap<(String, String, String), Agg> = BTreeMap::new();
 
     for r in &report.repos {
-        let checkout = cache_root
-            .join("fleet")
-            .join(&r.owner)
-            .join(&r.repo)
-            .join("checkout");
         for hit in &r.hits {
             for fm in &hit.files {
-                let key = (
-                    r.owner.clone(),
-                    r.repo.clone(),
-                    fm.path.clone(),
-                    fm.matched_needle.clone(),
-                );
-                if !seen.insert(key) {
-                    continue;
-                }
-                let Ok(bytes) = std::fs::read(checkout.join(&fm.path)) else {
-                    continue;
-                };
-                let pattern =
-                    pattern_for_path(cfg, &fm.path).unwrap_or_else(|| "(unknown)".to_string());
-                out.push(holes::MatchedFile {
-                    owner: r.owner.clone(),
-                    repo: r.repo.clone(),
-                    file_path: fm.path.clone(),
-                    pattern,
-                    bytes,
-                    matched_needle: fm.matched_needle.clone(),
-                });
+                let key = (r.owner.clone(), r.repo.clone(), fm.path.clone());
+                by_file
+                    .entry(key)
+                    .or_default()
+                    .needles
+                    .push((hit.term.clone(), fm.matched_needle.clone()));
             }
         }
+        for mh in &r.match_hits {
+            for mf in &mh.files {
+                let key = (r.owner.clone(), r.repo.clone(), mf.path.clone());
+                let entry = by_file.entry(key).or_default();
+                for addr in &mf.addresses {
+                    entry.addresses.push((mh.predicate.clone(), addr.clone()));
+                }
+            }
+        }
+    }
+
+    let mut out: Vec<holes::MatchedFile> = Vec::new();
+    for ((owner, repo, path), agg) in by_file {
+        let checkout = cache_root
+            .join("fleet")
+            .join(&owner)
+            .join(&repo)
+            .join("checkout");
+        let Ok(bytes) = std::fs::read(checkout.join(&path)) else {
+            continue;
+        };
+        let pattern = pattern_for_path(cfg, &path).unwrap_or_else(|| "(unknown)".to_string());
+        out.push(holes::MatchedFile {
+            owner,
+            repo,
+            file_path: path,
+            pattern,
+            bytes,
+            needle_sources: agg.needles,
+            predicate_sources: agg.addresses,
+        });
     }
     out
 }

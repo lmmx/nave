@@ -9,12 +9,16 @@ use nave_search::{SearchOptions, SearchReport, run_search};
 #[derive(Args, Debug)]
 #[allow(clippy::struct_excessive_bools)]
 pub(crate) struct SearchArgs {
-    /// One or more search terms. Each is `[scope:]value[|value...]`.
-    #[arg(required = true, num_args = 1..)]
+    /// Search terms. Each is `[scope:]value[|value...]`.
+    /// A scope restricts the term to files whose tracked-path pattern
+    /// contains `scope` as a substring (e.g. `pyproject:`, `workflow:`,
+    /// `dependabot:`).
+    #[arg(num_args = 0..)]
     pub terms: Vec<String>,
 
-    /// Structural predicate of the form `[scope:]path op literal`, where
-    /// `op` is `=` (exact) or `~` (substring). Same syntax as
+    /// Structural predicate of the form `[scope:] [!] path [op literal]`,
+    /// where `op` is one of `=`, `!=`, `^=`, `$=`, `*=`. A bare path
+    /// tests presence; `!path` tests absence. Same syntax as
     /// `nave build --match`.
     #[arg(long = "match", value_name = "PREDICATE")]
     pub match_preds: Vec<String>,
@@ -89,6 +93,10 @@ pub(crate) async fn run(args: SearchArgs) -> Result<()> {
                 .with_context(|| format!("parsing --match predicate {s:?}"))
         })
         .collect::<Result<_>>()?;
+
+    if terms.is_empty() && match_preds.is_empty() {
+        anyhow::bail!("provide at least one search term or `--match` predicate");
+    }
 
     let options = SearchOptions {
         terms,
@@ -194,8 +202,6 @@ fn print_files(report: &SearchReport, explain: bool) {
 fn print_holes(report: &SearchReport, explain: bool) {
     use std::collections::BTreeMap;
 
-    // Group holes by (pattern, address) so the output shows the
-    // structural positions as the primary unit, with repos as evidence.
     let mut by_addr: BTreeMap<(&str, &str), Vec<&nave_search::HoleHit>> = BTreeMap::new();
     for h in &report.holes {
         by_addr
@@ -208,9 +214,17 @@ fn print_holes(report: &SearchReport, explain: bool) {
         println!("{pattern}  {address}  ({} hits)", hits.len());
         if explain {
             for h in hits {
+                let evidence = match &h.evidence {
+                    nave_search::HoleEvidence::Needle { term, needle } => {
+                        format!("term {term:?} needle {needle:?}")
+                    }
+                    nave_search::HoleEvidence::Predicate { predicate } => {
+                        format!("--match {predicate:?}")
+                    }
+                };
                 println!(
-                    "    {}/{} :: {}  (needle: {:?})",
-                    h.owner, h.repo, h.file_path, h.needle,
+                    "    {}/{} :: {}  ({evidence})",
+                    h.owner, h.repo, h.file_path,
                 );
                 println!("        {}", h.snippet);
             }

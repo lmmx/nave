@@ -13,7 +13,11 @@ Search cached repositories for patterns across tracked files.
 Each positional `TERMS` argument is a term:
 
 - `value` — substring match anywhere in any tracked file.
-- `scope:value` — scoped substring match (`file:`, `workflow:`).
+- `scope:value` — substring match restricted to tracked-path patterns
+  whose glob contains `scope`. Examples: `pyproject:maturin`,
+  `workflow:pytest`, `dependabot:weekly`, `.toml:version`. Matching is
+  case-sensitive unless `-i` is passed (so `cargo:` misses `Cargo.toml`;
+  use `Cargo:` or `-i cargo:`).
 - `a|b` — OR inside a term.
 
 Terms space-separated are ANDed together. See [Query language](../../concepts/queries.md).
@@ -48,12 +52,23 @@ pyproject.toml  tool.maturin                (2 hits)
 Orthogonal to the positional terms: while terms are substring matches over raw bytes,
 `--match` operates on parsed tree structure. They compose (AND).
 
+Operators:
+
+- `=` (exact)
+- `!=` (not equal)
+- `^=` (starts with)
+- `$=` (ends with)
+- `*=` (contains)
+
 ```bash
-# repos with requires-python >= 3.10
-nave search --match 'file:pyproject.toml project.requires-python~>=3.10'
+# repos whose pyproject mentions Python 3.10 in requires-python
+nave search --match 'pyproject:project.requires-python*=3.10'
 
 # repos where dependabot is weekly
-nave search --match 'file:.github/dependabot.yml updates[0].schedule.interval=weekly'
+nave search --match 'dependabot:updates[0].schedule.interval=weekly'
+
+# repos with a step using the deprecated maturin-action
+nave search --match 'workflow:uses^=PyO3/maturin-action@'
 ```
 
 See [Query language § Structural predicates](../../concepts/queries.md#structural-predicates).

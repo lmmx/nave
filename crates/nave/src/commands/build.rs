@@ -12,12 +12,15 @@ pub(crate) struct BuildArgs {
     /// Restrict output to groups whose pattern contains this substring.
     #[arg(long)]
     pub filter: Option<String>,
-    /// Narrow the input to files satisfying every term.
-    /// Grammar: `[scope:]value[|value...]`, same as `nave search`.
+    /// Search terms. Each is `[scope:]value[|value...]`.
+    /// A scope restricts the term to files whose tracked-path pattern
+    /// contains `scope` as a substring (e.g. `pyproject:`, `workflow:`,
+    /// `dependabot:`), same as `nave search`.
     #[arg(long = "where", value_name = "TERM")]
     pub where_terms: Vec<String>,
-    /// Structural predicate of the form `[scope:]path op literal`, where
-    /// `op` is `=` (exact) or `~` (substring). Matches tree nodes whose
+    /// Structural predicate of the form `[scope:] [!] path [op literal]`,
+    /// where `op` is one of `=`, `!=`, `^=`, `$=`, `*=`. A bare path
+    /// tests presence; `!path` tests absence. Matches tree nodes whose
     /// relative `path` resolves to a scalar satisfying the comparison.
     /// Composes with `--where` and `--co-occur`.
     #[arg(long = "match", value_name = "PREDICATE")]
