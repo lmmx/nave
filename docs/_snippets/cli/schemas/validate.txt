@@ -8,5 +8,5 @@ Arguments:
 Options:
       --check-actions  Also validate workflow action `with:` blocks against upstream `action.yml`. Requires network for first-time ref resolution
       --fail-fast      Stop at the first failing file
-      --json
+      --json           
   -h, --help           Print help

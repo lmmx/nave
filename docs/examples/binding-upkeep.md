@@ -26,18 +26,20 @@ dependency on a Rust crate from within the repo's Rust source.
 
 ```bash
 nave search \
-  --match 'file:pyproject.toml tool.maturin~' \
+  --match 'pyproject:tool.maturin' \
   workflow:maturin
 ```
 
-The `--match` predicate is a presence check — the `~` substring match against an
-empty string matches whenever the address exists.
+The predicate `pyproject:tool.maturin` is a presence check — it matches whenever
+the `tool.maturin` path exists in the parsed pyproject, regardless of its contents.
+This is a true structural presence check, not a substring match that could
+false-positive on comments or unrelated text.
 
 ### Step 2: tabulate the versions
 
 ```bash
 nave search \
-  --match 'file:pyproject.toml tool.maturin~' \
+  --match 'pyproject:tool.maturin' \
   --output holes \
   --explain \
   | rg 'Cargo.toml'
@@ -54,7 +56,7 @@ aggregated.
 
 ```bash
 nave pen create --name nave/surveil-bindings \
-  --match 'file:pyproject.toml tool.maturin~'
+  --match 'pyproject:tool.maturin'
 ```
 
 Then:

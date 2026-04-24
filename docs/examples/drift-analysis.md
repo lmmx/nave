@@ -55,7 +55,7 @@ To find the 3 monthly repos:
 
 ```bash
 nave search \
-  --match 'file:.github/dependabot.yml updates[0].schedule.interval=monthly' \
+  --match 'dependabot:updates[].schedule.interval=monthly' \
   --sort pushed-at
 ```
 
@@ -64,13 +64,13 @@ interval):
 
 ```bash
 nave pen create \
-  --match 'file:.github/dependabot.yml updates[0].schedule.interval=monthly' \
-  --name nave/unify-dependabot-intervals \
-  monthly
+  --match 'dependabot:updates[].schedule.interval=monthly' \
+  --name nave/unify-dependabot-intervals
 ```
 
-The positional `monthly` is a fallback search term; the `--match` predicate is what
-actually narrows the selection structurally.
+Note the shift from `updates[0]` to `updates[]`: the `[]` wildcard matches any update
+with a monthly interval, which is what you actually want. `updates[0]` would miss repos
+whose monthly schedule happens to be in a later position in the array.
 
 ### JSON output for scripting
 

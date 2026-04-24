@@ -3,5 +3,5 @@ List schemas and their cache status
 Usage: nave schemas list [OPTIONS]
 
 Options:
-      --json
+      --json  
   -h, --help  Print help

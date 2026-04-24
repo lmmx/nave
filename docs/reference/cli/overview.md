@@ -41,5 +41,7 @@ Two pieces of grammar are used across multiple commands:
 - **Terms** (`search`, `pen create`, `build --where`): `[scope:]value[|value...]`.
   See [Query language](../../concepts/queries.md).
 - **Match predicates** (`search --match`, `build --match`, `pen create --match`):
-  `[scope:]path op literal` where `op` is `=` or `~`.
+  `[scope:] [!] path [op literal]` where `op` is one of `=`, `!=`, `^=`, `$=`, `*=`.
+  A bare path tests presence; `!path` tests absence.
+  Paths support `[]` wildcards for array elements.
   See [Query language § Structural predicates](../../concepts/queries.md#structural-predicates).

@@ -68,8 +68,8 @@ nave search maturin workflow:pytest --sort pushed-at --limit 10
 ## Case-insensitive
 nave search -i MATURIN
 
-## Structural: only repos with requires-python containing 3.10
-nave search --match 'file:pyproject.toml project.requires-python~3.10'
+## Structural: only repos with requires-python mentioning 3.10
+nave search --match 'pyproject:project.requires-python*=3.10'
 
 ## JSON for scripting
 nave search maturin --json | jq '.repos[].repo'
