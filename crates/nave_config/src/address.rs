@@ -4,6 +4,9 @@
 //! matching what `nave build` emits in hole reports, e.g.:
 //!   jobs.release.steps[1].with.command
 
+mod selector;
+pub use selector::{SelectorSegment, parse_selector, resolve_selector};
+
 use serde_json::Value;
 use std::fmt::Write;
 
