@@ -306,9 +306,7 @@ fn render_template(t: &Template, indent: usize) -> String {
                 match &field.value {
                     Template::Literal(v) => s.push_str(&render_literal(v)),
                     Template::Hole { id } => write!(s, "⟨?{id}⟩").unwrap(),
-                    nested @ (Template::Object(_)
-                    | Template::Array(_)
-                    | Template::Set(_)) => {
+                    nested @ (Template::Object(_) | Template::Array(_) | Template::Set(_)) => {
                         s.push_str(&render_template(nested, indent + 1));
                     }
                 }
@@ -324,9 +322,7 @@ fn render_template(t: &Template, indent: usize) -> String {
                 match elem {
                     Template::Literal(v) => s.push_str(&render_literal(v)),
                     Template::Hole { id } => write!(s, "⟨?{id}⟩").unwrap(),
-                    nested @ (Template::Object(_)
-                    | Template::Array(_)
-                    | Template::Set(_)) => {
+                    nested @ (Template::Object(_) | Template::Array(_) | Template::Set(_)) => {
                         let rendered = render_template(nested, indent + 1);
                         s.push_str(rendered.trim_start());
                     }
@@ -349,9 +345,7 @@ fn render_template(t: &Template, indent: usize) -> String {
                     Template::Hole { id } => {
                         write!(s, "⟨?{id}⟩{optional_marker}").unwrap();
                     }
-                    nested @ (Template::Object(_)
-                    | Template::Array(_)
-                    | Template::Set(_)) => {
+                    nested @ (Template::Object(_) | Template::Array(_) | Template::Set(_)) => {
                         let rendered = render_template(nested, indent + 1);
                         let trimmed = rendered.trim_start();
                         // Inject the optional marker after the first key
@@ -361,8 +355,7 @@ fn render_template(t: &Template, indent: usize) -> String {
                         } else {
                             // Append the marker as a suffix on the "- " line
                             // so the user sees which elements are optional.
-                            write!(s, "{trimmed}  # {}/{}", field.present_in, field.total)
-                                .unwrap();
+                            write!(s, "{trimmed}  # {}/{}", field.present_in, field.total).unwrap();
                         }
                     }
                 }

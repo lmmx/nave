@@ -59,29 +59,6 @@ pub fn anti_unify(instances: &[Value]) -> (Template, Vec<Observations>) {
     (template, obs)
 }
 
-/// Compute a clustering signature for an object value.
-/// Signature = sorted key set + values of all leaf-scalar entries.
-/// Two objects with the same signature land in the same cluster.
-fn element_signature(obj: &serde_json::Map<String, Value>) -> Vec<(String, Option<String>)> {
-    let mut sig: Vec<(String, Option<String>)> = obj
-        .iter()
-        .map(|(k, v)| {
-            let scalar = match v {
-                Value::String(s) => Some(s.clone()),
-                Value::Number(n) => Some(n.to_string()),
-                Value::Bool(b) => Some(b.to_string()),
-                Value::Null => Some("null".to_string()),
-                // Non-scalar values: key is part of the signature,
-                // but value is not (it'll become a hole within the cluster)
-                _ => None,
-            };
-            (k.clone(), scalar)
-        })
-        .collect();
-    sig.sort();
-    sig
-}
-
 /// Values observed at a single hole.
 ///
 /// `instance_indices[k]` is the originating instance's index in the
@@ -252,22 +229,33 @@ fn au_array(
     Template::Array(elements)
 }
 
-/// Signature for clustering: (sorted key set, ordinal within that
-/// key-set in this instance). The ordinal ensures that if one instance
-/// has two `run:` steps, they land in distinct clusters rather than
-/// being squished together.
-type Signature = (Vec<String>, usize);
-
-fn au_set(
-    all_instances: &[Value],
-    scope: &[usize],
-    obs: &mut Vec<Observations>,
-) -> Template {
+fn au_set(all_instances: &[Value], scope: &[usize], obs: &mut Vec<Observations>) -> Template {
     let total = scope.len();
 
-    // Tag every element with (scope-local instance index, value, signature).
-    // The signature includes an ordinal: the nth element with a given
-    // key-set within a single instance gets ordinal n.
+    // Compute the key-set intersection across ALL elements in ALL
+    // in-scope instances. Only these "core" keys participate in the
+    // signature. Optional keys (present in some elements, absent in
+    // others) don't affect clustering — they become optional fields
+    // within the cluster's anti-unified template.
+    let mut core_keys: Option<std::collections::BTreeSet<String>> = None;
+    for &global in scope {
+        for elem in all_instances[global].as_array().unwrap() {
+            if let Some(obj) = elem.as_object() {
+                let ks: std::collections::BTreeSet<String> = obj.keys().cloned().collect();
+                core_keys = Some(match core_keys {
+                    Some(existing) => existing.intersection(&ks).cloned().collect(),
+                    None => ks,
+                });
+            }
+        }
+    }
+    let core_keys = core_keys.unwrap_or_default();
+
+    // Signature is (core key names only, ordinal within this key-group
+    // in this instance). Values are NEVER part of the signature — they
+    // are what gets anti-unified within each cluster.
+    type Signature = (Vec<String>, usize);
+
     let mut tagged: Vec<(usize, Value, Signature)> = Vec::new();
     for (local, &global) in scope.iter().enumerate() {
         // Count how many times each key-set has appeared in *this* instance.
@@ -275,7 +263,11 @@ fn au_set(
         for elem in all_instances[global].as_array().unwrap() {
             let keys = match elem.as_object() {
                 Some(obj) => {
-                    let mut ks: Vec<String> = obj.keys().cloned().collect();
+                    let mut ks: Vec<String> = obj
+                        .keys()
+                        .filter(|k| core_keys.contains(k.as_str()))
+                        .cloned()
+                        .collect();
                     ks.sort();
                     ks
                 }
