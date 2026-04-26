@@ -256,17 +256,24 @@ fn collect_addresses(t: &Template, path: String, out: &mut BTreeMap<usize, Strin
 }
 
 /// Build a compact predicate label for a set element from its
-/// anti-unified template. Extracts key-set and any literal scalar
-/// values to produce labels like `run`, `uses=actions/checkout@v4`,
-/// or `uses,with` (when the value is a hole).
+/// anti-unified template. For set elements that are objects, uses
+/// only the key names (no values) to keep addresses readable.
 fn set_element_label(t: &Template) -> String {
     match t {
         Template::Object(fields) => {
-            // Collect "key=value" for literals, bare "key" for holes/nested.
+            // Only include keys where the value is NOT a literal —
+            // literals are shared across all clusters and add noise.
+            // Exception: if ALL values are literals, include them
+            // (degenerate case, shouldn't happen for set elements).
+            let has_holes = fields.values().any(|f| !matches!(&f.value, Template::Literal(_)));
+
             let mut parts: Vec<String> = Vec::new();
             for (key, field) in fields {
+                if has_holes && matches!(&field.value, Template::Literal(_)) {
+                    continue; // skip literal-valued keys in label
+                }
                 match &field.value {
-                    Template::Literal(Value::String(s)) => {
+                    Template::Literal(Value::String(s)) if s.len() <= 30 => {
                         parts.push(format!("{key}={s}"));
                     }
                     Template::Literal(v) => {
@@ -279,8 +286,6 @@ fn set_element_label(t: &Template) -> String {
             }
             parts.join(",")
         }
-        // Shouldn't normally happen for set elements (they're arrays of
-        // objects), but handle gracefully.
         Template::Literal(v) => render_literal(v),
         Template::Hole { id } => format!("?{id}"),
         Template::Array(_) | Template::Set(_) => "…".to_string(),
