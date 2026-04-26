@@ -31,6 +31,11 @@ pub(crate) struct BuildArgs {
     /// match from each other term. Requires ≥ 2 `--where` terms.
     #[arg(long)]
     pub co_occur: bool,
+    /// Only show profiles whose bindings overlap with holes that
+    /// the --where/--match predicates would identify via co-occurrence.
+    /// Requires at least one --where or --match term.
+    #[arg(long)]
+    pub relevant_profiles: bool,
 }
 
 #[allow(clippy::unused_async)]
@@ -69,6 +74,7 @@ pub(crate) async fn run(args: BuildArgs) -> Result<()> {
             match_preds,
             co_occur: args.co_occur,
             filter: args.filter.clone(),
+            relevant_profiles: args.relevant_profiles,
         },
     )?;
 
@@ -109,39 +115,45 @@ fn print_group(g: &GroupReport) {
     }
     // --- new: profiles section ---
     if !g.fca.profiles.is_empty() {
-        println!();
-        println!(
-            "  profiles: ({} concepts, {} non-trivial)",
-            g.fca.total_concepts,
-            g.fca.profiles.len()
-        );
-        for (i, profile) in g.fca.profiles.iter().enumerate() {
-            let repo_names: Vec<&str> = profile
-                .instances
-                .iter()
-                .filter_map(|&idx| g.instances.get(idx).map(|r| r.repo.as_str()))
-                .collect();
-            let repos_display = if repo_names.len() <= 4 {
-                repo_names.join(", ")
-            } else {
-                format!(
-                    "{}, … +{}",
-                    repo_names[..3].join(", "),
-                    repo_names.len() - 3
-                )
-            };
+        let display_profiles = match &g.profile_match_preds {
+            Some(preds) => nave_build::filter_profiles_by_predicates(&g.fca.profiles, preds),
+            None => g.fca.profiles.clone(),
+        };
+        if !display_profiles.is_empty() {
+            println!();
             println!(
-                "    Profile {}  ({} repos: {})",
-                i + 1,
-                profile.support,
-                repos_display
+                "  profiles: ({} concepts, {} non-trivial)",
+                g.fca.total_concepts,
+                display_profiles.len()
             );
-            for binding in &profile.bindings {
-                let val_str = match &binding.value {
-                    Some(v) => serde_json::to_string(v).unwrap_or_default(),
-                    None => "ABSENT".to_string(),
+            for (i, profile) in display_profiles.iter().enumerate() {
+                let repo_names: Vec<&str> = profile
+                    .instances
+                    .iter()
+                    .filter_map(|&idx| g.instances.get(idx).map(|r| r.repo.as_str()))
+                    .collect();
+                let repos_display = if repo_names.len() <= 4 {
+                    repo_names.join(", ")
+                } else {
+                    format!(
+                        "{}, … +{}",
+                        repo_names[..3].join(", "),
+                        repo_names.len() - 3
+                    )
                 };
-                println!("      {} = {}", binding.address, val_str);
+                println!(
+                    "    Profile {}  ({} repos: {})",
+                    i + 1,
+                    profile.support,
+                    repos_display
+                );
+                for binding in &profile.bindings {
+                    let val_str = match &binding.value {
+                        Some(v) => serde_json::to_string(v).unwrap_or_default(),
+                        None => "ABSENT".to_string(),
+                    };
+                    println!("      {} = {}", binding.address, val_str);
+                }
             }
         }
     }

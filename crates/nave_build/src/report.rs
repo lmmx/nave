@@ -4,8 +4,9 @@ use std::fmt::Write as _;
 use serde::Serialize;
 use serde_json::Value;
 
-use crate::{FileInstance, FcaResult};
 use crate::antiunify::{Observations, Template, anti_unify};
+use crate::{FcaResult, FileInstance};
+use nave_config::MatchPredicate;
 
 #[derive(Debug, Default, Serialize)]
 pub struct BuildReport {
@@ -21,6 +22,8 @@ pub struct GroupReport {
     pub template_text: String,
     pub holes: Vec<HoleReport>,
     pub fca: FcaResult,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile_match_preds: Option<Vec<MatchPredicate>>,
 }
 
 #[derive(Debug, Serialize)]
@@ -80,7 +83,6 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> GroupRep
             .unwrap_or_else(|| format!("?{id}"));
         holes.push(summarise_hole(address, obs, total, &repo_names));
     }
-    holes.sort_by(|a, b| a.address.cmp(&b.address));
 
     eprintln!(
         "fca::analyse: n_instances={}, n_observations={}, holes={}",
@@ -88,8 +90,13 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> GroupRep
         observations.len(),
         holes.len()
     );
+    // Run FCA before sorting holes — observations and holes must be
+    // in the same order (by hole id from anti-unification).
     let fca_result = crate::fca::analyse(&observations, total, &holes);
     eprintln!("fca::analyse complete");
+
+    // Sort holes for display only, after FCA is done.
+    holes.sort_by(|a, b| a.address.cmp(&b.address));
 
     let template_text = render_template(&template, 0);
 
@@ -108,6 +115,7 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> GroupRep
         template_text,
         holes,
         fca: fca_result,
+        profile_match_preds: None,
     }
 }
 

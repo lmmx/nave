@@ -31,13 +31,14 @@
 //!     point at for something that doesn't exist)
 
 use anyhow::{Result, anyhow};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::address::{
     Segment, find_addresses_all_objects, parse_address, resolve_rel_path, subtree_at,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Op {
     /// Exact string equality against the scalar's rendered form.
     Eq,
@@ -77,7 +78,7 @@ impl Op {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MatchPredicate {
     /// Optional scope restricting which tracked-path patterns this
     /// predicate applies to — same semantics as `Term.scope`.
@@ -175,6 +176,23 @@ impl MatchPredicate {
             Op::Contains => rendered.contains(&self.literal),
             Op::Present | Op::Absent => unreachable!("unary op reached scalar comparison"),
         }
+    }
+
+    /// Test whether a value satisfies this predicate's operator and literal.
+    /// Returns `false` for non-scalar values or unary ops (Present/Absent).
+    pub fn matches_value(&self, value: &Value) -> bool {
+        if !self.op.is_binary() {
+            return false;
+        }
+        // For scalars, test the natural rendered form.
+        if let Some(rendered) = render_scalar(value) {
+            return self.matches_scalar(&rendered);
+        }
+        // For arrays/objects, test against the JSON serialisation.
+        // This lets *=/^=/$= work against compound values the same
+        // way the user sees them in the output.
+        let json = serde_json::to_string(value).unwrap_or_default();
+        self.matches_scalar(&json)
     }
 }
 

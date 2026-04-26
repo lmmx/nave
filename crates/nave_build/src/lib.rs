@@ -12,7 +12,9 @@ mod fca;
 mod report;
 
 pub use antiunify::{Template, anti_unify};
-pub use fca::{FcaResult, Profile, ProfileBinding, analyse as fca_analyse};
+pub use fca::{
+    FcaResult, Profile, ProfileBinding, analyse as fca_analyse, filter_profiles_by_predicates,
+};
 pub use report::{BuildReport, GroupReport, HoleReport, InstanceRef, SourceHint};
 
 use std::collections::BTreeMap;
@@ -47,6 +49,10 @@ pub struct BuildOptions {
     pub co_occur: bool,
     /// Only build groups whose pattern contains this substring.
     pub filter: Option<String>,
+    /// Only show profiles whose bindings overlap with holes that
+    /// the --where/--match predicates would identify via co-occurrence.
+    /// Requires at least one --where or --match term.
+    pub relevant_profiles: bool,
 }
 
 /// Walk the cache and produce a build report.
@@ -284,7 +290,12 @@ pub fn run_build(
                 continue;
             }
         }
-        let group = report::build_group(&pattern, &instances);
+        let mut group = report::build_group(&pattern, &instances);
+
+        if options.relevant_profiles && !options.match_preds.is_empty() {
+            group.profile_match_preds = Some(options.match_preds.clone());
+        }
+
         report.groups.push(group);
     }
 

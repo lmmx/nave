@@ -101,8 +101,7 @@ pub fn analyse(
     let (attributes, ctx) = build_context(observations, n_instances, holes);
     let n_attributes = attributes.len();
 
-    let concepts: Vec<(BitSet, BitSet)> =
-        NextClosure.enumerate_concepts(&ctx).collect();
+    let concepts: Vec<(BitSet, BitSet)> = NextClosure.enumerate_concepts(&ctx).collect();
     let total_concepts = concepts.len();
 
     let profiles = interpret_concepts(concepts, &attributes, n_instances);
@@ -136,6 +135,10 @@ fn build_context(
     let mut value_to_attr: BTreeMap<(usize, String), usize> = BTreeMap::new();
     let mut absent_attr: BTreeMap<usize, usize> = BTreeMap::new();
 
+    // Collect which instances are absent for each optional hole,
+    // so we can detect structurally redundant absences.
+    let mut absent_sets: Vec<(usize, String, std::collections::HashSet<usize>)> = Vec::new();
+
     for (hole_idx, (obs, hole)) in observations.iter().zip(holes.iter()).enumerate() {
         let is_optional = hole.present_in < hole.total;
 
@@ -157,21 +160,57 @@ fn build_context(
         }
 
         if is_optional {
-            let attr_idx = attributes.len();
-            attributes.push(Attribute {
-                hole_index: hole_idx,
-                address: hole.address.clone(),
-                value: None,
-            });
-            absent_attr.insert(hole_idx, attr_idx);
+            let present: std::collections::HashSet<usize> =
+                obs.instance_indices.iter().copied().collect();
+            let absent: std::collections::HashSet<usize> =
+                (0..n_instances).filter(|i| !present.contains(i)).collect();
+            absent_sets.push((hole_idx, hole.address.clone(), absent));
         }
     }
 
-    // Build the per-instance attribute sets, then construct the FormalContext
-    // via add_attribute / add_object.
-    let n_attrs = attributes.len();
+    // Filter out structurally redundant ABSENT attributes: if hole A's
+    // address is a prefix of hole B's address and they have the same
+    // absent instances, B's absence is implied by A's. Keep only the
+    // shallowest (shortest address) for each group of co-absent holes.
+    let mut keep_absent: Vec<bool> = vec![true; absent_sets.len()];
+    for i in 0..absent_sets.len() {
+        if !keep_absent[i] {
+            continue;
+        }
+        for j in 0..absent_sets.len() {
+            if i == j || !keep_absent[j] {
+                continue;
+            }
+            let (_, ref addr_i, ref set_i) = absent_sets[i];
+            let (_, ref addr_j, ref set_j) = absent_sets[j];
+            // If i is a prefix of j and same absent set, j is redundant.
+            if addr_j.starts_with(addr_i)
+                && (addr_j.len() > addr_i.len())
+                && (addr_j.as_bytes().get(addr_i.len()) == Some(&b'.')
+                    || addr_j.as_bytes().get(addr_i.len()) == Some(&b'['))
+                && set_i == set_j
+            {
+                keep_absent[j] = false;
+            }
+        }
+    }
 
-    // Compute which attributes each instance has.
+    for (idx, keep) in keep_absent.iter().enumerate() {
+        if !keep {
+            continue;
+        }
+        let (hole_idx, _, _) = &absent_sets[idx];
+        let attr_idx = attributes.len();
+        attributes.push(Attribute {
+            hole_index: *hole_idx,
+            address: holes[*hole_idx].address.clone(),
+            value: None,
+        });
+        absent_attr.insert(*hole_idx, attr_idx);
+    }
+
+    // Build per-instance attribute sets.
+    let n_attrs = attributes.len();
     let mut instance_attrs: Vec<BitSet> = (0..n_instances)
         .map(|_| BitSet::with_capacity(n_attrs))
         .collect();
@@ -199,14 +238,11 @@ fn build_context(
     // Construct the FormalContext.
     let mut ctx = FormalContext::<String>::new();
 
-    // Add attributes first (so attribute indices are stable when adding objects).
-    for (i, attr) in attributes.iter().enumerate() {
+    for attr in attributes.iter() {
         let label = match &attr.value {
             Some(v) => format!("{}={}", attr.address, short_value(v)),
             None => format!("{}=ABSENT", attr.address),
         };
-        // Objects BitSet is empty here; incidence is set via add_object below.
-        let _ = i; // attribute index will match insertion order
         ctx.add_attribute(label, &BitSet::new());
     }
 
@@ -266,9 +302,6 @@ fn interpret_concepts(
             })
             .collect();
 
-        // Skip concepts whose intent has bindings from fewer than 2
-        // distinct holes — single-hole concepts just restate the
-        // value distribution already shown in the holes listing.
         let distinct_holes: std::collections::HashSet<usize> =
             bindings.iter().map(|b| b.hole_index).collect();
         if distinct_holes.len() < 2 {
@@ -284,6 +317,24 @@ fn interpret_concepts(
 
     profiles.sort_by(|a, b| b.support.cmp(&a.support));
     profiles
+}
+
+/// Filter profiles to those where at least one binding's value
+/// satisfies at least one of the given match predicates.
+pub fn filter_profiles_by_predicates(
+    profiles: &[Profile],
+    preds: &[nave_config::MatchPredicate],
+) -> Vec<Profile> {
+    profiles
+        .iter()
+        .filter(|p| {
+            p.bindings.iter().any(|b| match &b.value {
+                Some(v) => preds.iter().any(|pred| pred.matches_value(v)),
+                None => false,
+            })
+        })
+        .cloned()
+        .collect()
 }
 
 // ---------------------------------------------------------------------------
@@ -370,16 +421,22 @@ mod tests {
             make_obs(
                 (0..9).collect(),
                 vec![
-                    "github-actions", "github-actions", "github-actions",
-                    "github-actions", "github-actions", "github-actions",
-                    "github-actions", "github-actions", "cargo",
+                    "github-actions",
+                    "github-actions",
+                    "github-actions",
+                    "github-actions",
+                    "github-actions",
+                    "github-actions",
+                    "github-actions",
+                    "github-actions",
+                    "cargo",
                 ],
             ),
             make_obs(
                 (0..9).collect(),
                 vec![
-                    "weekly", "weekly", "weekly", "weekly", "weekly", "weekly",
-                    "monthly", "monthly", "monthly",
+                    "weekly", "weekly", "weekly", "weekly", "weekly", "weekly", "monthly",
+                    "monthly", "monthly",
                 ],
             ),
         ];
