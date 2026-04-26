@@ -59,7 +59,7 @@ If zero results, you're greenfielding. If some results, go read those first.
 To see the shared shape of your pytest workflows before you mutate them:
 
 ```bash
-nave build --filter workflow --match 'workflow:jobs.test*=pytest'
+nave build --where workflow:uv --match 'workflow:run*=pytest'
 ```
 
 This gives you the anti-unified template, with holes showing exactly which parts vary
