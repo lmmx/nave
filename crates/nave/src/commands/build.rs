@@ -61,19 +61,16 @@ pub(crate) async fn run(args: BuildArgs) -> Result<()> {
         })
         .collect::<Result<_>>()?;
 
-    let mut report = run_build(
+    let report = run_build(
         &root,
         &cfg,
         &BuildOptions {
             where_terms,
             match_preds,
             co_occur: args.co_occur,
+            filter: args.filter.clone(),
         },
     )?;
-
-    if let Some(f) = &args.filter {
-        report.groups.retain(|g| g.pattern.contains(f));
-    }
 
     if args.json {
         println!("{}", serde_json::to_string_pretty(&report)?);
@@ -109,6 +106,44 @@ fn print_group(g: &GroupReport) {
     println!("  holes:");
     for h in &g.holes {
         print_hole(h);
+    }
+    // --- new: profiles section ---
+    if !g.fca.profiles.is_empty() {
+        println!();
+        println!(
+            "  profiles: ({} concepts, {} non-trivial)",
+            g.fca.total_concepts,
+            g.fca.profiles.len()
+        );
+        for (i, profile) in g.fca.profiles.iter().enumerate() {
+            let repo_names: Vec<&str> = profile
+                .instances
+                .iter()
+                .filter_map(|&idx| g.instances.get(idx).map(|r| r.repo.as_str()))
+                .collect();
+            let repos_display = if repo_names.len() <= 4 {
+                repo_names.join(", ")
+            } else {
+                format!(
+                    "{}, … +{}",
+                    repo_names[..3].join(", "),
+                    repo_names.len() - 3
+                )
+            };
+            println!(
+                "    Profile {}  ({} repos: {})",
+                i + 1,
+                profile.support,
+                repos_display
+            );
+            for binding in &profile.bindings {
+                let val_str = match &binding.value {
+                    Some(v) => serde_json::to_string(v).unwrap_or_default(),
+                    None => "ABSENT".to_string(),
+                };
+                println!("      {} = {}", binding.address, val_str);
+            }
+        }
     }
 }
 

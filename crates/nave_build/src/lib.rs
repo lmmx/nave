@@ -8,9 +8,11 @@
 //! instances are co-occurrence sites (subtrees) rather than whole files.
 
 mod antiunify;
+mod fca;
 mod report;
 
 pub use antiunify::{Template, anti_unify};
+pub use fca::{FcaResult, Profile, ProfileBinding, analyse as fca_analyse};
 pub use report::{BuildReport, GroupReport, HoleReport, InstanceRef, SourceHint};
 
 use std::collections::BTreeMap;
@@ -43,6 +45,8 @@ pub struct BuildOptions {
     /// ancestor shared by an anchor-term match and at least one match
     /// from each other term. Only meaningful with ≥ 2 `where_terms`.
     pub co_occur: bool,
+    /// Only build groups whose pattern contains this substring.
+    pub filter: Option<String>,
 }
 
 /// Walk the cache and produce a build report.
@@ -274,6 +278,11 @@ pub fn run_build(
     for (pattern, instances) in groups {
         if instances.is_empty() {
             continue;
+        }
+        if let Some(ref f) = options.filter {
+            if !pattern.contains(f) {
+                continue;
+            }
         }
         let group = report::build_group(&pattern, &instances);
         report.groups.push(group);

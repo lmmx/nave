@@ -39,6 +39,8 @@ tracing-subscriber = {version = "0.3", features = ["env-filter"]}
 thiserror = {version = "1"}
 futures = {version = "0.3"}
 regex = {version = "1"}
+odis = {version = "2026.4.0"}
+bit-set = {version = "0.8.0"}
 
 [workspace.lints.clippy]
 pedantic = {level = "warn", priority = -2}

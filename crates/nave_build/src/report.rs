@@ -4,7 +4,7 @@ use std::fmt::Write as _;
 use serde::Serialize;
 use serde_json::Value;
 
-use crate::FileInstance;
+use crate::{FileInstance, FcaResult};
 use crate::antiunify::{Observations, Template, anti_unify};
 
 #[derive(Debug, Default, Serialize)]
@@ -20,6 +20,7 @@ pub struct GroupReport {
     pub instances: Vec<InstanceRef>,
     pub template_text: String,
     pub holes: Vec<HoleReport>,
+    pub fca: FcaResult,
 }
 
 #[derive(Debug, Serialize)]
@@ -81,6 +82,15 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> GroupRep
     }
     holes.sort_by(|a, b| a.address.cmp(&b.address));
 
+    eprintln!(
+        "fca::analyse: n_instances={}, n_observations={}, holes={}",
+        total,
+        observations.len(),
+        holes.len()
+    );
+    let fca_result = crate::fca::analyse(&observations, total, &holes);
+    eprintln!("fca::analyse complete");
+
     let template_text = render_template(&template, 0);
 
     GroupReport {
@@ -97,6 +107,7 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> GroupRep
             .collect(),
         template_text,
         holes,
+        fca: fca_result,
     }
 }
 
