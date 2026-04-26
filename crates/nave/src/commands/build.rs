@@ -148,10 +148,10 @@ fn print_group(g: &GroupReport) {
                     repos_display
                 );
                 for binding in &profile.bindings {
-                    let val_str = match &binding.value {
-                        Some(v) => serde_json::to_string(v).unwrap_or_default(),
-                        None => "ABSENT".to_string(),
-                    };
+                    if binding.value.is_none() {
+                        continue;
+                    }
+                    let val_str = serde_json::to_string(binding.value.as_ref().unwrap()).unwrap_or_default();
                     println!("      {} = {}", binding.address, val_str);
                 }
             }

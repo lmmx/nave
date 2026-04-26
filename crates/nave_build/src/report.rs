@@ -245,6 +245,45 @@ fn collect_addresses(t: &Template, path: String, out: &mut BTreeMap<usize, Strin
                 collect_addresses(elem, next, out);
             }
         }
+        Template::Set(elements) => {
+            for field in elements {
+                let label = set_element_label(&field.value);
+                let next = format!("{path}[{label}]");
+                collect_addresses(&field.value, next, out);
+            }
+        }
+    }
+}
+
+/// Build a compact predicate label for a set element from its
+/// anti-unified template. Extracts key-set and any literal scalar
+/// values to produce labels like `run`, `uses=actions/checkout@v4`,
+/// or `uses,with` (when the value is a hole).
+fn set_element_label(t: &Template) -> String {
+    match t {
+        Template::Object(fields) => {
+            // Collect "key=value" for literals, bare "key" for holes/nested.
+            let mut parts: Vec<String> = Vec::new();
+            for (key, field) in fields {
+                match &field.value {
+                    Template::Literal(Value::String(s)) => {
+                        parts.push(format!("{key}={s}"));
+                    }
+                    Template::Literal(v) => {
+                        parts.push(format!("{key}={v}"));
+                    }
+                    _ => {
+                        parts.push(key.clone());
+                    }
+                }
+            }
+            parts.join(",")
+        }
+        // Shouldn't normally happen for set elements (they're arrays of
+        // objects), but handle gracefully.
+        Template::Literal(v) => render_literal(v),
+        Template::Hole { id } => format!("?{id}"),
+        Template::Array(_) | Template::Set(_) => "…".to_string(),
     }
 }
 
@@ -267,7 +306,9 @@ fn render_template(t: &Template, indent: usize) -> String {
                 match &field.value {
                     Template::Literal(v) => s.push_str(&render_literal(v)),
                     Template::Hole { id } => write!(s, "⟨?{id}⟩").unwrap(),
-                    nested @ (Template::Object(_) | Template::Array(_)) => {
+                    nested @ (Template::Object(_)
+                    | Template::Array(_)
+                    | Template::Set(_)) => {
                         s.push_str(&render_template(nested, indent + 1));
                     }
                 }
@@ -283,9 +324,46 @@ fn render_template(t: &Template, indent: usize) -> String {
                 match elem {
                     Template::Literal(v) => s.push_str(&render_literal(v)),
                     Template::Hole { id } => write!(s, "⟨?{id}⟩").unwrap(),
-                    nested @ (Template::Object(_) | Template::Array(_)) => {
+                    nested @ (Template::Object(_)
+                    | Template::Array(_)
+                    | Template::Set(_)) => {
                         let rendered = render_template(nested, indent + 1);
                         s.push_str(rendered.trim_start());
+                    }
+                }
+            }
+            s
+        }
+        Template::Set(elements) => {
+            let mut s = String::new();
+            for field in elements {
+                s.push('\n');
+                s.push_str(&pad);
+                let optional_marker = if field.is_required() { "" } else { "?" };
+                s.push_str("- ");
+                match &field.value {
+                    Template::Literal(v) => {
+                        s.push_str(&render_literal(v));
+                        s.push_str(optional_marker);
+                    }
+                    Template::Hole { id } => {
+                        write!(s, "⟨?{id}⟩{optional_marker}").unwrap();
+                    }
+                    nested @ (Template::Object(_)
+                    | Template::Array(_)
+                    | Template::Set(_)) => {
+                        let rendered = render_template(nested, indent + 1);
+                        let trimmed = rendered.trim_start();
+                        // Inject the optional marker after the first key
+                        // if this is an object, to match Object rendering.
+                        if optional_marker.is_empty() {
+                            s.push_str(trimmed);
+                        } else {
+                            // Append the marker as a suffix on the "- " line
+                            // so the user sees which elements are optional.
+                            write!(s, "{trimmed}  # {}/{}", field.present_in, field.total)
+                                .unwrap();
+                        }
                     }
                 }
             }

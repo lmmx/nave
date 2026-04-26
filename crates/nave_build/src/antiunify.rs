@@ -21,6 +21,16 @@ pub enum Template {
     /// A JSON array. Positional alignment: same-length arrays zip
     /// element-wise; different lengths fall through to Hole.
     Array(Vec<Template>),
+
+    /// A JSON array with set/bag semantics: elements are matched
+    /// across instances by structural similarity (key-set signature)
+    /// rather than position. Used for arrays of objects where order
+    /// is arbitrary and content is identity — CI workflow steps,
+    /// dependency entries, linter rule lists. Each `Field` represents
+    /// a cluster of structurally-similar elements across instances,
+    /// with `present_in / total` tracking how many instances
+    /// contributed a matching element.
+    Set(Vec<Field>),
 }
 
 #[derive(Debug, Clone)]
@@ -47,6 +57,29 @@ pub fn anti_unify(instances: &[Value]) -> (Template, Vec<Observations>) {
     let top_scope: Vec<usize> = (0..instances.len()).collect();
     let template = au_rec(instances, &top_scope, &mut obs);
     (template, obs)
+}
+
+/// Compute a clustering signature for an object value.
+/// Signature = sorted key set + values of all leaf-scalar entries.
+/// Two objects with the same signature land in the same cluster.
+fn element_signature(obj: &serde_json::Map<String, Value>) -> Vec<(String, Option<String>)> {
+    let mut sig: Vec<(String, Option<String>)> = obj
+        .iter()
+        .map(|(k, v)| {
+            let scalar = match v {
+                Value::String(s) => Some(s.clone()),
+                Value::Number(n) => Some(n.to_string()),
+                Value::Bool(b) => Some(b.to_string()),
+                Value::Null => Some("null".to_string()),
+                // Non-scalar values: key is part of the signature,
+                // but value is not (it'll become a hole within the cluster)
+                _ => None,
+            };
+            (k.clone(), scalar)
+        })
+        .collect();
+    sig.sort();
+    sig
 }
 
 /// Values observed at a single hole.
@@ -82,9 +115,20 @@ fn au_rec(all_instances: &[Value], scope: &[usize], obs: &mut Vec<Observations>)
         return au_object(all_instances, scope, obs);
     }
 
-    // All arrays of equal length → recurse positionally.
+    // All arrays → decide: set (arrays of objects) or positional (arrays of scalars).
     if vals.iter().all(|v| matches!(v, Value::Array(_))) {
         let arrays: Vec<&Vec<Value>> = vals.iter().map(|v| v.as_array().unwrap()).collect();
+
+        // Auto-detect: if all elements across all arrays are objects, use set semantics.
+        let all_elements_are_objects = arrays
+            .iter()
+            .all(|a| a.iter().all(|elem| matches!(elem, Value::Object(_))));
+
+        if all_elements_are_objects {
+            return au_set(all_instances, scope, obs);
+        }
+
+        // Otherwise: positional, but only if equal lengths.
         if arrays.iter().all(|a| a.len() == arrays[0].len()) {
             return au_array(all_instances, scope, arrays[0].len(), obs);
         }
@@ -206,4 +250,84 @@ fn au_array(
         elements.push(child);
     }
     Template::Array(elements)
+}
+
+/// Signature for clustering: (sorted key set, ordinal within that
+/// key-set in this instance). The ordinal ensures that if one instance
+/// has two `run:` steps, they land in distinct clusters rather than
+/// being squished together.
+type Signature = (Vec<String>, usize);
+
+fn au_set(
+    all_instances: &[Value],
+    scope: &[usize],
+    obs: &mut Vec<Observations>,
+) -> Template {
+    let total = scope.len();
+
+    // Tag every element with (scope-local instance index, value, signature).
+    // The signature includes an ordinal: the nth element with a given
+    // key-set within a single instance gets ordinal n.
+    let mut tagged: Vec<(usize, Value, Signature)> = Vec::new();
+    for (local, &global) in scope.iter().enumerate() {
+        // Count how many times each key-set has appeared in *this* instance.
+        let mut ordinals: BTreeMap<Vec<String>, usize> = BTreeMap::new();
+        for elem in all_instances[global].as_array().unwrap() {
+            let keys = match elem.as_object() {
+                Some(obj) => {
+                    let mut ks: Vec<String> = obj.keys().cloned().collect();
+                    ks.sort();
+                    ks
+                }
+                None => vec!["__scalar__".to_string()],
+            };
+            let ord = ordinals.entry(keys.clone()).or_insert(0);
+            tagged.push((local, elem.clone(), (keys, *ord)));
+            *ord += 1;
+        }
+    }
+
+    // Group by signature.
+    let mut clusters: BTreeMap<Signature, Vec<(usize, Value)>> = BTreeMap::new();
+    for (local, val, sig) in tagged {
+        clusters.entry(sig).or_default().push((local, val));
+    }
+
+    let mut fields = Vec::new();
+    for (_sig, members) in clusters {
+        let parent_indices: Vec<usize> = members.iter().map(|(local, _)| scope[*local]).collect();
+        let child_vals: Vec<Value> = members.into_iter().map(|(_, v)| v).collect();
+
+        // present_in counts distinct instances, not occurrences.
+        // With the ordinal fix, each instance contributes at most once
+        // per cluster, so this dedup is technically redundant — but
+        // kept as a safety invariant.
+        let present_in = {
+            let mut instances: Vec<usize> = parent_indices.clone();
+            instances.sort_unstable();
+            instances.dedup();
+            instances.len()
+        };
+
+        let mark = obs.len();
+        let child_scope: Vec<usize> = (0..child_vals.len()).collect();
+        let child = au_rec(&child_vals, &child_scope, obs);
+
+        // Remap observations to parent scope.
+        for o in obs.iter_mut().skip(mark) {
+            o.instance_indices = o
+                .instance_indices
+                .iter()
+                .map(|&local_idx| parent_indices[local_idx])
+                .collect();
+        }
+
+        fields.push(Field {
+            value: child,
+            present_in,
+            total,
+        });
+    }
+
+    Template::Set(fields)
 }
