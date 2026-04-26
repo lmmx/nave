@@ -30,6 +30,8 @@ nave search \
   workflow:maturin
 ```
 
+- This outputs a list of repo names (default `--output` is repos)
+
 The predicate `pyproject:tool.maturin` is a presence check — it matches whenever
 the `tool.maturin` path exists in the parsed pyproject, regardless of its contents.
 This is a true structural presence check, not a substring match that could
@@ -41,18 +43,41 @@ false-positive on comments or unrelated text.
 nave search \
   --match 'pyproject:tool.maturin' \
   --output holes \
-  --explain \
-  | rg 'Cargo.toml'
+  --explain
 ```
 
-This surfaces every `Cargo.toml` field pointed to by the binding repos — useful for
-seeing which crate versions are pinned across the fleet.
+This emits every occurrence of the `tool.maturin` block across matching repo's `pyproject.toml`,
+grouped by structural address.
+
+Each entry shows:
+
+- the file and address
+- how many repos matched
+- per-repo values at that location
+
+Example:
+
+```
+pyproject.toml  tool.maturin  (13 hits)
+    lmmx/ansi-to-html :: pyproject.toml
+        {"features":["pyo3/extension-module"]}
+    lmmx/czkawka :: pyproject.toml
+        {"features":["pyo3/extension-module"],"module-name":"czkawka._czkawka",...}
+```
+
+This is useful for quickly seeing how binding repos are configured (which only set `features`,
+which define `module-name` or `python-source`, which introduce additional flags or diverge
+from the common pattern).
+
+At this stage you're not extracting crate versions yet but you're getting an overview of
+the configuration surface of the bindings so you know what shapes your later
+analysis needs to handle.
 
 ### Step 3: build a pen for surveillance
 
-Surveillance isn't a codemod, but the pen model still fits: you need isolated
-workspaces to run `cargo public-api` in each repo, and you want the results
-aggregated.
+These overviews don't make any interventions in the code, but we can still use a pen to collect them:
+if you need isolated workspaces to run `cargo public-api` in each repo, and you want the results
+aggregated (even if we don't plan on pushing changes based on what we find).
 
 ```bash
 nave pen create --name nave/surveil-bindings \
@@ -73,6 +98,7 @@ binding release.
 
 ## Why this fits Nave
 
-The specifics here are less important than the general shape: surveillance over a
-fleet subset, with isolated execution per repo, aggregated results. The pen model
-covers it natively even though the use case isn't "apply a codemod".
+The general approach here is to carry out surveillance over a fleet subset,
+with isolated execution per repo, aggregated results.
+
+The pen concept covers this kind of task even when the use case isn't applying codemods.

@@ -5,9 +5,10 @@ A realistic bulk-edit scenario from the
 CI tests should use `--resolution lowest-direct` alongside `--frozen`, and you want to
 roll this out across every repo that has a pytest CI workflow.
 
-### The pattern
+### Motivation
 
-The target is the [MCP Python SDK's workflow](https://github.com/modelcontextprotocol/python-sdk/blob/main/.github/workflows/shared.yml#L53):
+The motivating example here can be seen in the
+[MCP Python SDK's workflow](https://github.com/modelcontextprotocol/python-sdk/blob/main/.github/workflows/shared.yml#L53):
 
 ```yaml
 test:
@@ -21,10 +22,14 @@ test:
           install-flags: "--frozen"
 ```
 
-The rationale: `lowest-direct` uses the lowest compatible versions for direct
-dependencies (and latest for transitives), catching "my pinned lower bound doesn't
-actually work" bugs that pure lockfile runs miss. Full details in
-[uv's resolution docs](https://docs.astral.sh/uv/concepts/resolution/#resolution-strategy).
+Note the extra leg in its test version matrix.
+
+In addition to the typical approach on the `locked` leg,
+the `lowest-direct` leg uses the lowest compatible versions for direct dependencies (and latest for transitives),
+catching invalid lockfiles which pin lower bounds that will install but don't actually work
+(breaking the tests at runtime).
+
+For further details see [uv's resolution docs](https://docs.astral.sh/uv/concepts/resolution/#resolution-strategy).
 
 ### Step 1: find the target repos
 
@@ -52,7 +57,7 @@ align with it rather than create a second pattern:
 nave search workflow:dep-resolution --explain
 ```
 
-If zero results, you're greenfielding. If some results, go read those first.
+If zero results, you're greenfielding. If there are some, go read those first.
 
 ### Step 3: build a template of the current workflows
 
@@ -69,8 +74,9 @@ today. The codemod needs to slot into those holes cleanly.
 
 ```bash
 nave pen create \
-  --name nave/lowest-direct \
-  workflow:pytest workflow:uv
+  workflow:uv \
+  --match workflow:run*=pytest \
+  --name nave/lowest-direct
 ```
 
 This clones the matching repos into `~/.local/share/nave/pens/lowest-direct/` and
