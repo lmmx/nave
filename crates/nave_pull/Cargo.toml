@@ -10,7 +10,7 @@ workspace = true
 
 [package]
 name = "nave_pull"
-version = "0.0.7"
+version = "0.0.8"
 description = "Sparse-checkout puller for scanned repos"
 authors.workspace = true
 edition.workspace = true

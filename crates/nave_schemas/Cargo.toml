@@ -16,7 +16,7 @@ workspace = true
 
 [package]
 name = "nave_schemas"
-version = "0.0.7"
+version = "0.0.8"
 description = "Schema caching and config validation for nave"
 authors.workspace = true
 edition.workspace = true

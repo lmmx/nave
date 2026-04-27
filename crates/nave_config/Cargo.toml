@@ -14,7 +14,7 @@ workspace = true
 
 [package]
 name = "nave_config"
-version = "0.0.7"
+version = "0.0.8"
 description = "Configuration and cache paths for nave"
 authors.workspace = true
 edition.workspace = true

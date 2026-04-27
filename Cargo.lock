@@ -1265,7 +1265,7 @@ dependencies = [
 
 [[package]]
 name = "nave"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "cargo-husky",
@@ -1294,7 +1294,7 @@ dependencies = [
 
 [[package]]
 name = "nave_build"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "bit-set",
@@ -1308,7 +1308,7 @@ dependencies = [
 
 [[package]]
 name = "nave_check"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "nave_config",
@@ -1320,7 +1320,7 @@ dependencies = [
 
 [[package]]
 name = "nave_config"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "dirs",
@@ -1335,7 +1335,7 @@ dependencies = [
 
 [[package]]
 name = "nave_github"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "futures",
@@ -1350,7 +1350,7 @@ dependencies = [
 
 [[package]]
 name = "nave_parse"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "serde",
@@ -1362,7 +1362,7 @@ dependencies = [
 
 [[package]]
 name = "nave_pen"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "dirs",
@@ -1380,7 +1380,7 @@ dependencies = [
 
 [[package]]
 name = "nave_pull"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "futures",
@@ -1391,7 +1391,7 @@ dependencies = [
 
 [[package]]
 name = "nave_scan"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "futures",
@@ -1405,7 +1405,7 @@ dependencies = [
 
 [[package]]
 name = "nave_schemas"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "jsonschema",
@@ -1422,7 +1422,7 @@ dependencies = [
 
 [[package]]
 name = "nave_search"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "nave_build",
