@@ -116,6 +116,23 @@ predicates emit the concrete address of the resolved value.
 `--match` composes with plain terms and with `--co-occur` (on `build`).
 At least one of a positional term or `--match` is required.
 
+### Filtering profiles by predicate
+
+`--relevant-profiles` (on `build`) uses the same `--match` predicates to
+filter which profiles are displayed. A profile is shown only if at least one
+of its bindings' values satisfies a `--match` predicate.
+
+```bash
+# Show the full workflow template but only profiles involving pytest
+nave build \
+  --where workflow:uv \
+  --match 'workflow:run*=pytest' \
+  --relevant-profiles
+```
+
+This does not change which repos are included or how anti-unification works —
+it only filters the profile display.
+
 ## Co-occurrence
 
 Plain terms AND at the *file* level: a repo matches if each term finds its target

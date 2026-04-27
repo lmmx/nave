@@ -31,6 +31,11 @@ pub(crate) struct BuildArgs {
     /// match from each other term. Requires ≥ 2 `--where` terms.
     #[arg(long)]
     pub co_occur: bool,
+    /// Only show profiles whose bindings overlap with holes that
+    /// the --where/--match predicates would identify via co-occurrence.
+    /// Requires at least one --where or --match term.
+    #[arg(long)]
+    pub relevant_profiles: bool,
 }
 
 #[allow(clippy::unused_async)]
@@ -61,19 +66,17 @@ pub(crate) async fn run(args: BuildArgs) -> Result<()> {
         })
         .collect::<Result<_>>()?;
 
-    let mut report = run_build(
+    let report = run_build(
         &root,
         &cfg,
         &BuildOptions {
             where_terms,
             match_preds,
             co_occur: args.co_occur,
+            filter: args.filter.clone(),
+            relevant_profiles: args.relevant_profiles,
         },
     )?;
-
-    if let Some(f) = &args.filter {
-        report.groups.retain(|g| g.pattern.contains(f));
-    }
 
     if args.json {
         println!("{}", serde_json::to_string_pretty(&report)?);
@@ -109,6 +112,93 @@ fn print_group(g: &GroupReport) {
     println!("  holes:");
     for h in &g.holes {
         print_hole(h);
+    }
+    if !g.fca.profiles.is_empty() {
+        let display_profiles = match &g.profile_match_preds {
+            Some(preds) => nave_build::filter_profiles_by_predicates(&g.fca.profiles, preds),
+            None => g.fca.profiles.clone(),
+        };
+        if !display_profiles.is_empty() {
+            println!();
+            println!(
+                "  profiles: ({} concepts, {} non-trivial)",
+                g.fca.total_concepts,
+                display_profiles.len()
+            );
+            for (i, profile) in display_profiles.iter().enumerate() {
+                let repo_names: Vec<&str> = profile
+                    .instances
+                    .iter()
+                    .filter_map(|&idx| g.instances.get(idx).map(|r| r.repo.as_str()))
+                    .collect();
+                let repos_display = if repo_names.len() <= 4 {
+                    repo_names.join(", ")
+                } else {
+                    format!(
+                        "{}, … +{}",
+                        repo_names[..3].join(", "),
+                        repo_names.len() - 3
+                    )
+                };
+
+                // Show parent relationship if lattice info is available
+                let parent_info = g.fca.lattice.as_ref().and_then(|lat| {
+                    let parents = &lat.parents[i];
+                    if parents.is_empty() {
+                        None
+                    } else {
+                        let parent_refs: Vec<String> = parents
+                            .iter()
+                            .map(|&p| format!("Profile {}", p + 1))
+                            .collect();
+                        Some(format!(" (refines {})", parent_refs.join(", ")))
+                    }
+                });
+
+                println!(
+                    "    Profile {}  ({} repos: {}){}",
+                    i + 1,
+                    profile.support,
+                    repos_display,
+                    parent_info.unwrap_or_default()
+                );
+
+                let (bindings_to_show, showing_delta) = match g.fca.lattice.as_ref() {
+                    Some(lat) => {
+                        let all_parents_trivial = lat.parents[i].is_empty()
+                            || lat.parents[i]
+                                .iter()
+                                .all(|&p| g.fca.profiles[p].support == g.instance_count);
+                        if all_parents_trivial {
+                            (&profile.bindings, false)
+                        } else {
+                            (&lat.deltas[i], true)
+                        }
+                    }
+                    None => (&profile.bindings, false),
+                };
+
+                for binding in bindings_to_show {
+                    let display_addr = g
+                        .display_addresses
+                        .get(&binding.hole_index)
+                        .unwrap_or(&binding.address);
+                    if let Some(v) = &binding.value {
+                        let val_str = serde_json::to_string(v).unwrap_or_default();
+                        println!("      {display_addr} = {val_str}");
+                    }
+                }
+                if showing_delta {
+                    let absent_count = bindings_to_show
+                        .iter()
+                        .filter(|b| b.value.is_none())
+                        .count();
+                    if absent_count > 0 {
+                        println!("      ({absent_count} fewer optional keys)");
+                    }
+                }
+            }
+        }
     }
 }
 

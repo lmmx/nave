@@ -4,8 +4,9 @@ use std::fmt::Write as _;
 use serde::Serialize;
 use serde_json::Value;
 
-use crate::FileInstance;
 use crate::antiunify::{Observations, Template, anti_unify};
+use crate::{FcaResult, FileInstance};
+use nave_config::MatchPredicate;
 
 #[derive(Debug, Default, Serialize)]
 pub struct BuildReport {
@@ -20,6 +21,10 @@ pub struct GroupReport {
     pub instances: Vec<InstanceRef>,
     pub template_text: String,
     pub holes: Vec<HoleReport>,
+    pub fca: FcaResult,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile_match_preds: Option<Vec<MatchPredicate>>,
+    pub display_addresses: BTreeMap<usize, String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -68,6 +73,9 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> GroupRep
     let mut hole_addresses: BTreeMap<usize, String> = BTreeMap::new();
     collect_addresses(&template, String::new(), &mut hole_addresses);
 
+    let mut display_addresses: BTreeMap<usize, String> = BTreeMap::new();
+    collect_display_addresses(&template, String::new(), &mut display_addresses);
+
     let total = instances.len();
     let repo_names: Vec<String> = instances.iter().map(|i| i.repo.clone()).collect();
 
@@ -79,6 +87,19 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> GroupRep
             .unwrap_or_else(|| format!("?{id}"));
         holes.push(summarise_hole(address, obs, total, &repo_names));
     }
+
+    eprintln!(
+        "fca::analyse: n_instances={}, n_observations={}, holes={}",
+        total,
+        observations.len(),
+        holes.len()
+    );
+    // Run FCA before sorting holes — observations and holes must be
+    // in the same order (by hole id from anti-unification).
+    let fca_result = crate::fca::analyse(&observations, total, &holes);
+    eprintln!("fca::analyse complete");
+
+    // Sort holes for display only, after FCA is done.
     holes.sort_by(|a, b| a.address.cmp(&b.address));
 
     let template_text = render_template(&template, 0);
@@ -97,6 +118,9 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> GroupRep
             .collect(),
         template_text,
         holes,
+        fca: fca_result,
+        profile_match_preds: None,
+        display_addresses,
     }
 }
 
@@ -226,6 +250,93 @@ fn collect_addresses(t: &Template, path: String, out: &mut BTreeMap<usize, Strin
                 collect_addresses(elem, next, out);
             }
         }
+        Template::Set(elements) => {
+            for field in elements {
+                let label = set_element_label(&field.value);
+                let next = format!("{path}[{label}]");
+                collect_addresses(&field.value, next, out);
+            }
+        }
+    }
+}
+
+/// Collect simplified addresses for profile display — set elements
+/// get `[]` instead of the full predicate label.
+fn collect_display_addresses(t: &Template, path: String, out: &mut BTreeMap<usize, String>) {
+    match t {
+        Template::Literal(_) => {}
+        Template::Hole { id } => {
+            out.insert(
+                *id,
+                if path.is_empty() {
+                    "$".to_string()
+                } else {
+                    path
+                },
+            );
+        }
+        Template::Object(fields) => {
+            for (key, field) in fields {
+                let next = if path.is_empty() {
+                    key.clone()
+                } else {
+                    format!("{path}.{key}")
+                };
+                collect_display_addresses(&field.value, next, out);
+            }
+        }
+        Template::Array(elems) => {
+            for (i, elem) in elems.iter().enumerate() {
+                let next = format!("{path}[{i}]");
+                collect_display_addresses(elem, next, out);
+            }
+        }
+        Template::Set(elements) => {
+            for field in elements {
+                // Use [] for all set elements — no predicate label
+                let next = format!("{path}[]");
+                collect_display_addresses(&field.value, next, out);
+            }
+        }
+    }
+}
+
+/// Build a compact predicate label for a set element from its
+/// anti-unified template. For set elements that are objects, uses
+/// only the key names (no values) to keep addresses readable.
+fn set_element_label(t: &Template) -> String {
+    match t {
+        Template::Object(fields) => {
+            // Only include keys where the value is NOT a literal —
+            // literals are shared across all clusters and add noise.
+            // Exception: if ALL values are literals, include them
+            // (degenerate case, shouldn't happen for set elements).
+            let has_holes = fields
+                .values()
+                .any(|f| !matches!(&f.value, Template::Literal(_)));
+
+            let mut parts: Vec<String> = Vec::new();
+            for (key, field) in fields {
+                if has_holes && matches!(&field.value, Template::Literal(_)) {
+                    continue; // skip literal-valued keys in label
+                }
+                match &field.value {
+                    Template::Literal(Value::String(s)) if s.len() <= 30 => {
+                        parts.push(format!("{key}={s}"));
+                    }
+                    Template::Literal(v) => {
+                        parts.push(format!("{key}={v}"));
+                    }
+                    _ => {
+                        parts.push(key.clone());
+                    }
+                }
+            }
+            parts.join(",")
+        }
+        Template::Literal(v) => render_literal(v),
+        Template::Hole { id } => format!("?{id}"),
+        Template::Array(_) | Template::Set(_) => "…".to_string(),
     }
 }
 
@@ -248,7 +359,7 @@ fn render_template(t: &Template, indent: usize) -> String {
                 match &field.value {
                     Template::Literal(v) => s.push_str(&render_literal(v)),
                     Template::Hole { id } => write!(s, "⟨?{id}⟩").unwrap(),
-                    nested @ (Template::Object(_) | Template::Array(_)) => {
+                    nested @ (Template::Object(_) | Template::Array(_) | Template::Set(_)) => {
                         s.push_str(&render_template(nested, indent + 1));
                     }
                 }
@@ -264,9 +375,41 @@ fn render_template(t: &Template, indent: usize) -> String {
                 match elem {
                     Template::Literal(v) => s.push_str(&render_literal(v)),
                     Template::Hole { id } => write!(s, "⟨?{id}⟩").unwrap(),
-                    nested @ (Template::Object(_) | Template::Array(_)) => {
+                    nested @ (Template::Object(_) | Template::Array(_) | Template::Set(_)) => {
                         let rendered = render_template(nested, indent + 1);
                         s.push_str(rendered.trim_start());
+                    }
+                }
+            }
+            s
+        }
+        Template::Set(elements) => {
+            let mut s = String::new();
+            for field in elements {
+                s.push('\n');
+                s.push_str(&pad);
+                let optional_marker = if field.is_required() { "" } else { "?" };
+                s.push_str("- ");
+                match &field.value {
+                    Template::Literal(v) => {
+                        s.push_str(&render_literal(v));
+                        s.push_str(optional_marker);
+                    }
+                    Template::Hole { id } => {
+                        write!(s, "⟨?{id}⟩{optional_marker}").unwrap();
+                    }
+                    nested @ (Template::Object(_) | Template::Array(_) | Template::Set(_)) => {
+                        let rendered = render_template(nested, indent + 1);
+                        let trimmed = rendered.trim_start();
+                        // Inject the optional marker after the first key
+                        // if this is an object, to match Object rendering.
+                        if optional_marker.is_empty() {
+                            s.push_str(trimmed);
+                        } else {
+                            // Append the marker as a suffix on the "- " line
+                            // so the user sees which elements are optional.
+                            write!(s, "{trimmed}  # {}/{}", field.present_in, field.total).unwrap();
+                        }
                     }
                 }
             }

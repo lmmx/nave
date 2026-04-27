@@ -6,7 +6,7 @@ Arguments:
   [TERMS]...  Search terms. Each is `[scope:]value[|value...]`. A scope restricts the term to files whose tracked-path pattern contains `scope` as a substring (e.g. `pyproject:`, `workflow:`, `dependabot:`)
 
 Options:
-      --match <PREDICATE>  Structural predicate of the form `[scope:]path op literal`, where `op` is one of `=`, `!=`, `^=`, `$=`, `*=`. Same syntax as `nave build --match`
+      --match <PREDICATE>  Structural predicate of the form `[scope:] [!] path [op literal]`, where `op` is one of `=`, `!=`, `^=`, `$=`, `*=`. A bare path tests presence; `!path` tests absence. Same syntax as `nave build --match`
       --output <OUTPUT>    Output projection [default: repos] [possible values: repos, files, holes]
       --json               Emit JSON instead of the projected text form
       --count              Print only the count of matches
