@@ -28,11 +28,11 @@ Text mode (default):
   instances: 9
 
   template:
-    updates: 
+    updates:
       - cooldown?: {"default-days":7}
         directory: "/"
         package-ecosystem: ⟨?0⟩
-        schedule: 
+        schedule:
           interval: ⟨?1⟩
     version: 2
 
