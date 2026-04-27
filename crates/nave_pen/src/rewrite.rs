@@ -24,8 +24,8 @@ use nave_rewrite::{OpOutcome, OpStatus, RewriteOp, apply_at, plan_rewrite};
 use nave_schemas::{SchemaRegistry, schema_for_path};
 
 use crate::rewrite_state::{
-    AppliedRecord, FailedRecord, RunLogEntry, RunOutcome, append_run_log, new_run_id,
-    read_ops_state, write_op_logs, write_ops_state, OpLogArtefacts,
+    AppliedRecord, FailedRecord, OpLogArtefacts, RunLogEntry, RunOutcome, append_run_log,
+    new_run_id, read_ops_state, write_op_logs, write_ops_state,
 };
 use crate::storage::{Pen, PenRepo, pen_repo_clone_dir, write_pen};
 use crate::walk::{TrackedFile, tracked_files_in_repo};
@@ -254,6 +254,7 @@ fn rewrite_one_repo(
     // `staged` maps relpath → (Document, original_bytes). Across ops in
     // the same repo, the same file may be mutated multiple times.
     let mut staged: BTreeMap<String, (Document, Vec<u8>)> = BTreeMap::new();
+    let mut mutated: BTreeSet<String> = BTreeSet::new();
     let mut op_outcomes: Vec<RewriteOpOutcome> = Vec::new();
     let mut rollback_trigger: Option<String> = None;
     let mut written_logs_dir: Option<PathBuf> = None;
@@ -346,6 +347,7 @@ fn rewrite_one_repo(
             }
             files_touched.push(tf.relpath.clone());
             all_addresses.extend(addrs);
+            mutated.insert(tf.relpath.clone());
         }
 
         if let Some(reason) = op_failed {
@@ -367,7 +369,11 @@ fn rewrite_one_repo(
                     &r.name,
                     run_id,
                     &op.id,
-                    &OpLogArtefacts { stdout: "", stderr: "", err: &reason },
+                    &OpLogArtefacts {
+                        stdout: "",
+                        stderr: "",
+                        err: &reason,
+                    },
                 )?;
                 written_logs_dir = Some(logs.clone());
                 let outcome = if options.no_rollback {
@@ -443,7 +449,11 @@ fn rewrite_one_repo(
                             &r.name,
                             run_id,
                             &trigger_id,
-                            &OpLogArtefacts { stdout: "", stderr: "", err: &errs.join("\n") },
+                            &OpLogArtefacts {
+                                stdout: "",
+                                stderr: "",
+                                err: &errs.join("\n"),
+                            },
                         )?;
                         written_logs_dir = Some(logs.clone());
                         let outcome = if options.no_rollback {
@@ -483,7 +493,10 @@ fn rewrite_one_repo(
     // still produces a diff even when the rewrite would have rolled back.
     let mut diffs: Vec<FileDiff> = Vec::new();
     if options.diff {
-        for (path, (doc, original)) in &staged {
+        for path in &mutated {
+            let Some((doc, original)) = staged.get(path) else {
+                continue;
+            };
             let new_bytes = match render(doc) {
                 Ok(s) => s.into_bytes(),
                 Err(_) => continue,
@@ -509,7 +522,10 @@ fn rewrite_one_repo(
     if writes_allowed {
         let proceed_with_writes = committed || options.no_rollback;
         if proceed_with_writes {
-            for (path, (doc, _)) in &staged {
+            for path in &mutated {
+                let Some((doc, _)) = staged.get(path) else {
+                    continue;
+                };
                 let new_bytes = match render(doc) {
                     Ok(s) => s.into_bytes(),
                     Err(e) => {
@@ -594,9 +610,9 @@ fn rewrite_one_repo(
             }
             write_ops_state(pen_root, pen_name, &r.owner, &r.name, &state)?;
             if committed {
-                info!(repo = %format!("{}/{}", r.owner, r.name), "rewrite committed");
+                info!(repo = %format!("{}/{}", r.owner, r.name), "rewrite applied");
             } else {
-                info!(repo = %format!("{}/{}", r.owner, r.name), "rewrite committed partial (--no-rollback)");
+                info!(repo = %format!("{}/{}", r.owner, r.name), "rewrite applied partially (--no-rollback)");
             }
         } else {
             info!(repo = %format!("{}/{}", r.owner, r.name), "rewrite rolled back");
@@ -614,7 +630,7 @@ fn rewrite_one_repo(
     })
 }
 
-fn aggregate_op_statuses(
+pub(crate) fn aggregate_op_statuses(
     pen_root: &Path,
     pen_name: &str,
     ops: &[RewriteOp],

@@ -539,15 +539,21 @@ bindings = "pyo3""#,
 
     #[test]
     fn toml_rename_key() {
-        let mut doc = toml_doc(r"[a]
-old = 1");
+        let mut doc = toml_doc(
+            r"[a]
+old = 1",
+        );
         apply_at(
             &mut doc,
             "a.old",
-            &Action::RenameKey { to: "renamed".into() },
+            &Action::RenameKey {
+                to: "renamed".into(),
+            },
         )
         .unwrap();
-        let Document::Toml(v) = &doc else { unreachable!() };
+        let Document::Toml(v) = &doc else {
+            unreachable!()
+        };
         assert_eq!(v["a"]["renamed"].as_integer(), Some(1));
         assert!(v["a"].as_table().unwrap().get("old").is_none());
     }

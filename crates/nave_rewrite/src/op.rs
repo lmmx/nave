@@ -41,7 +41,6 @@ pub enum OpStatus {
     Failed,
 }
 
-
 /// What to target.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]

@@ -1,6 +1,7 @@
 use anyhow::{Context, Result, bail};
 use clap::{Args, Subcommand};
 use regex::Regex;
+use std::io::Write;
 use tracing::info;
 
 use nave_config::{cache_root, load_default};
@@ -379,22 +380,22 @@ async fn run_sync(args: PenSyncArgs) -> Result<()> {
 async fn run_clean(args: PenSimpleArgs) -> Result<()> {
     let cfg = load_default()?;
     let root = resolve_pen_root(&cfg.pen)?;
-    let pen = load_pen(&root, &args.name)?;
-    clean_pen(&root, &pen).await
+    let mut pen = load_pen(&root, &args.name)?;
+    clean_pen(&root, &mut pen).await
 }
 
 async fn run_revert(args: PenAllowDirtyArgs) -> Result<()> {
     let cfg = load_default()?;
     let root = resolve_pen_root(&cfg.pen)?;
-    let pen = load_pen(&root, &args.name)?;
-    revert_pen(&root, &pen, args.allow_dirty).await
+    let mut pen = load_pen(&root, &args.name)?;
+    revert_pen(&root, &mut pen, args.allow_dirty).await
 }
 
 async fn run_reinit(args: PenAllowDirtyArgs) -> Result<()> {
     let cfg = load_default()?;
     let root = resolve_pen_root(&cfg.pen)?;
-    let pen = load_pen(&root, &args.name)?;
-    reinit_pen(&root, &pen, args.allow_dirty).await
+    let mut pen = load_pen(&root, &args.name)?;
+    reinit_pen(&root, &mut pen, args.allow_dirty).await
 }
 
 async fn run_exec(args: PenExecArgs) -> Result<()> {
@@ -533,9 +534,26 @@ fn parse_filters(raw: &[String]) -> Result<ListFilters> {
 }
 
 fn print_rewrite_report(report: &nave_pen::RewritePenReport) {
-    println!("pen: {}  run: {}", report.pen, report.run_id);
+    let has_diffs = report.repos.iter().any(|r| !r.diffs.is_empty());
+
+    // Diffs go to stdout (the pipeable primary output).
+    if has_diffs {
+        for r in &report.repos {
+            for d in &r.diffs {
+                // Diff headers identify the repo+file in a single line a
+                // patch tool can consume; the standard diff prefix already
+                // names the file, so we prepend the repo for context.
+                println!("# {}/{} :: {}", r.owner, r.repo, d.path);
+                print!("{}", d.diff);
+            }
+        }
+    }
+
+    // Everything else — repo summaries, op outcomes, statuses — goes to stderr.
+    let mut err = std::io::stderr().lock();
+    let _ = writeln!(err, "pen: {}  run: {}", report.pen, report.run_id);
     if report.dry_run {
-        println!("(dry-run)");
+        let _ = writeln!(err, "(dry-run)");
     }
     for r in &report.repos {
         let status = if r.committed {
@@ -545,7 +563,7 @@ fn print_rewrite_report(report: &nave_pen::RewritePenReport) {
         } else {
             "·"
         };
-        println!("{status} {}/{}", r.owner, r.repo);
+        let _ = writeln!(err, "{status} {}/{}", r.owner, r.repo);
         for o in &r.ops {
             let label = match &o.outcome {
                 nave_rewrite::OpOutcome::Applied => "applied".to_string(),
@@ -555,28 +573,29 @@ fn print_rewrite_report(report: &nave_pen::RewritePenReport) {
                     format!("validation failed ({} errors)", errors.len())
                 }
             };
-            println!("    {} — {label}", o.op_id);
+            let _ = writeln!(err, "    {} — {label}", o.op_id);
             for f in &o.files {
-                println!("        {f}");
+                let _ = writeln!(err, "        {f}");
             }
         }
         if let Some(trigger) = &r.rollback_trigger {
             match &r.logs_dir {
-                Some(p) => println!(
-                    "  ↪ rolled back due to op {trigger:?}; see logs at {}",
-                    p.display()
-                ),
-                None => println!("  ↪ rolled back due to op {trigger:?}"),
+                Some(p) => {
+                    let _ = writeln!(
+                        err,
+                        "  ↪ rolled back due to op {trigger:?}; see logs at {}",
+                        p.display()
+                    );
+                }
+                None => {
+                    let _ = writeln!(err, "  ↪ rolled back due to op {trigger:?}");
+                }
             }
         }
-        for d in &r.diffs {
-            println!("--- diff: {} ---", d.path);
-            print!("{}", d.diff);
-        }
     }
-    println!();
-    println!("op statuses:");
+    let _ = writeln!(err);
+    let _ = writeln!(err, "op statuses:");
     for (id, s) in &report.op_statuses {
-        println!("  {id}: {s:?}");
+        let _ = writeln!(err, "  {id}: {s:?}");
     }
 }

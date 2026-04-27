@@ -8,6 +8,9 @@ use time::OffsetDateTime;
 use tokio::process::Command;
 use tracing::info;
 
+use crate::rewrite_state::{
+    RunLogEntry, RunOutcome, append_run_log, new_run_id, ops_toml_path, read_ops_state,
+};
 use crate::state::compute_repo_state;
 use crate::storage::{Pen, pen_repo_clone_dir, write_pen};
 
@@ -59,10 +62,13 @@ pub struct SyncReport {
     pub stale_repos: Vec<String>,
 }
 
-/// Discard uncommitted changes in every pen repo.
-pub async fn clean_pen(pen_root: &Path, pen: &Pen) -> Result<()> {
+/// Discard uncommitted changes in every pen repo. Also clears any
+/// per-repo rewrite state for the cleaned repos (since the working
+/// tree no longer reflects whatever was applied).
+pub async fn clean_pen(pen_root: &Path, pen: &mut Pen) -> Result<()> {
     let mut cleaned = 0usize;
     let mut skipped = 0usize;
+    let mut affected: Vec<(String, String)> = Vec::new();
     for r in &pen.repos {
         let dir = pen_repo_clone_dir(pen_root, &pen.name, &r.owner, &r.name);
         if !dir.exists() {
@@ -76,14 +82,23 @@ pub async fn clean_pen(pen_root: &Path, pen: &Pen) -> Result<()> {
         run_git_quiet(&dir, &["clean", "-fd"], "clean").await?;
         info!(repo = %format!("{}/{}", r.owner, r.name), "cleaned");
         cleaned += 1;
+        affected.push((r.owner.clone(), r.name.clone()));
     }
     info!(cleaned, skipped, "clean complete");
+
+    let affected_refs: Vec<(&str, &str)> = affected
+        .iter()
+        .map(|(o, n)| (o.as_str(), n.as_str()))
+        .collect();
+    clear_rewrite_state_for(pen_root, pen, &affected_refs)?;
     Ok(())
 }
 
 /// Drop all local commits made on the pen branch, returning each repo
 /// to the synced baseline (i.e. the pen branch's initial creation point).
-pub async fn revert_pen(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> Result<()> {
+/// Also clears per-repo rewrite state for every repo touched, since the
+/// working tree no longer reflects whatever was applied.
+pub async fn revert_pen(pen_root: &Path, pen: &mut Pen, allow_dirty: bool) -> Result<()> {
     // Pre-flight: no dirty unless --allow-dirty.
     if !allow_dirty {
         for r in &pen.repos {
@@ -100,6 +115,7 @@ pub async fn revert_pen(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> Result
             }
         }
     }
+    let mut affected: Vec<(String, String)> = Vec::new();
     for r in &pen.repos {
         let dir = pen_repo_clone_dir(pen_root, &pen.name, &r.owner, &r.name);
         if !dir.exists() {
@@ -117,13 +133,21 @@ pub async fn revert_pen(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> Result
         )
         .await?;
         info!(repo = %format!("{}/{}", r.owner, r.name), "reverted");
+        affected.push((r.owner.clone(), r.name.clone()));
     }
+    let affected_refs: Vec<(&str, &str)> = affected
+        .iter()
+        .map(|(o, n)| (o.as_str(), n.as_str()))
+        .collect();
+    clear_rewrite_state_for(pen_root, pen, &affected_refs)?;
     Ok(())
 }
 
 /// Rebuild the pen branch from origin's default branch. Equivalent to
-/// reclone-and-rebranch in place.
-pub async fn reinit_pen(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> Result<()> {
+/// reclone-and-rebranch in place. Also clears per-repo rewrite state
+/// for every repo touched, since the working tree no longer reflects
+/// whatever was applied.
+pub async fn reinit_pen(pen_root: &Path, pen: &mut Pen, allow_dirty: bool) -> Result<()> {
     use futures::{StreamExt, stream};
 
     // Pre-flight: check cleanliness sequentially (cheap, and fails fast).
@@ -137,6 +161,18 @@ pub async fn reinit_pen(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> Result
                     r.name
                 );
             }
+        }
+    }
+
+    // Collect affected repos before the async block so we can hand them
+    // off to `clear_rewrite_state_for` after. Every repo with an existing
+    // clone dir is "affected" because reinit forces it back to origin's
+    // default branch tip, dropping anything the rewrite did.
+    let mut affected: Vec<(String, String)> = Vec::new();
+    for r in &pen.repos {
+        let dir = pen_repo_clone_dir(pen_root, &pen.name, &r.owner, &r.name);
+        if dir.exists() {
+            affected.push((r.owner.clone(), r.name.clone()));
         }
     }
 
@@ -178,6 +214,12 @@ pub async fn reinit_pen(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> Result
     for r in results {
         r?;
     }
+
+    let affected_refs: Vec<(&str, &str)> = affected
+        .iter()
+        .map(|(o, n)| (o.as_str(), n.as_str()))
+        .collect();
+    clear_rewrite_state_for(pen_root, pen, &affected_refs)?;
     Ok(())
 }
 
@@ -329,5 +371,70 @@ pub async fn remove_pen_safe(pen_root: &Path, pen: &Pen, allow_dirty: bool) -> R
         }
     }
     crate::storage::remove_pen(pen_root, &pen.name)?;
+    Ok(())
+}
+
+/// Clear per-repo rewrite state for the given repos, then recompute
+/// the pen-level op statuses and persist them.
+///
+/// Called from `clean_pen`, `revert_pen`, and `reinit_pen` to keep the
+/// rewrite state consistent with what's actually present in the repo
+/// working trees and commits. Without this, a rewrite that gets reverted
+/// would still show as `applied` in `pen.toml`, and the next
+/// `pen rewrite` would skip it.
+fn clear_rewrite_state_for(
+    pen_root: &Path,
+    pen: &mut Pen,
+    affected: &[(&str, &str)],
+) -> Result<()> {
+    if pen.ops.is_empty() {
+        return Ok(());
+    }
+
+    let run_id = new_run_id();
+    let now = OffsetDateTime::now_utc();
+
+    for (owner, name) in affected {
+        let ops_toml = ops_toml_path(pen_root, &pen.name, owner, name);
+
+        // Note which ops were applied here, for the run log.
+        let prior = read_ops_state(pen_root, &pen.name, owner, name)?;
+        if prior.ops.is_empty() && prior.failed.is_empty() {
+            continue;
+        }
+
+        if ops_toml.exists() {
+            std::fs::remove_file(&ops_toml)?;
+        }
+
+        for op_id in prior.ops.keys().chain(prior.failed.keys()) {
+            append_run_log(
+                pen_root,
+                &pen.name,
+                owner,
+                name,
+                RunLogEntry {
+                    run_id: run_id.clone(),
+                    op_id: op_id.clone(),
+                    ts: now,
+                    outcome: RunOutcome::Skipped,
+                    files: vec![],
+                    addresses: vec![],
+                    reason: Some("state cleared by pen clean/revert/reinit".into()),
+                    logs_dir: None,
+                },
+            )?;
+        }
+    }
+
+    // Recompute pen-level statuses and persist.
+    let statuses =
+        crate::rewrite::aggregate_op_statuses(pen_root, &pen.name, &pen.ops, &pen.repos)?;
+    for op in &mut pen.ops {
+        if let Some(s) = statuses.get(&op.id) {
+            op.status = *s;
+        }
+    }
+    write_pen(pen_root, pen)?;
     Ok(())
 }
