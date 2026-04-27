@@ -95,6 +95,7 @@ pub async fn create_pen(cfg: &NaveConfig, opts: CreateOptions) -> Result<Pen> {
         branch,
         filter: PenFilter { terms: opts.terms },
         repos: pen_repos,
+        ops: Vec::new(),
     };
     write_pen(&root, &pen)?;
     Ok(pen)

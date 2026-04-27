@@ -1,0 +1,24 @@
+[dependencies]
+anyhow.workspace = true
+nave_config.workspace = true
+nave_parse.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_norway.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true
+
+[package]
+name = "nave_rewrite"
+version = "0.0.1"
+description = "Declarative rewrites over parsed config trees"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true

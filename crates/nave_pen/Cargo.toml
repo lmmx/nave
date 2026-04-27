@@ -3,6 +3,9 @@ nave_config = {workspace = true}
 nave_search = {workspace = true}
 nave_scan = {workspace = true}
 nave_github = {workspace = true}
+nave_rewrite = {workspace = true}
+nave_schemas = {workspace = true}
+nave_parse = {workspace = true}
 anyhow = {workspace = true}
 serde = {workspace = true}
 futures = {workspace = true}
@@ -11,6 +14,8 @@ tokio = {workspace = true}
 tracing = {workspace = true}
 time = {workspace = true}
 dirs = {workspace = true}
+serde_json = {workspace = true}
+similar = {workspace = true}
 
 [lints]
 workspace = true

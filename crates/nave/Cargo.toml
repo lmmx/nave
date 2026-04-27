@@ -13,6 +13,7 @@ nave_parse = {workspace = true}
 nave_schemas = {workspace = true}
 nave_search = {workspace = true}
 nave_pen = {workspace = true}
+nave_rewrite = {workspace = true}
 anyhow = {workspace = true}
 clap = {workspace = true}
 tokio = {workspace = true}

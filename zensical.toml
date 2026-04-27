@@ -16,6 +16,7 @@ nav = [
     "concepts/templates.md",
     "concepts/schemas.md",
     "concepts/pens.md",
+    "concepts/rewrites.md",
     "concepts/operations.md",
     "concepts/config.md"
   ]},
@@ -47,6 +48,7 @@ nav = [
     "reference/cli/pen/list.md",
     "reference/cli/pen/reinit.md",
     "reference/cli/pen/revert.md",
+    "reference/cli/pen/rewrite.md",
     "reference/cli/pen/rm.md",
     "reference/cli/pen/show.md",
     "reference/cli/pen/status.md",

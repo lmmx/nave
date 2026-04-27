@@ -1,0 +1,18 @@
+Apply declarative rewrites defined in the pen's `pen.toml`
+
+Usage: nave pen rewrite [OPTIONS] <NAME>
+
+Arguments:
+  <NAME>  Pen name
+
+Options:
+      --only <ONLY>  Restrict to a single repo (bare name or owner/name)
+      --op <OPS>     Restrict to specific op ids. Repeatable; default = all not-yet-applied ops
+      --dry-run      Plan and validate without writing
+      --diff         Compute and print unified diffs (implies --dry-run)
+      --allow-dirty  Bypass the dirty-tree gate
+      --no-validate  Skip post-mutation schema validation
+      --force        Re-run ops already marked applied for a repo
+      --no-rollback  Disable per-repo atomic rollback. Failed rewrites leave partial changes in the working tree
+      --json         Emit JSON report
+  -h, --help         Print help

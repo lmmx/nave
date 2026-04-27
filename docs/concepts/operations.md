@@ -31,7 +31,10 @@ that a bulk edit will land on shaky ground.
 
 | Command subtree | What it does                                    |
 |-----------------|-------------------------------------------------|
-| `pen`           | Clone subsets, run codemods, push branches, (eventually) open PRs |
+| `pen create / sync / clean / revert / reinit / rm` | Pen lifecycle |
+| `pen rewrite`   | Apply declarative transforms to working trees       |
+| `pen exec`      | Run an arbitrary command per repo                   |
+| `pen run`       | (Planned) Rewrite + commit + push                   |
 
 Pens are the only thing in Nave that can mutate remote state, and every write goes
 through the pen lifecycle. There is no "just push this one commit" shortcut.

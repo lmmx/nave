@@ -40,17 +40,18 @@ not the fleet size × history.
 ## Lifecycle
 
 ```
-create ──► sync ──► exec/run ──► (open) ──► (merge) ──► rm
-            ▲                         │
-            └── freshen ──────────────┘
+create ──► sync ──► rewrite/exec ──► (run) ──► (open) ──► (merge) ──► rm
+            ▲                          │
+            └───── freshen ────────────┘
 ```
 
 1. **create** — clone matching repos, create pen branches, record the filter.
 2. **sync** — re-evaluate the filter against a fresh scan; note drift.
 3. **exec** — run arbitrary commands in each repo. Does not push.
-4. **run** — apply the codemod and push branches. 🚧 *Codemod authoring is still under design.*
-5. **open / merge / close** — PR lifecycle. 🚧 *PR integration is planned but not yet shipped.*
-6. **rm** — remove local state. `--purge` also removes remote branches.
+4. **rewrite** — apply declarative rewrites defined in `pen.toml`. Working tree only.
+5. **run** — apply the codemod and push branches. 🚧 *Codemod authoring is still under design.*
+6. **open / merge / close** — PR lifecycle. 🚧 *PR integration is planned but not yet shipped.*
+7. **rm** — remove local state. `--purge` also removes remote branches.
 
 See [++"nave pen"++](../reference/cli/pen.md) for the full command list.
 
@@ -71,7 +72,8 @@ Every pen repo has three orthogonal state axes:
 These states are operational gates:
 
 - [++"nave pen run"++](../reference/cli/pen/run.md) refuses to proceed on a stale pen (use `--freshen` to sync first).
-- [++"nave pen run"++](../reference/cli/pen/run.md) also refuses on a dirty tree (use `--allow-dirty`).
+- [++"nave pen rewrite"++](../reference/cli/pen/rewrite.md) refuses on a dirty tree (use `--allow-dirty`),
+  hence so does [++"nave pen run"++](../reference/cli/pen/run.md) (which has the same flag).
 - [++"nave pen revert"++](../reference/cli/pen/revert.md) / [++"nave pen reinit"++](../reference/cli/pen/reinit.md) refuse on a dirty tree (use `--allow-dirty`).
 
 The friction is deliberate: a codemod applied to a stale filter silently skips repos

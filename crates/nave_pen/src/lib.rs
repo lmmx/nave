@@ -3,12 +3,22 @@
 
 pub mod create;
 pub mod ops;
+pub mod rewrite;
+pub mod rewrite_state;
 pub mod state;
 pub mod storage;
 pub mod walk;
 
 pub use create::{CreateOptions, create_pen};
 pub use ops::{SyncReport, clean_pen, exec_pen, reinit_pen, remove_pen_safe, revert_pen, sync_pen};
+pub use rewrite::{
+    FileDiff, RewriteOpOutcome, RewriteOptions, RewritePenReport, RewriteRepoOutcome, rewrite_pen,
+};
+pub use rewrite_state::{
+    AppliedRecord, FailedRecord, OpLogArtefacts, RepoOpsState, RepoRunLog, RunLogEntry, RunOutcome,
+    append_run_log, logs_dir, new_run_id, ops_toml_path, pen_state_dir, read_ops_state,
+    repo_state_dir, run_log_path, write_op_logs, write_ops_state,
+};
 pub use state::{Divergence, Freshness, RepoState, RunState, WorkTree, compute_repo_state};
 pub use storage::{
     Pen, PenFilter, PenRepo, list_pens, load_pen, pen_dir, pen_repo_clone_dir, pen_repos_dir,

@@ -78,27 +78,36 @@ nave build --filter dependabot
 
   template:
     updates:
-      - cooldown?: ⟨?0⟩
+      - cooldown?: {"default-days":7}
         directory: "/"
-        package-ecosystem: ⟨?1⟩
+        package-ecosystem: ⟨?0⟩
         schedule:
-          interval: ⟨?2⟩
+          interval: ⟨?1⟩
     version: 2
 
   holes:
-    updates[0].cooldown  [optionalkey]  3/9 optional  [constant when present]
-        3× {"default-days":7}
-    updates[0].package-ecosystem  [string]  9/9
+    updates[package-ecosystem,schedule].package-ecosystem  [string]  9/9
         8× "github-actions"
         1× "cargo"
-    updates[0].schedule.interval  [string]  9/9
+    updates[package-ecosystem,schedule].schedule.interval  [string]  9/9
         6× "weekly"
         3× "monthly"
+
+  profiles: (7 concepts, 3 non-trivial)
+    Profile 1  (5 repos: polite, polars-fastembed, polars-genson, … +2)
+      updates[].package-ecosystem = "github-actions"
+      updates[].schedule.interval = "weekly"
+    Profile 2  (3 repos: trusty-pub, ossify, clickpydeps)
+      updates[].package-ecosystem = "github-actions"
+      updates[].schedule.interval = "monthly"
+    Profile 3  (1 repos: comrak)
+      updates[].package-ecosystem = "cargo"
+      updates[].schedule.interval = "weekly"
 ```
 
 This is read as: across 9 dependabot configs, they all have the same shape; the ecosystem and interval vary,
-and 3 of the 9 set a cooldown. Under the hood this is anti-unification over the parsed YAML/TOML trees,
-but you don't need to care about that to use it.
+and some set a 7 day cooldown. Under the hood this is anti-unification over the parsed YAML/TOML trees (the
+variable 'holes'), followed by enumeration of formal concepts (the 'profiles'), but you don't need to care about that to use it.
 
 JSON output is available with `--json` for scripting.
 
