@@ -1,5 +1,3 @@
-// nave_build/src/fca.rs
-
 //! Formal concept analysis over anti-unification observations.
 //!
 //! Builds a formal context from the holes produced by [`anti_unify`],
@@ -16,9 +14,9 @@
 use std::collections::BTreeMap;
 
 use bit_set::BitSet;
-use odis::FormalContext;
 use odis::algorithms::NextClosure;
 use odis::traits::ConceptEnumerator;
+use odis::{FormalContext, Poset};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -63,6 +61,17 @@ pub struct Profile {
     pub support: usize,
 }
 
+/// Lattice structure: parent indices and delta bindings per profile.
+#[derive(Debug, Clone, Serialize)]
+pub struct LatticeInfo {
+    /// For each profile index, the indices of its parent (superconcept) profiles.
+    /// A parent P of concept C has extent(C) ⊂ extent(P) with no intermediate concept.
+    pub parents: Vec<Vec<usize>>,
+    /// For each profile, the bindings that are NEW relative to all parents.
+    /// delta[i] = intent(profile[i]) \ union(intent(parent) for parent in parents[i])
+    pub deltas: Vec<Vec<ProfileBinding>>,
+}
+
 /// Result of running FCA on a single group's observations.
 #[derive(Debug, Clone, Serialize)]
 pub struct FcaResult {
@@ -72,6 +81,9 @@ pub struct FcaResult {
     pub total_concepts: usize,
     /// Number of attributes in the formal context.
     pub n_attributes: usize,
+    /// Lattice structure for delta-based rendering.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lattice: Option<LatticeInfo>,
 }
 
 // ---------------------------------------------------------------------------
@@ -95,6 +107,7 @@ pub fn analyse(
             profiles: vec![],
             total_concepts: 0,
             n_attributes: 0,
+            lattice: None,
         };
     }
 
@@ -105,12 +118,103 @@ pub fn analyse(
     let total_concepts = concepts.len();
 
     let profiles = interpret_concepts(concepts, &attributes, n_instances);
+    let lattice = build_lattice(&profiles);
 
     FcaResult {
         profiles,
         total_concepts,
         n_attributes,
+        lattice,
     }
+}
+
+/// Build the Hasse diagram of the profile lattice and compute
+/// per-profile deltas (new bindings relative to parents).
+fn build_lattice(profiles: &[Profile]) -> Option<LatticeInfo> {
+    if profiles.is_empty() {
+        return None;
+    }
+
+    let n = profiles.len();
+
+    // Build extent BitSets for subset testing
+    let extents: Vec<BitSet> = profiles
+        .iter()
+        .map(|p| p.instances.iter().copied().collect())
+        .collect();
+
+    // Build the transitive relation: edge (i, j) means extent[i] ⊂ extent[j]
+    // (profile i is MORE specific than profile j — smaller extent, larger intent).
+    // In poset terms: i < j iff extent(i) ⊂ extent(j).
+    // The Poset convention is (u, v) means u ≤ v, so we want
+    // (child, parent) pairs where child has strictly smaller extent.
+    let mut transitive_edges: Vec<(u32, u32)> = Vec::new();
+    for i in 0..n {
+        for j in 0..n {
+            if i != j && extents[i].is_subset(&extents[j]) && extents[i].len() < extents[j].len() {
+                transitive_edges.push((i as u32, j as u32));
+            }
+        }
+    }
+
+    // Use odis Poset to compute the covering relation (Hasse edges)
+    let node_labels: Vec<usize> = (0..n).collect();
+    let poset = Poset::from_transitive_relation(node_labels, transitive_edges).ok()?;
+
+    // Extract parent indices from covering edges.
+    // covering_edges contains (child, parent) pairs.
+    let mut parents: Vec<Vec<usize>> = vec![vec![]; n];
+    for &(child, parent) in &poset.covering_edges {
+        parents[child as usize].push(parent as usize);
+    }
+
+    // Build intent key-sets for efficient delta computation.
+    // Key = (hole_index, serialised_value_or_none)
+    let intent_sets: Vec<std::collections::HashSet<(usize, Option<String>)>> = profiles
+        .iter()
+        .map(|p| {
+            p.bindings
+                .iter()
+                .map(|b| {
+                    (
+                        b.hole_index,
+                        b.value
+                            .as_ref()
+                            .map(|v| serde_json::to_string(v).unwrap_or_default()),
+                    )
+                })
+                .collect()
+        })
+        .collect();
+
+    // Compute deltas: delta[i] = bindings in i not present in any parent
+    let deltas: Vec<Vec<ProfileBinding>> = profiles
+        .iter()
+        .enumerate()
+        .map(|(i, profile)| {
+            let inherited: std::collections::HashSet<(usize, Option<String>)> = parents[i]
+                .iter()
+                .flat_map(|&p| intent_sets[p].iter().cloned())
+                .collect();
+
+            profile
+                .bindings
+                .iter()
+                .filter(|b| {
+                    let key = (
+                        b.hole_index,
+                        b.value
+                            .as_ref()
+                            .map(|v| serde_json::to_string(v).unwrap_or_default()),
+                    );
+                    !inherited.contains(&key)
+                })
+                .cloned()
+                .collect()
+        })
+        .collect();
+
+    Some(LatticeInfo { parents, deltas })
 }
 
 // ---------------------------------------------------------------------------

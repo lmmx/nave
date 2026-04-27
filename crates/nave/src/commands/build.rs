@@ -113,7 +113,6 @@ fn print_group(g: &GroupReport) {
     for h in &g.holes {
         print_hole(h);
     }
-    // --- new: profiles section ---
     if !g.fca.profiles.is_empty() {
         let display_profiles = match &g.profile_match_preds {
             Some(preds) => nave_build::filter_profiles_by_predicates(&g.fca.profiles, preds),
@@ -141,19 +140,62 @@ fn print_group(g: &GroupReport) {
                         repo_names.len() - 3
                     )
                 };
+
+                // Show parent relationship if lattice info is available
+                let parent_info = g.fca.lattice.as_ref().and_then(|lat| {
+                    let parents = &lat.parents[i];
+                    if parents.is_empty() {
+                        None
+                    } else {
+                        let parent_refs: Vec<String> = parents
+                            .iter()
+                            .map(|&p| format!("Profile {}", p + 1))
+                            .collect();
+                        Some(format!(" (refines {})", parent_refs.join(", ")))
+                    }
+                });
+
                 println!(
-                    "    Profile {}  ({} repos: {})",
+                    "    Profile {}  ({} repos: {}){}",
                     i + 1,
                     profile.support,
-                    repos_display
+                    repos_display,
+                    parent_info.unwrap_or_default()
                 );
-                for binding in &profile.bindings {
-                    if binding.value.is_none() {
-                        continue;
+
+                let (bindings_to_show, showing_delta) = match g.fca.lattice.as_ref() {
+                    Some(lat) => {
+                        let all_parents_trivial = lat.parents[i].is_empty()
+                            || lat.parents[i]
+                                .iter()
+                                .all(|&p| g.fca.profiles[p].support == g.instance_count);
+                        if all_parents_trivial {
+                            (&profile.bindings, false)
+                        } else {
+                            (&lat.deltas[i], true)
+                        }
                     }
-                    let val_str =
-                        serde_json::to_string(binding.value.as_ref().unwrap()).unwrap_or_default();
-                    println!("      {} = {}", binding.address, val_str);
+                    None => (&profile.bindings, false),
+                };
+
+                for binding in bindings_to_show {
+                    let display_addr = g
+                        .display_addresses
+                        .get(&binding.hole_index)
+                        .unwrap_or(&binding.address);
+                    if let Some(v) = &binding.value {
+                        let val_str = serde_json::to_string(v).unwrap_or_default();
+                        println!("      {} = {}", display_addr, val_str);
+                    }
+                }
+                if showing_delta {
+                    let absent_count = bindings_to_show
+                        .iter()
+                        .filter(|b| b.value.is_none())
+                        .count();
+                    if absent_count > 0 {
+                        println!("      ({} fewer optional keys)", absent_count);
+                    }
                 }
             }
         }

@@ -24,6 +24,7 @@ pub struct GroupReport {
     pub fca: FcaResult,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub profile_match_preds: Option<Vec<MatchPredicate>>,
+    pub display_addresses: BTreeMap<usize, String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -72,6 +73,9 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> GroupRep
     let mut hole_addresses: BTreeMap<usize, String> = BTreeMap::new();
     collect_addresses(&template, String::new(), &mut hole_addresses);
 
+    let mut display_addresses: BTreeMap<usize, String> = BTreeMap::new();
+    collect_display_addresses(&template, String::new(), &mut display_addresses);
+
     let total = instances.len();
     let repo_names: Vec<String> = instances.iter().map(|i| i.repo.clone()).collect();
 
@@ -116,6 +120,7 @@ pub(crate) fn build_group(pattern: &str, instances: &[FileInstance]) -> GroupRep
         holes,
         fca: fca_result,
         profile_match_preds: None,
+        display_addresses,
     }
 }
 
@@ -255,6 +260,47 @@ fn collect_addresses(t: &Template, path: String, out: &mut BTreeMap<usize, Strin
     }
 }
 
+/// Collect simplified addresses for profile display — set elements
+/// get `[]` instead of the full predicate label.
+fn collect_display_addresses(t: &Template, path: String, out: &mut BTreeMap<usize, String>) {
+    match t {
+        Template::Literal(_) => {}
+        Template::Hole { id } => {
+            out.insert(
+                *id,
+                if path.is_empty() {
+                    "$".to_string()
+                } else {
+                    path
+                },
+            );
+        }
+        Template::Object(fields) => {
+            for (key, field) in fields {
+                let next = if path.is_empty() {
+                    key.clone()
+                } else {
+                    format!("{path}.{key}")
+                };
+                collect_display_addresses(&field.value, next, out);
+            }
+        }
+        Template::Array(elems) => {
+            for (i, elem) in elems.iter().enumerate() {
+                let next = format!("{path}[{i}]");
+                collect_display_addresses(elem, next, out);
+            }
+        }
+        Template::Set(elements) => {
+            for field in elements {
+                // Use [] for all set elements — no predicate label
+                let next = format!("{path}[]");
+                collect_display_addresses(&field.value, next, out);
+            }
+        }
+    }
+}
+
 /// Build a compact predicate label for a set element from its
 /// anti-unified template. For set elements that are objects, uses
 /// only the key names (no values) to keep addresses readable.
@@ -265,7 +311,9 @@ fn set_element_label(t: &Template) -> String {
             // literals are shared across all clusters and add noise.
             // Exception: if ALL values are literals, include them
             // (degenerate case, shouldn't happen for set elements).
-            let has_holes = fields.values().any(|f| !matches!(&f.value, Template::Literal(_)));
+            let has_holes = fields
+                .values()
+                .any(|f| !matches!(&f.value, Template::Literal(_)));
 
             let mut parts: Vec<String> = Vec::new();
             for (key, field) in fields {
