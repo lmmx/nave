@@ -230,6 +230,11 @@ fn au_array(
 }
 
 fn au_set(all_instances: &[Value], scope: &[usize], obs: &mut Vec<Observations>) -> Template {
+    // Signature is (core key names only, ordinal within this key-group
+    // in this instance). Values are NEVER part of the signature — they
+    // are what gets anti-unified within each cluster.
+    type Signature = (Vec<String>, usize);
+
     let total = scope.len();
 
     // Compute the key-set intersection across ALL elements in ALL
@@ -250,11 +255,6 @@ fn au_set(all_instances: &[Value], scope: &[usize], obs: &mut Vec<Observations>)
         }
     }
     let core_keys = core_keys.unwrap_or_default();
-
-    // Signature is (core key names only, ordinal within this key-group
-    // in this instance). Values are NEVER part of the signature — they
-    // are what gets anti-unified within each cluster.
-    type Signature = (Vec<String>, usize);
 
     let mut tagged: Vec<(usize, Value, Signature)> = Vec::new();
     for (local, &global) in scope.iter().enumerate() {

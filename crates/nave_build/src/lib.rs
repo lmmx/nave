@@ -285,10 +285,10 @@ pub fn run_build(
         if instances.is_empty() {
             continue;
         }
-        if let Some(ref f) = options.filter {
-            if !pattern.contains(f) {
-                continue;
-            }
+        if let Some(ref f) = options.filter
+            && !pattern.contains(f)
+        {
+            continue;
         }
         let mut group = report::build_group(&pattern, &instances);
 

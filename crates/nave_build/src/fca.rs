@@ -149,9 +149,14 @@ fn build_lattice(profiles: &[Profile]) -> Option<LatticeInfo> {
     // The Poset convention is (u, v) means u ≤ v, so we want
     // (child, parent) pairs where child has strictly smaller extent.
     let mut transitive_edges: Vec<(u32, u32)> = Vec::new();
+    assert!(
+        u32::try_from(n).is_ok(),
+        "too many profiles for u32 indices"
+    );
     for i in 0..n {
         for j in 0..n {
             if i != j && extents[i].is_subset(&extents[j]) && extents[i].len() < extents[j].len() {
+                #[allow(clippy::cast_possible_truncation)]
                 transitive_edges.push((i as u32, j as u32));
             }
         }
@@ -331,9 +336,9 @@ fn build_context(
         }
 
         if let Some(&attr_idx) = absent_attr.get(&hole_idx) {
-            for inst_idx in 0..n_instances {
+            for (inst_idx, inst_attr) in instance_attrs.iter_mut().enumerate() {
                 if !present.contains(&inst_idx) {
-                    instance_attrs[inst_idx].insert(attr_idx);
+                    inst_attr.insert(attr_idx);
                 }
             }
         }
@@ -342,7 +347,7 @@ fn build_context(
     // Construct the FormalContext.
     let mut ctx = FormalContext::<String>::new();
 
-    for attr in attributes.iter() {
+    for attr in &attributes {
         let label = match &attr.value {
             Some(v) => format!("{}={}", attr.address, short_value(v)),
             None => format!("{}=ABSENT", attr.address),
@@ -419,7 +424,7 @@ fn interpret_concepts(
         });
     }
 
-    profiles.sort_by(|a, b| b.support.cmp(&a.support));
+    profiles.sort_by_key(|p| std::cmp::Reverse(p.support));
     profiles
 }
 

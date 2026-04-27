@@ -185,7 +185,7 @@ fn print_group(g: &GroupReport) {
                         .unwrap_or(&binding.address);
                     if let Some(v) = &binding.value {
                         let val_str = serde_json::to_string(v).unwrap_or_default();
-                        println!("      {} = {}", display_addr, val_str);
+                        println!("      {display_addr} = {val_str}");
                     }
                 }
                 if showing_delta {
@@ -194,7 +194,7 @@ fn print_group(g: &GroupReport) {
                         .filter(|b| b.value.is_none())
                         .count();
                     if absent_count > 0 {
-                        println!("      ({} fewer optional keys)", absent_count);
+                        println!("      ({absent_count} fewer optional keys)");
                     }
                 }
             }
