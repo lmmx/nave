@@ -60,4 +60,4 @@ homepage = "https://github.com/lmmx/nave"
 documentation = "https://github.com/lmmx/nave"
 repository = "https://github.com/lmmx/nave"
 authors = ["Louis Maddox <louismmx@gmail.com>"]
-license = "MIT"
+license = "AGPL-3.0-only"

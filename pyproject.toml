@@ -17,14 +17,13 @@ description = "Fleet-level modelling and operations for OSS package repos, in Ru
 authors = [{name = "Louis Maddox", email = "louismmx@gmail.com"}]
 readme = "README.md"
 requires-python = ">=3.9"
-license = "MIT"
+license = "AGPL-3.0-only"
 license-files = ["LICENSE"]
 keywords = ["fleet-ops", "packaging", "github", "dependabot"]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Environment :: Console",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
