@@ -18,6 +18,26 @@ It's thresholdless (no tuning parameters) and has been well-studied since
 See the [Wikipedia article](https://en.wikipedia.org/wiki/Anti-unification) for the
 formal treatment.
 
+## Set-based array handling
+
+Arrays of objects (such as CI workflow steps or dependabot update entries) are
+anti-unified with **set semantics** rather than positional alignment. Elements
+are clustered by structural similarity — specifically, by the intersection of
+key-sets across all elements — and anti-unified within each cluster.
+
+This means that a checkout step in position 0 of one workflow and position 2
+of another will be recognised as the same kind of step and grouped together.
+Within a cluster, variation becomes holes; clusters present in some instances
+but not others become optional set elements.
+
+Arrays of scalars (such as Python version lists) continue to use positional
+alignment.
+
+Hole addresses for set elements use a predicate label showing the varying
+keys: `steps[name,run].run` means "the step cluster whose `name` and `run`
+keys vary." In profile display, these are simplified to `steps[]` for
+readability.
+
 ## What [++"nave"++](../reference/cli/nave.md) does with it
 
 [++"nave build"++](../reference/cli/build.md) groups tracked files by their logical kind (e.g. "all dependabot
@@ -97,6 +117,33 @@ Cohorts are how you decide which configs to bulk-edit. "Move the 3 monthly repos
 weekly" is a single codemod targeting a single cohort; you pass the same query to
 [++"nave pen create"++](../reference/cli/pen/create.md) that you'd pass to
 [++"nave build --match"++](../reference/cli/build.md) to isolate it.
+
+## Profiles
+
+A profile is a **formal concept** from [formal concept analysis][fca] (FCA): a
+maximal pair of (repos, hole-value bindings) where every repo in the set
+shares every binding, and every binding is shared by every repo.
+
+[fca]: https://en.wikipedia.org/wiki/Formal_concept_analysis
+
+Profiles are computed automatically by `nave build` from the hole
+observations. They answer the question "which configuration choices travel
+together across my fleet?"
+
+For example, in a fleet of 9 dependabot configs with two holes
+(package-ecosystem and schedule interval), FCA discovers three profiles:
+
+- 5 repos use `github-actions` + `weekly`
+- 3 repos use `github-actions` + `monthly`
+- 1 repo uses `cargo` + `weekly`
+
+These three profiles completely explain the variation in the fleet.
+
+When the concept lattice has hierarchical structure (some profiles are
+refinements of others), the display shows deltas: only the bindings that
+are new relative to parent profiles. This makes the progressive
+specialisation of configuration visible — "Profile 2 refines Profile 1 by
+adding the specific version detection script."
 
 ## Why it works on configs
 

@@ -28,23 +28,32 @@ Text mode (default):
   instances: 9
 
   template:
-    updates:
-      - cooldown?: ⟨?0⟩
+    updates: 
+      - cooldown?: {"default-days":7}
         directory: "/"
-        package-ecosystem: ⟨?1⟩
-        schedule:
-          interval: ⟨?2⟩
+        package-ecosystem: ⟨?0⟩
+        schedule: 
+          interval: ⟨?1⟩
     version: 2
 
   holes:
-    updates[0].cooldown  [optionalkey]  3/9 optional  [constant when present]
-        3× {"default-days":7}
-    updates[0].package-ecosystem  [string]  9/9
+    updates[package-ecosystem,schedule].package-ecosystem  [string]  9/9
         8× "github-actions"
         1× "cargo"
-    updates[0].schedule.interval  [string]  9/9
+    updates[package-ecosystem,schedule].schedule.interval  [string]  9/9
         6× "weekly"
         3× "monthly"
+
+  profiles: (7 concepts, 3 non-trivial)
+    Profile 1  (5 repos: polite, polars-fastembed, polars-genson, … +2)
+      updates[].package-ecosystem = "github-actions"
+      updates[].schedule.interval = "weekly"
+    Profile 2  (3 repos: trusty-pub, ossify, clickpydeps)
+      updates[].package-ecosystem = "github-actions"
+      updates[].schedule.interval = "monthly"
+    Profile 3  (1 repos: comrak)
+      updates[].package-ecosystem = "cargo"
+      updates[].schedule.interval = "weekly"
 ```
 
 JSON mode (`--json`) produces the same structure as a nested `BuildReport` object.
@@ -53,12 +62,13 @@ JSON mode (`--json`) produces the same structure as a nested `BuildReport` objec
 
 Three independent narrowing mechanisms:
 
-| Flag          | Scope                                          |
-|---------------|------------------------------------------------|
-| `--filter`    | Post-hoc filter on group pattern (output only) |
-| `--where`     | Pre-filter on files (substring terms)          |
-| `--match`     | Pre-filter on tree structure (predicates)      |
-| `--co-occur`  | Anti-unify subtrees, not whole files           |
+| Flag                  | Scope                                          |
+|-----------------------|------------------------------------------------|
+| `--filter`            | Skip groups whose pattern doesn't match        |
+| `--where`             | Pre-filter on files (substring terms)          |
+| `--match`             | Pre-filter on tree structure (predicates)      |
+| `--co-occur`          | Anti-unify subtrees, not whole files           |
+| `--relevant-profiles` | Show only profiles matching `--match` values   |
 
 They compose. Typical usage:
 
@@ -85,6 +95,45 @@ only care about one. Anti-unifying whole workflow files (for example) will usual
 drown the signal you want in inter-job variation.
 
 Requires ≥ 2 `--where` terms.
+
+## Profiles
+
+After anti-unification, `nave build` runs formal concept analysis (FCA) on the
+hole observations to discover **configuration profiles** — maximal sets of
+hole-value bindings shared by subsets of instances.
+
+Each profile is a [formal concept][fca]: a set of repos (the extent) and the
+hole-value bindings they all share (the intent). Profiles are displayed as a
+lattice — when a profile refines another (its repos are a subset), only the
+new bindings (the delta) are shown, with a `(refines Profile N)` annotation.
+
+[fca]: https://en.wikipedia.org/wiki/Formal_concept_analysis
+
+Root profiles (those with no parent in the lattice) show their full intent.
+Refinements show only what's new. Structural differences (optional keys
+present in one subgroup but not another) are summarised as
+`(N fewer optional keys)`.
+
+Profiles with multiple parents represent repos at the intersection of
+several groups — their configuration is the combination of all parent
+profiles.
+
+### `--relevant-profiles`
+
+When `--match` predicates are provided, `--relevant-profiles` filters the
+profile display to only show profiles where at least one binding's value
+satisfies a `--match` predicate. This focuses the output on the variation
+you searched for.
+
+```bash
+nave build \
+  --where workflow:uv \
+  --match 'workflow:run*=pytest' \
+  --relevant-profiles
+```
+
+This shows all holes across the full workflow template, but only displays
+profiles whose bindings involve a value containing "pytest".
 
 ## Hole kinds
 
