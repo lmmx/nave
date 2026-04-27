@@ -18,6 +18,7 @@ nave_build = {path = "crates/nave_build"}
 nave_search = {path = "crates/nave_search"}
 nave_schemas = {path = "crates/nave_schemas"}
 nave_pen = {path = "crates/nave_pen"}
+nave_rewrite = {path = "crates/nave_rewrite"}
 anyhow = {version = "1.0.80"}
 clap = {version = "4.5.3", features = ["derive"]}
 indicatif = {version = "0.17"}
@@ -41,6 +42,7 @@ futures = {version = "0.3"}
 regex = {version = "1"}
 odis = {version = "2026.4.0"}
 bit-set = {version = "0.8.0"}
+similar = {version = "2"}
 
 [workspace.lints.clippy]
 pedantic = {level = "warn", priority = -2}

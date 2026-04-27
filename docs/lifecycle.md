@@ -47,8 +47,13 @@ These are all read-only operations, and fast to run since they're using the loca
 
 ### 4. Rewrite
 
-[++"nave pen"++](reference/cli/pen.md) is the write layer. Pens create scoped workspaces, run codemods, push
-branches, and (eventually) open and merge PRs. See [Pens](concepts/pens.md).
+[++"nave pen"++](reference/cli/pen.md) is the write layer.
+
+Pens create scoped workspaces and carry out rewrites and arbitrary commands;
+[++"nave pen rewrite"++](reference/cli/pen/rewrite.md) applies declarative
+transforms; the planned [++"nave pen run"++](reference/cli/pen/run.md)
+adds commit-and-push orchestration on top. See [Pens](concepts/pens.md)
+and [Rewrites](concepts/rewrites.md).
 
 ## The typical flow
 

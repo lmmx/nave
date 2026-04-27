@@ -5,9 +5,9 @@ use tracing::info;
 
 use nave_config::{cache_root, load_default};
 use nave_pen::{
-    CreateOptions, Divergence, Freshness, RepoState, RunState, WorkTree, clean_pen,
+    CreateOptions, Divergence, Freshness, RepoState, RewriteOptions, RunState, WorkTree, clean_pen,
     compute_repo_state, create_pen, exec_pen, list_pens, load_pen, reinit_pen, remove_pen_safe,
-    resolve_pen_root, revert_pen, sync_pen,
+    resolve_pen_root, revert_pen, rewrite_pen, sync_pen,
 };
 
 #[derive(Debug, Args)]
@@ -38,6 +38,8 @@ pub(crate) enum PenAction {
     Exec(PenExecArgs),
     /// Remove a pen's local workspace and definition.
     Rm(PenRmArgs),
+    /// Apply declarative rewrites defined in the pen's `pen.toml`.
+    Rewrite(PenRewriteArgs),
 }
 
 #[derive(Debug, Args)]
@@ -150,6 +152,41 @@ pub(crate) struct PenRmArgs {
     pub allow_dirty: bool,
 }
 
+#[derive(Debug, Args)]
+#[allow(clippy::struct_excessive_bools)]
+pub(crate) struct PenRewriteArgs {
+    /// Pen name.
+    pub name: String,
+    /// Restrict to a single repo (bare name or owner/name).
+    #[arg(long)]
+    pub only: Option<String>,
+    /// Restrict to specific op ids. Repeatable; default = all not-yet-applied ops.
+    #[arg(long = "op")]
+    pub ops: Vec<String>,
+    /// Plan and validate without writing.
+    #[arg(long)]
+    pub dry_run: bool,
+    /// Compute and print unified diffs (implies --dry-run).
+    #[arg(long)]
+    pub diff: bool,
+    /// Bypass the dirty-tree gate.
+    #[arg(long)]
+    pub allow_dirty: bool,
+    /// Skip post-mutation schema validation.
+    #[arg(long)]
+    pub no_validate: bool,
+    /// Re-run ops already marked applied for a repo.
+    #[arg(long)]
+    pub force: bool,
+    /// Disable per-repo atomic rollback. Failed rewrites leave partial
+    /// changes in the working tree.
+    #[arg(long)]
+    pub no_rollback: bool,
+    /// Emit JSON report.
+    #[arg(long)]
+    pub json: bool,
+}
+
 pub(crate) async fn run(args: PenArgs) -> Result<()> {
     match args.action {
         PenAction::Create(a) => run_create(a).await,
@@ -162,6 +199,7 @@ pub(crate) async fn run(args: PenArgs) -> Result<()> {
         PenAction::Reinit(a) => run_reinit(a).await,
         PenAction::Exec(a) => run_exec(a).await,
         PenAction::Rm(a) => run_rm(a).await,
+        PenAction::Rewrite(a) => run_rewrite(a).await,
     }
 }
 
@@ -385,6 +423,39 @@ async fn run_rm(args: PenRmArgs) -> Result<()> {
     info!(name = %args.name, "pen removed");
     Ok(())
 }
+async fn run_rewrite(args: PenRewriteArgs) -> Result<()> {
+    let cfg = load_default()?;
+    let root = resolve_pen_root(&cfg.pen)?;
+    let mut pen = load_pen(&root, &args.name)?;
+    let report = rewrite_pen(
+        &root,
+        &cfg,
+        &mut pen,
+        RewriteOptions {
+            only: args.only,
+            op_ids: args.ops,
+            dry_run: args.dry_run || args.diff,
+            diff: args.diff,
+            allow_dirty: args.allow_dirty,
+            no_validate: args.no_validate,
+            force: args.force,
+            no_rollback: args.no_rollback,
+        },
+    )
+    .await?;
+
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&report)?);
+    } else {
+        print_rewrite_report(&report);
+    }
+
+    let any_failed = report.repos.iter().any(|r| r.rollback_trigger.is_some());
+    if any_failed {
+        std::process::exit(1);
+    }
+    Ok(())
+}
 
 // --- filter parsing for `list --filter key=value` ---
 
@@ -459,4 +530,53 @@ fn parse_filters(raw: &[String]) -> Result<ListFilters> {
         }
     }
     Ok(f)
+}
+
+fn print_rewrite_report(report: &nave_pen::RewritePenReport) {
+    println!("pen: {}  run: {}", report.pen, report.run_id);
+    if report.dry_run {
+        println!("(dry-run)");
+    }
+    for r in &report.repos {
+        let status = if r.committed {
+            "✓"
+        } else if r.rollback_trigger.is_some() {
+            "✗"
+        } else {
+            "·"
+        };
+        println!("{status} {}/{}", r.owner, r.repo);
+        for o in &r.ops {
+            let label = match &o.outcome {
+                nave_rewrite::OpOutcome::Applied => "applied".to_string(),
+                nave_rewrite::OpOutcome::NoTargets => "no-targets".to_string(),
+                nave_rewrite::OpOutcome::Failed { reason } => format!("failed: {reason}"),
+                nave_rewrite::OpOutcome::ValidationFailed { errors } => {
+                    format!("validation failed ({} errors)", errors.len())
+                }
+            };
+            println!("    {} — {label}", o.op_id);
+            for f in &o.files {
+                println!("        {f}");
+            }
+        }
+        if let Some(trigger) = &r.rollback_trigger {
+            match &r.logs_dir {
+                Some(p) => println!(
+                    "  ↪ rolled back due to op {trigger:?}; see logs at {}",
+                    p.display()
+                ),
+                None => println!("  ↪ rolled back due to op {trigger:?}"),
+            }
+        }
+        for d in &r.diffs {
+            println!("--- diff: {} ---", d.path);
+            print!("{}", d.diff);
+        }
+    }
+    println!();
+    println!("op statuses:");
+    for (id, s) in &report.op_statuses {
+        println!("  {id}: {s:?}");
+    }
 }

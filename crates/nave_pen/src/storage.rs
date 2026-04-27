@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
 use nave_config::{PenConfig, pen_root};
+use nave_rewrite::RewriteOp;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pen {
@@ -25,6 +26,9 @@ pub struct Pen {
     pub branch: String,
     pub filter: PenFilter,
     pub repos: Vec<PenRepo>,
+    /// Declarative rewrite operations defined for this pen.
+    #[serde(default)]
+    pub ops: Vec<RewriteOp>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

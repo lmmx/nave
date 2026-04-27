@@ -23,6 +23,7 @@ but not yet available in the CLI:
 - [++"nave pen merge"++](pen/merge.md) — merge PRs (wrapping `gh pr merge`).
 - [++"nave pen close"++](pen/close.md) — close open pen PRs.
 - [++"nave pen prune"++](pen/prune.md) — remove pens that have run but reference deleted remotes.
+- [++"nave pen rewrite"++](pen/rewrite.md) — apply declarative rewrites.
 
 In the meantime: use [++"nave pen exec"++](pen/exec.md)
 for arbitrary per-repo commands, and drive PRs manually with `gh`.
@@ -39,3 +40,4 @@ for arbitrary per-repo commands, and drive PRs manually with `gh`.
 - [`reinit`](pen/reinit.md)
 - [`exec`](pen/exec.md)
 - [`rm`](pen/rm.md)
+- [`rewrite`](pen/rewrite.md)

@@ -14,7 +14,7 @@ snippets:
     done
 
     # pen subcommands
-    for cmd in create list show status sync clean revert reinit exec rm; do \
+    for cmd in create list show status sync clean revert reinit exec rm rewrite; do \
         echo "→ pen $cmd"; \
         nave pen $cmd --help | sed 's/\x1b\[[0-9;]*m//g' > docs/_snippets/cli/pen/$cmd.txt; \
     done
