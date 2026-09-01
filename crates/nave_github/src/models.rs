@@ -9,6 +9,7 @@ pub struct Repo {
     pub clone_url: String,
     pub fork: bool,
     pub archived: bool,
+    pub size: u64,
     #[serde(with = "time::serde::rfc3339::option", default)]
     pub pushed_at: Option<OffsetDateTime>,
     pub owner: RepoOwner,

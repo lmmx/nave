@@ -120,6 +120,7 @@ pub async fn run_scan(
         .into_iter()
         .filter(|r| !r.archived)
         .filter(|r| !(cfg.scan.exclude_forks && r.fork))
+        .filter(|r| r.size > 0)
         .collect();
 
     let matcher =
