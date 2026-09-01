@@ -38,6 +38,13 @@ impl GithubClient {
         })
     }
 
+    pub async fn get_user_type(&self, username: &str) -> Result<String> {
+        let url = format!("{}/users/{}", self.api_base, username);
+        let resp = self.http.get(&url).send().await?;
+        let user: serde_json::Value = parse_body(resp).await?;
+        Ok(user["type"].as_str().unwrap_or("User").to_string())
+    }
+
     pub fn auth_label(&self) -> &'static str {
         self.auth.label()
     }
@@ -49,9 +56,15 @@ impl GithubClient {
         per_page: u32,
         repo_type: &str,
     ) -> Result<Vec<Repo>> {
+        let user_type = self.get_user_type(username).await?;
+        let base_path = if user_type == "Organization" {
+            "orgs"
+        } else {
+            "users"
+        };
         let mut url = format!(
-            "{}/users/{}/repos?per_page={}&type={}&sort=full_name",
-            self.api_base, username, per_page, repo_type,
+            "{}/{}/{}/repos?per_page={}&type={}&sort=full_name",
+            self.api_base, base_path, username, per_page, repo_type,
         );
         let mut out = Vec::new();
 
