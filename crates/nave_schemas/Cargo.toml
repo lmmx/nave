@@ -1,15 +1,15 @@
 [dependencies]
-nave_config = {workspace = true}
-nave_parse = {workspace = true}
-anyhow = {workspace = true}
-serde = {workspace = true}
-serde_json = {workspace = true}
-serde_norway = {workspace = true}
-reqwest = {workspace = true}
-tokio = {workspace = true}
-tracing = {workspace = true}
-thiserror = {workspace = true}
-jsonschema = {workspace = true}
+nave_config = { workspace = true }
+nave_parse = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_norway = { workspace = true }
+reqwest = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+jsonschema = { workspace = true }
 
 [lints]
 workspace = true
