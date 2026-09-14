@@ -1,12 +1,12 @@
 [dependencies]
-nave_config = {workspace = true}
-nave_parse = {workspace = true}
-anyhow = {workspace = true}
-serde = {workspace = true}
-serde_json = {workspace = true}
-tracing = {workspace = true}
-odis = {workspace = true}
-bit-set = {workspace = true}
+nave_config = { workspace = true }
+nave_parse = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+odis = { workspace = true }
+bit-set = { workspace = true }
 
 [lints]
 workspace = true
