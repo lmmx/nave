@@ -1,12 +1,12 @@
 [dependencies]
-nave_config = {workspace = true}
-nave_github = {workspace = true}
-anyhow = {workspace = true}
-serde = {workspace = true}
-time = {workspace = true}
-tokio = {workspace = true}
-tracing = {workspace = true}
-futures = {workspace = true}
+nave_config = { workspace = true }
+nave_github = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+futures = { workspace = true }
 
 [lints]
 workspace = true
