@@ -14,7 +14,7 @@ docs = [
 name = "nave"
 version = "0.0.8"
 description = "Fleet-level modelling and operations for OSS package repos, in Rust."
-authors = [{name = "Louis Maddox", email = "louismmx@gmail.com"}]
+authors = [{ name = "Louis Maddox", email = "louismmx@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.9"
 license = "AGPL-3.0-only"

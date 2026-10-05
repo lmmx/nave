@@ -1,9 +1,9 @@
 [dependencies]
-nave_config = {workspace = true}
-anyhow = {workspace = true}
-futures = {workspace = true}
-tokio = {workspace = true}
-tracing = {workspace = true}
+nave_config = { workspace = true }
+anyhow = { workspace = true }
+futures = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
 
 [lints]
 workspace = true
