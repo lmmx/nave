@@ -1,0 +1,60 @@
+diff --git a/crates/nave_build/src/fca.rs b/crates/nave_build/src/fca.rs
+index 51cebbc..2cde779 100644
+--- a/crates/nave_build/src/fca.rs
++++ b/crates/nave_build/src/fca.rs
+@@ -102,7 +102,7 @@ pub fn analyse(
+     holes: &[HoleReport],
+ ) -> FcaResult {
+     // Skip FCA if there are fewer than 2 holes (nothing to co-occur).
+-    if observations.len() < 2 {
++    if observations.len() < 2 || std::env::var_os("NAVE_NO_FCA").is_some() {
+         return FcaResult {
+             profiles: vec![],
+             total_concepts: 0,
+@@ -114,7 +114,19 @@ pub fn analyse(
+     let (attributes, ctx) = build_context(observations, n_instances, holes);
+     let n_attributes = attributes.len();
+ 
+-    let concepts: Vec<(BitSet, BitSet)> = NextClosure.enumerate_concepts(&ctx).collect();
++    // EXPERIMENT: optional cap, count report, and exit-after-count (analysis/README.md).
++    let cap = std::env::var("NAVE_FCA_CAP").ok().and_then(|v| v.parse().ok()).unwrap_or(usize::MAX);
++    let concepts: Vec<(BitSet, BitSet)> = NextClosure.enumerate_concepts(&ctx).take(cap).collect();
++    let n_absent = attributes.iter().filter(|a| a.value.is_none()).count();
++    eprintln!(
++        "EXPERIMENT n_attributes={n_attributes} n_value_attrs={} n_absent_attrs={n_absent} concepts={} capped={}",
++        n_attributes - n_absent,
++        concepts.len(),
++        concepts.len() == cap
++    );
++    if std::env::var_os("NAVE_FCA_COUNT_ONLY").is_some() {
++        std::process::exit(0);
++    }
+     let total_concepts = concepts.len();
+ 
+     let profiles = interpret_concepts(concepts, &attributes, n_instances);
+@@ -258,7 +270,13 @@ fn build_context(
+             seen.entry(key).or_insert_with(|| v.clone());
+         }
+ 
++        // EXPERIMENT: drop value attributes seen in fewer than N instances.
++        let min_support: usize = std::env::var("NAVE_FCA_MIN_SUPPORT").ok().and_then(|v| v.parse().ok()).unwrap_or(0);
+         for (val_key, val) in &seen {
++            let support = obs.values.iter().filter(|v| serde_json::to_string(v).unwrap_or_default() == *val_key).count();
++            if support < min_support {
++                continue;
++            }
+             let attr_idx = attributes.len();
+             attributes.push(Attribute {
+                 hole_index: hole_idx,
+@@ -304,8 +322,10 @@ fn build_context(
+         }
+     }
+ 
++    // EXPERIMENT: ablate all "key absent" attributes.
++    let no_absent = std::env::var_os("NAVE_FCA_NO_ABSENT").is_some();
+     for (idx, keep) in keep_absent.iter().enumerate() {
+-        if !keep {
++        if !keep || no_absent {
+             continue;
+         }
+         let (hole_idx, _, _) = &absent_sets[idx];

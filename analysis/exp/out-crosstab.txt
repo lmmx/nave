@@ -1,0 +1,32 @@
+filename                 C1   C2   C3   C4   C5   C6   n
+CI.yml                   38    .    2    3    .    .  43
+deploy.yml                .   27    .    .    .    .  27
+test.yml                  .    1   24    .    .    .  25
+binaries.yml              .    .    .   12    .    .  12
+master.yml                .    .    4    .    .    .   4
+pages.yml                 3    .    .    .    .    .   3
+zizmor.yml                .    3    .    .    .    .   3
+ci.yml                    .    .    1    1    1    .   3
+publish_to_pypi.yml       3    .    .    .    .    .   3
+test-platform.yml         .    .    .    .    .    2   2
+spam-filter.yml           .    1    .    .    .    .   1
+tests.yml                 .    .    .    1    .    .   1
+bloat.yml                 .    .    .    .    1    .   1
+release.yml               1    .    .    .    .    .   1
+release-plz.yml           .    1    .    .    .    .   1
+docs.yml                  .    .    .    .    1    .   1
+test-with-retry.yml       .    .    .    .    .    1   1
+build-ort-providers.yml    1    .    .    .    .    .   1
+trigger.yml               .    1    .    .    .    .   1
+cluster sizes            46   34   31   17    3    3
+
+filename -> majority cluster accuracy: 0.94 (majority-class baseline 0.34)
+cluster -> majority filename accuracy: 0.78  distinct filenames=19
+
+members by cluster (repo/file):
+  C1: ansi-to-html/CI.yml, clickpydeps/pages.yml, cliptargets/CI.yml, comrak/CI.yml, cuJSON-rs/release.yml, czkawka/CI.yml, demopyrs/publish_to_pypi.yml, fastrs/CI.yml, fieldrouter/CI.yml, fugitrs/CI.yml, grepow/CI.yml, hftorchcache/CI.yml, htmd/CI.yml, httpolars/publish_to_pypi.yml, iced-lenia/CI.yml, igloosphinx/CI.yml, lol-html/CI.yml, mcpup/CI.yml, nave/CI.yml, octopolars/CI.yml, ossify/pages.yml, page-dewarp/CI.yml, polars-config-meta/CI.yml, polars-diskcache/CI.yml, polars-expr-hopper/CI.yml, polars-fastembed/build-ort-providers.yml, polars-fastembed/CI.yml, polars-genson/CI.yml, polars-lprof/CI.yml, polars-ls/CI.yml, polars-luxical/CI.yml, polars-permute-plugin/CI.yml, polars-scheduler/CI.yml, polars-schema-index/CI.yml, polars-udf-plugin-tutorial/publish_to_pypi.yml, powell-opt/CI.yml, prqrs/CI.yml, pydantic-ast/CI.yml, pydantic-function-models/CI.yml, pydantree/CI.yml, pypdown/CI.yml, range-streams/CI.yml, textum/CI.yml, trusty-pub/pages.yml, validate-call-safe/CI.yml, wend/CI.yml
+  C2: anti-spam-bot-action/spam-filter.yml, clickpydeps/zizmor.yml, cliptargets/deploy.yml, comrak/deploy.yml, fieldrouter/deploy.yml, grepow/deploy.yml, hftorchcache/deploy.yml, igloosphinx/deploy.yml, isotarp/release-plz.yml, isotarp/test.yml, mcpup/deploy.yml, octopolars/deploy.yml, ossify/zizmor.yml, page-dewarp/deploy.yml, polars-config-meta/deploy.yml, polars-diskcache/deploy.yml, polars-expr-hopper/deploy.yml, polars-fastembed/deploy.yml, polars-genson/deploy.yml, polars-lprof/deploy.yml, polars-ls/deploy.yml, polars-luxical/deploy.yml, polars-permute-plugin/deploy.yml, polars-schema-index/deploy.yml, pydantic-ast/deploy.yml, pydantic-function-models/deploy.yml, pydantree/deploy.yml, pypdown/deploy.yml, range-streams/deploy.yml, self-serve-py-pkg/trigger.yml, textum/deploy.yml, trusty-pub/zizmor.yml, validate-call-safe/deploy.yml, wend/deploy.yml
+  C3: braces/CI.yml, cliptargets/test.yml, comrak/test.yml, cuJSON-rs/ci.yml, fieldrouter/test.yml, grepow/test.yml, igloosphinx/test.yml, impscan/master.yml, inline-snapshot-phash/CI.yml, mcpup/test.yml, mvdef/master.yml, octopolars/test.yml, page-dewarp/test.yml, polars-config-meta/test.yml, polars-diskcache/test.yml, polars-expr-hopper/test.yml, polars-fastembed/test.yml, polars-lprof/test.yml, polars-ls/test.yml, polars-permute-plugin/test.yml, polars-schema-index/test.yml, pydantic-ast/test.yml, pydantic-function-models/test.yml, pydantree/test.yml, pypdown/test.yml, range-streams/test.yml, self-serve-demo/master.yml, tfl-api-dataclass-gen/master.yml, tubeulator/test.yml, validate-call-safe/test.yml, wend/test.yml
+  C4: asterism/binaries.yml, avrotize-rs/CI.yml, beeb/tests.yml, blazon/binaries.yml, braces/binaries.yml, chloro/binaries.yml, echo-comment/CI.yml, figment2/ci.yml, isotarp/binaries.yml, plaudit/binaries.yml, polars-genson/binaries.yml, polite/CI.yml, pts/binaries.yml, rustdoc-text/binaries.yml, syncdoc/binaries.yml, textum/binaries.yml, whichdoc/binaries.yml
+  C5: cargo-bloat-action-demo/bloat.yml, d3-wiring-diagrams/ci.yml, nave/docs.yml
+  C6: page-dewarp/test-with-retry.yml, polars-fastembed/test-platform.yml, polars-luxical/test-platform.yml

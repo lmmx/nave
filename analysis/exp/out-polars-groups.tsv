@@ -1,0 +1,43 @@
+repo	path	indexed	signature	file_last_changed	current_form_since	group_first_seen
+octopolars	pyproject.toml	True	[dependency-groups] lts-cpu = ['polars[rtcompat]>=<v>']	2026-04-15	2026-04-15	2026-04-15
+polars-expr-hopper	pyproject.toml	True	[dependency-groups] lts-cpu = ['polars[rtcompat]>=<v>']	2026-04-16	2026-04-16	2026-04-16
+octopolars	pyproject.toml	True	[dependency-groups] polars = ['polars>=<v>']	2026-04-15	2025-12-06	2025-12-06
+polars-expr-hopper	pyproject.toml	True	[dependency-groups] polars = ['polars>=<v>']	2026-04-16	2025-12-06	2025-12-06
+igloosphinx	pyproject.toml	True	[project.optional-dependencies] lts-cpu = ['polars[rtcompat]>=<v>']	2026-04-16	2026-04-16	2026-04-16
+octopolars	pyproject.toml	True	[project.optional-dependencies] lts-cpu = ['polars[rtcompat]>=<v>']	2026-04-15	2026-04-15	2026-04-15
+polars-config-meta	pyproject.toml	True	[project.optional-dependencies] lts-cpu = ['polars[rtcompat]>=<v>']	2026-04-15	2026-04-15	2026-04-15
+polars-lprof	pyproject.toml	True	[project.optional-dependencies] lts-cpu = ['polars[rtcompat]>=<v>']	2026-04-16	2026-04-16	2026-04-16
+polars-ls	pyproject.toml	True	[project.optional-dependencies] lts-cpu = ['polars[rtcompat]>=<v>']	2026-04-16	2026-04-16	2026-04-16
+polars-schema-index	pyproject.toml	True	[project.optional-dependencies] lts-cpu = ['polars[rtcompat]>=<v>']	2026-04-16	2026-04-16	2026-04-16
+tubeulator	pyproject.toml	True	[project.optional-dependencies] lts-cpu = ['polars[rtcompat]>=<v>']	2026-04-14	2026-04-14	2026-04-14
+datapasta	pyproject.toml	True	[project.optional-dependencies] polars = ['polars>=<v>']	2026-04-14	2025-03-02	2025-03-02
+dslgen	pyproject.toml	True	[project.optional-dependencies] polars = ['polars>=<v>']	2025-03-18	2025-02-20	2025-02-20
+lit-embs	pyproject.toml	True	[project.optional-dependencies] polars = ['polars>=<v>']	2025-03-18	2025-03-01	2025-03-01
+mdbed	pyproject.toml	True	[project.optional-dependencies] polars = ['polars>=<v>']	2025-03-01	2025-03-01	2025-03-01
+octopolars	pyproject.toml	True	[project.optional-dependencies] polars = ['polars>=<v>']	2026-04-15	2025-02-11	2025-02-11
+polars-config-meta	pyproject.toml	True	[project.optional-dependencies] polars = ['polars>=<v>']	2026-04-15	2025-02-08	2025-02-08
+polars-expr-hopper	pyproject.toml	True	[project.optional-dependencies] polars = ['polars>=<v>']	2026-04-16	2025-02-12	2025-02-12
+polars-genson	polars-genson-py/pyproject.toml	False	[project.optional-dependencies] polars = ['polars>=<v>']	2026-10-15	2026-09-26	2025-08-17
+polars-permute-plugin	pyproject.toml	True	[project.optional-dependencies] polars = ['polars>=<v>']	2026-04-16	2025-02-06	2025-02-06
+polars-sbert	pyproject.toml	True	[project.optional-dependencies] polars = ['polars>=<v>']	2025-02-20	2025-02-20	2025-02-20
+polars-scheduler	polars-scheduler-py/pyproject.toml	False	[project.optional-dependencies] polars = ['polars>=<v>']	2025-03-14	2025-03-13	2025-03-13
+reswirl	pyproject.toml	True	[project.optional-dependencies] polars = ['polars>=<v>']	2025-02-11	2025-02-10	2025-02-10
+datapasta	pyproject.toml	True	[project.optional-dependencies] polars-lts-cpu = ['polars-lts-cpu>=<v>']	2026-04-14	2025-03-02	2025-03-02
+dslgen	pyproject.toml	True	[project.optional-dependencies] polars-lts-cpu = ['polars-lts-cpu>=<v>']	2025-03-18	2025-02-20	2025-02-20
+lit-embs	pyproject.toml	True	[project.optional-dependencies] polars-lts-cpu = ['polars-lts-cpu>=<v>']	2025-03-18	2025-03-01	2025-03-01
+mdbed	pyproject.toml	True	[project.optional-dependencies] polars-lts-cpu = ['polars-lts-cpu>=<v>']	2025-03-01	2025-03-01	2025-03-01
+polars-expr-hopper	pyproject.toml	True	[project.optional-dependencies] polars-lts-cpu = ['polars-lts-cpu>=<v>']	2026-04-16	2025-02-12	2025-02-12
+polars-permute-plugin	pyproject.toml	True	[project.optional-dependencies] polars-lts-cpu = ['polars-lts-cpu>=<v>']	2026-04-16	2025-02-06	2025-02-06
+polars-sbert	pyproject.toml	True	[project.optional-dependencies] polars-lts-cpu = ['polars-lts-cpu>=<v>']	2025-02-20	2025-02-20	2025-02-20
+polars-scheduler	polars-scheduler-py/pyproject.toml	False	[project.optional-dependencies] polars-lts-cpu = ['polars-lts-cpu>=<v>']	2025-03-14	2025-03-13	2025-03-13
+reswirl	pyproject.toml	True	[project.optional-dependencies] polars-lts-cpu = ['polars-lts-cpu>=<v>']	2025-02-11	2025-02-10	2025-02-10
+polars-fastembed	polars-fastembed/pyproject.toml	False	[project.optional-dependencies] polars-lts-cpu = ['polars[rtcompat]']	2025-12-26	2025-12-14	2025-12-14
+polars-genson	polars-genson-py/pyproject.toml	False	[project.optional-dependencies] rtcompat = ['polars[rtcompat]>=<v>']	2026-10-15	2026-09-26	2026-09-26
+
+# mixed groups (polars alongside other packages; not counted):
+# polars-config-meta	pyproject.toml	[dependency-groups] full = ['polars[pandas]>=1.36.0', 'pyarrow>=22.0.0']
+# polars-diskcache	pyproject.toml	[project.optional-dependencies] dev = ['pdbpp>=0.12.1', 'polars>=1.36']
+# polars-diskcache	pyproject.toml	[dependency-groups] dev = ['pdbpp>=0.12.1', 'polars>=1.36']
+# polars-permute-plugin	pyproject.toml	[dependency-groups] dev = ['pdbpp>=0.11.7', 'polars>=1.32.0']
+# polars-genson	polars-genson-py/pyproject.toml	[dependency-groups] dev = ['pdbpp>=0.11.7', 'polars>=2.0.0']
+# tubeulator-models	pyproject.toml	[dependency-groups] pull = ['pdfplumber>=0.11.9', 'polars==1.29', 'tubeulator>=0.1.3']
