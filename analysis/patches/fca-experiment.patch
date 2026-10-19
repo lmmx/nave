@@ -14,7 +14,7 @@ index 51cebbc..2cde779 100644
 @@ -114,7 +114,19 @@ pub fn analyse(
      let (attributes, ctx) = build_context(observations, n_instances, holes);
      let n_attributes = attributes.len();
- 
+
 -    let concepts: Vec<(BitSet, BitSet)> = NextClosure.enumerate_concepts(&ctx).collect();
 +    // EXPERIMENT: optional cap, count report, and exit-after-count (analysis/README.md).
 +    let cap = std::env::var("NAVE_FCA_CAP").ok().and_then(|v| v.parse().ok()).unwrap_or(usize::MAX);
@@ -30,12 +30,12 @@ index 51cebbc..2cde779 100644
 +        std::process::exit(0);
 +    }
      let total_concepts = concepts.len();
- 
+
      let profiles = interpret_concepts(concepts, &attributes, n_instances);
 @@ -258,7 +270,13 @@ fn build_context(
              seen.entry(key).or_insert_with(|| v.clone());
          }
- 
+
 +        // EXPERIMENT: drop value attributes seen in fewer than N instances.
 +        let min_support: usize = std::env::var("NAVE_FCA_MIN_SUPPORT").ok().and_then(|v| v.parse().ok()).unwrap_or(0);
          for (val_key, val) in &seen {
@@ -49,7 +49,7 @@ index 51cebbc..2cde779 100644
 @@ -304,8 +322,10 @@ fn build_context(
          }
      }
- 
+
 +    // EXPERIMENT: ablate all "key absent" attributes.
 +    let no_absent = std::env::var_os("NAVE_FCA_NO_ABSENT").is_some();
      for (idx, keep) in keep_absent.iter().enumerate() {
