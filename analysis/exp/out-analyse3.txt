@@ -1,0 +1,77 @@
+
+== pyproject.toml  [dictionary-aware]: 97 files, 186 distinct key paths
+   universal(100%)=0  >=50%=17  10-50%=23  <10%=146  singletons=73
+   mean pairwise Jaccard distance=0.62
+   k=2: silhouette=0.40 sizes=[92, 5]
+   k=3: silhouette=0.40 sizes=[88, 5, 4]
+   k=4: silhouette=0.38 sizes=[88, 5, 3, 1]
+   k=6: silhouette=0.29 sizes=[82, 5, 5, 3, 1, 1]
+   k=8: silhouette=0.34 sizes=[68, 7, 7, 5, 5, 3, 1, 1]
+   config-distance vs creation-gap Spearman rho=0.34 (pairs=4656)
+   permutation null: mean=0.004 max=0.168  -> p<0.005
+
+== Cargo.toml  [dictionary-aware]: 51 files, 131 distinct key paths
+   universal(100%)=0  >=50%=11  10-50%=51  <10%=69  singletons=39
+   mean pairwise Jaccard distance=0.76
+   k=2: silhouette=0.40 sizes=[34, 17]
+   k=3: silhouette=0.34 sizes=[29, 17, 5]
+   k=4: silhouette=0.29 sizes=[29, 16, 5, 1]
+   k=6: silhouette=0.32 sizes=[18, 16, 6, 5, 5, 1]
+   k=8: silhouette=0.35 sizes=[16, 15, 5, 5, 4, 3, 2, 1]
+   config-distance vs creation-gap Spearman rho=0.10 (pairs=1275)
+   permutation null: mean=0.002 max=0.144  -> p<0.050
+
+== workflows  [dictionary-aware]: 134 files, 122 distinct key paths
+   universal(100%)=7  >=50%=23  10-50%=28  <10%=71  singletons=32
+   mean pairwise Jaccard distance=0.50
+   k=2: silhouette=0.29 sizes=[117, 17]
+   k=3: silhouette=0.41 sizes=[83, 34, 17]
+   k=4: silhouette=0.42 sizes=[83, 31, 17, 3]
+   k=6: silhouette=0.57 sizes=[46, 34, 31, 17, 3, 3]
+   k=8: silhouette=0.57 sizes=[45, 34, 31, 15, 3, 3, 2, 1]
+   config-distance vs creation-gap Spearman rho=0.07 (pairs=8911)
+   permutation null: mean=-0.000 max=0.085  -> p<0.025
+
+pre-commit: holes=53 attributes~236  holes with >=8 values=6 carrying 50 attrs (21%)  version-ish holes=6
+     9 values  repos[hooks,repo,rev].hooks[additional_dependencies,args,entry,id,lang
+     7 values  repos[hooks,repo,rev].hooks[args,exclude,id].id
+     7 values  repos[hooks,repo,rev].hooks[args,id,stages].id
+     7 values  repos[hooks,repo,rev].hooks[exclude,id].exclude
+
+pyproject: holes=52 attributes~656  holes with >=8 values=20 carrying 525 attrs (80%)  version-ish holes=2
+    85 values  project.name
+    71 values  project.description
+    57 values  project.dependencies
+    40 values  project.classifiers
+
+Cargo: holes=89 attributes~500  holes with >=8 values=16 carrying 228 attrs (46%)  version-ish holes=15
+    34 values  package.name
+    17 values  package.description
+    16 values  lib.name
+    15 values  package.repository
+
+workflows: holes=188 attributes~758  holes with >=8 values=6 carrying 88 attrs (12%)  version-ish holes=39
+    24 values  on
+    20 values  name
+    12 values  env.BINARY_NAME
+    10 values  jobs.get-python-versions.steps[name,run].run
+
+### workflows k=6
+  [46] {'CI.yml': 38, 'pages.yml': 3, 'publish_to_pypi.yml': 3, 'release.yml': 1}
+       distinguishing: True.push.tags (+93%), jobs.*.permissions.id-token (+91%), jobs.*.environment (+84%), jobs.*.if (+80%)
+  [34] {'deploy.yml': 27, 'zizmor.yml': 3, 'spam-filter.yml': 1, 'release-plz.yml': 1}
+       distinguishing: jobs.*.permissions (+48%), jobs.*.permissions.contents (+42%), jobs.*.name (+27%), jobs.*.permissions.security-events (+9%)
+  [31] {'test.yml': 24, 'master.yml': 4, 'CI.yml': 2, 'ci.yml': 1}
+       distinguishing: jobs.*.outputs.* (+73%), jobs.*.outputs (+73%), concurrency.group (+67%), concurrency.cancel-in-progress (+67%)
+  [17] {'binaries.yml': 12, 'CI.yml': 3, 'tests.yml': 1, 'ci.yml': 1}
+       distinguishing: env.* (+89%), env (+89%), jobs.*.continue-on-error (+88%), defaults.run.shell (+88%)
+  [3] {'bloat.yml': 1, 'ci.yml': 1, 'docs.yml': 1}
+       distinguishing: permissions.contents (+57%), permissions (+51%), True.push.branches (+38%), True.push (+37%)
+  [3] {'test-platform.yml': 2, 'test-with-retry.yml': 1}
+       distinguishing: True.workflow_call.inputs.*.type (+100%), True.workflow_call.inputs.*.required (+100%), True.workflow_call.inputs.* (+100%), True.workflow_call.inputs (+100%)
+
+### Cargo.toml k=2
+  [34] pyo3 in deps: 14/34, workspace: 0
+       distinguishing: package.version (+100%), package.name (+100%), package.edition (+100%), package (+100%)
+  [17] pyo3 in deps: 0/17, workspace: 17
+       distinguishing: workspace.resolver (+100%), workspace.members (+100%), workspace (+100%), workspace.package.license (+94%)

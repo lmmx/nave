@@ -1,0 +1,73 @@
+
+== pyproject.toml: 97 files, 335 distinct key paths
+   universal(100%)=0  >=50%=16  10-50%=32  <10%=287  singletons=197
+   mean pairwise Jaccard distance=0.68
+   k=2: silhouette=0.32 sizes=[88, 9]
+   k=3: silhouette=0.34 sizes=[88, 6, 3]
+   k=4: silhouette=0.32 sizes=[88, 5, 3, 1]
+   k=6: silhouette=0.30 sizes=[76, 7, 5, 5, 3, 1]
+   k=8: silhouette=0.31 sizes=[68, 7, 7, 5, 5, 3, 1, 1]
+   config-distance vs creation-gap Spearman rho=0.35 (pairs=4656)
+   permutation null: mean=0.006 max=0.168  -> p<0.005
+   k=4 clusters vs backend:
+     size  88  years 2019-2026 (median 2025.1)  {np.str_('uv_build'): 33, np.str_('pdm'): 24, np.str_('maturin'): 15, np.str_('none'): 9}
+     size   5  years 2020-2021 (median 2021.0)  {np.str_('none'): 5}
+     size   3  years 2024-2024 (median 2024.5)  {np.str_('poetry'): 3}
+     size   1  years 2024-2024 (median 2024.7)  {np.str_('uv_build'): 1}
+   k=6 clusters vs backend:
+     size  76  years 2021-2026 (median 2025.1)  {np.str_('uv_build'): 31, np.str_('pdm'): 22, np.str_('maturin'): 10, np.str_('none'): 9}
+     size   7  years 2019-2023 (median 2022.1)  {np.str_('setuptools'): 3, np.str_('pdm'): 2, np.str_('uv_build'): 2}
+     size   5  years 2023-2024 (median 2024.4)  {np.str_('maturin'): 5}
+     size   5  years 2020-2021 (median 2021.0)  {np.str_('none'): 5}
+     size   3  years 2024-2024 (median 2024.5)  {np.str_('poetry'): 3}
+     size   1  years 2024-2024 (median 2024.7)  {np.str_('uv_build'): 1}
+
+   backend x creation year:
+     uv_build     {'2019': 1, '2021': 2, '2022': 1, '2023': 2, '2024': 6, '2025': 15, '2026': 7}
+     pdm          {'2021': 1, '2022': 2, '2023': 4, '2024': 5, '2025': 12}
+     maturin      {'2023': 3, '2024': 3, '2025': 6, '2026': 3}
+     none         {'2020': 2, '2021': 3, '2024': 4, '2025': 5}
+     poetry       {'2024': 4}
+     setuptools   {'2022': 2, '2023': 1}
+     hatchling    {'2024': 1, '2025': 2}
+
+== pre-commit: 101 files, 25 distinct key paths
+   universal(100%)=1  >=50%=12  10-50%=1  <10%=12  singletons=1
+   mean pairwise Jaccard distance=0.26
+   k=2: silhouette=0.72 sizes=[100, 1]
+   k=3: silhouette=0.63 sizes=[99, 1, 1]
+   k=4: silhouette=0.62 sizes=[94, 5, 1, 1]
+   k=6: silhouette=0.74 sizes=[80, 13, 5, 1, 1, 1]
+   k=8: silhouette=0.76 sizes=[80, 11, 3, 2, 2, 1, 1, 1]
+   config-distance vs creation-gap Spearman rho=-0.03 (pairs=5050)
+   permutation null: mean=-0.009 max=0.139  -> p<0.637
+
+== Cargo.toml: 51 files, 670 distinct key paths
+   universal(100%)=0  >=50%=10  10-50%=56  <10%=604  singletons=468
+   mean pairwise Jaccard distance=0.87
+   k=2: silhouette=0.19 sizes=[34, 17]
+   k=3: silhouette=0.17 sizes=[34, 16, 1]
+   k=4: silhouette=0.12 sizes=[33, 16, 1, 1]
+   k=6: silhouette=0.14 sizes=[28, 9, 7, 5, 1, 1]
+   k=8: silhouette=0.15 sizes=[23, 9, 7, 5, 4, 1, 1, 1]
+   config-distance vs creation-gap Spearman rho=0.09 (pairs=1275)
+   permutation null: mean=0.005 max=0.176  -> p<0.090
+
+== workflows: 134 files, 959 distinct key paths
+   universal(100%)=3  >=50%=8  10-50%=174  <10%=777  singletons=588
+   mean pairwise Jaccard distance=0.82
+   k=2: silhouette=0.16 sizes=[133, 1]
+   k=3: silhouette=0.15 sizes=[132, 1, 1]
+   k=4: silhouette=0.17 sizes=[128, 4, 1, 1]
+   k=6: silhouette=0.17 sizes=[126, 4, 1, 1, 1, 1]
+   k=8: silhouette=0.42 sizes=[65, 46, 15, 4, 1, 1, 1, 1]
+   config-distance vs creation-gap Spearman rho=0.10 (pairs=8911)
+   permutation null: mean=0.005 max=0.119  -> p<0.030
+
+   workflow filenames: {'CI.yml': 43, 'deploy.yml': 27, 'test.yml': 25, 'binaries.yml': 12, 'master.yml': 4, 'pages.yml': 3, 'zizmor.yml': 3, 'ci.yml': 3, 'publish_to_pypi.yml': 3, 'test-platform.yml': 2}
+   CI.yml files containing 'maturin generate-ci' header-ish (maturin-action present): 16 / 43
+
+== CI.yml only (maturin-generated lineage): 43 files, 288 distinct key paths
+   universal(100%)=4  >=50%=46  10-50%=95  <10%=147  singletons=85
+
+   repos created from a GitHub template: {'lmmx/self-serve-py-pkg': 4}
