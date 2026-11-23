@@ -7,8 +7,8 @@ docs_dir = "docs"
 repo_name = "lmmx/nave"
 repo_url = "https://github.com/lmmx/nave"
 nav = [
-  {"Home" = "index.md"},
-  {"Concepts" = [
+  { "Home" = "index.md" },
+  { "Concepts" = [
     "concepts/fleet.md",
     "concepts/primitives.md",
     "concepts/cache.md",
@@ -19,15 +19,15 @@ nav = [
     "concepts/rewrites.md",
     "concepts/operations.md",
     "concepts/config.md"
-  ]},
-  {"Lifecycle" = "lifecycle.md"},
-  {"Examples" = [
+  ] },
+  { "Lifecycle" = "lifecycle.md" },
+  { "Examples" = [
     "examples/drift-analysis.md",
     "examples/search-fleet.md",
     "examples/lower-bound-rollout.md",
     "examples/binding-upkeep.md"
-  ]},
-  {"CLI" = [
+  ] },
+  { "CLI" = [
     "reference/cli/overview.md",
     "reference/cli/command-flow.md",
     "reference/cli/nave.md",
@@ -59,7 +59,7 @@ nav = [
     "reference/cli/pen/open.md",
     "reference/cli/pen/prune.md",
     "reference/cli/pen/run.md"
-  ]}
+  ] }
 ]
 extra_css = ["assets/stylesheets/extra.css"]
 
